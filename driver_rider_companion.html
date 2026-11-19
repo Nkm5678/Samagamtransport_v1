@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Samagam Driver & Rider Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .pulse-ring { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between max-w-md mx-auto bg-slate-900 border-x border-slate-800">
+    <header class="bg-emerald-900 px-4 py-3.5 flex items-center justify-between shadow-md sticky top-0 z-40">
+        <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🚍</span>
+            <div>
+                <h1 class="font-bold text-base text-white leading-tight">SAMAGAM DRIVER APP</h1>
+                <p class="text-[11px] text-emerald-200" id="header-sub">Select Bus & Duty Shift</p>
+            </div>
+        </div>
+        <span id="gps-pill" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">GPS OFF</span>
+    </header>
+
+    <main class="p-4 space-y-4 flex-1">
+        <section class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-3 shadow-lg">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">1. Assigned Bus</span>
+                <button onclick="loadDriverData()" class="text-xs text-slate-400 hover:text-white">↻ Refresh</button>
+            </div>
+            <select id="bus-select" onchange="onBusSelected()" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-3 text-base font-bold text-white"></select>
+            <div id="bus-details-card" class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/80 text-xs space-y-1.5 hidden">
+                <div class="flex justify-between"><span class="text-slate-400">Driver:</span><span class="font-semibold text-white" id="disp-driver">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Capacity:</span><span class="font-semibold text-emerald-400" id="disp-capacity">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Current Location:</span><span class="font-semibold text-amber-300" id="disp-hub">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Status:</span><span class="font-bold px-2 py-0.5 rounded bg-blue-900/60 text-blue-300" id="disp-status">--</span></div>
+            </div>
+        </section>
+
+        <section class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-4 shadow-lg">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">2. Active Shuttle Trip & GPS</span>
+                <span id="live-speed-badge" class="text-xs font-mono text-slate-400">0 km/h</span>
+            </div>
+
+            <div id="start-trip-panel" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Destination Hub / Samagam Ground</label>
+                    <select id="dest-select" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-3 text-sm font-semibold text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Pilgrims Boarding (Headcount)</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="adjustPax(-5)" class="bg-slate-700 text-white font-bold px-4 py-3 rounded-xl">-5</button>
+                        <input type="number" id="pax-count" value="45" min="0" max="80" class="flex-1 text-center bg-slate-900 border border-slate-600 rounded-xl py-3 text-lg font-extrabold text-white">
+                        <button type="button" onclick="adjustPax(5)" class="bg-slate-700 text-white font-bold px-4 py-3 rounded-xl">+5</button>
+                    </div>
+                </div>
+                <button onclick="startTrip()" id="btn-start-trip" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-4 rounded-xl text-base shadow-lg">
+                    ▶ START TRIP & LIVE GPS
+                </button>
+            </div>
+
+            <div id="active-trip-panel" class="hidden space-y-3">
+                <div class="bg-emerald-950/80 border border-emerald-600/60 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-emerald-300 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-ring inline-block"></span>
+                            TRIP IN PROGRESS
+                        </span>
+                        <span class="text-xs font-mono text-emerald-200" id="active-journey-code">JRN-...</span>
+                    </div>
+                    <div class="text-sm font-bold text-white" id="active-route-label">Origin → Destination</div>
+                    <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+                        <div class="bg-slate-900/70 p-2 rounded-lg">
+                            <div class="text-slate-400">Distance Covered</div>
+                            <div class="text-base font-extrabold text-emerald-400" id="active-distance">0.00 km</div>
+                        </div>
+                        <div class="bg-slate-900/70 p-2 rounded-lg">
+                            <div class="text-slate-400">Last GPS Ping</div>
+                            <div class="text-sm font-bold text-white" id="active-ping-time">--:--:--</div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="endTrip()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-4 rounded-xl text-base shadow-lg">
+                    ⏹ ARRIVED AT GATE / END TRIP
+                </button>
+            </div>
+            <p id="gps-log-msg" class="text-[11px] text-slate-400 text-center">Ready to start shuttle trip.</p>
+        </section>
+
+        <section class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 space-y-3 shadow-lg">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 block">3. Quick Gate Status</span>
+            <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
+                <button onclick="quickStatus('EMPTY_IN')" class="bg-slate-700 py-3.5 px-2 rounded-xl border border-slate-600">🟢 Empty at Gate</button>
+                <button onclick="quickStatus('UNLOADED_IN')" class="bg-slate-700 py-3.5 px-2 rounded-xl border border-slate-600">🔵 Unloading Pax</button>
+                <button onclick="quickStatus('EMPTY_OUT')" class="bg-slate-700 py-3.5 px-2 rounded-xl border border-slate-600">🟡 Returning Empty</button>
+                <button onclick="reportBreakdown()" class="bg-rose-950/80 text-rose-200 py-3.5 px-2 rounded-xl border border-rose-700">🚨 Breakdown Alert</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/emergency_dialer_modal.js"></script>
+    <script>
+        let vehicles = [], hubs = [], selectedVehicle = null, activeJourneyId = null, watchId = null, lastPing = 0;
+
+        async function loadDriverData() {
+            const [vRes, hRes] = await Promise.all([fetch('/api/fleet/vehicles'), fetch('/api/operations/hubs')]);
+            vehicles = await vRes.json();
+            hubs = await hRes.json();
+            const busSel = document.getElementById('bus-select');
+            const prev = busSel.value || localStorage.getItem('driver_selected_bus');
+            busSel.innerHTML = vehicles.map(v => `<option value="${v.vehicle_reg_number}">${v.vehicle_reg_number} — ${v.vehicle_type}</option>`).join('');
+            if (prev && vehicles.some(v => v.vehicle_reg_number === prev)) busSel.value = prev;
+            document.getElementById('dest-select').innerHTML = hubs.map(h => `<option value="${h.hub_name}">${h.hub_name}</option>`).join('');
+            onBusSelected();
+        }
+
+        function onBusSelected() {
+            const reg = document.getElementById('bus-select').value;
+            localStorage.setItem('driver_selected_bus', reg);
+            selectedVehicle = vehicles.find(v => v.vehicle_reg_number === reg);
+            if (!selectedVehicle) return;
+            document.getElementById('bus-details-card').classList.remove('hidden');
+            document.getElementById('disp-driver').textContent = `${selectedVehicle.driver_name} (${selectedVehicle.driver_phone})`;
+            document.getElementById('disp-capacity').textContent = `${selectedVehicle.capacity} Seats`;
+            document.getElementById('disp-hub').textContent = selectedVehicle.current_hub;
+            document.getElementById('disp-status').textContent = selectedVehicle.status;
+            document.getElementById('header-sub').textContent = `${selectedVehicle.vehicle_reg_number} • ${selectedVehicle.driver_name}`;
+            document.getElementById('pax-count').value = selectedVehicle.capacity;
+        }
+
+        function adjustPax(d) {
+            const el = document.getElementById('pax-count');
+            el.value = Math.max(0, Math.min(100, (parseInt(el.value) || 0) + d));
+        }
+
+        function getCoords() {
+            return new Promise(resolve => {
+                navigator.geolocation.getCurrentPosition(
+                    p => resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude }),
+                    () => resolve({ latitude: 19.2183, longitude: 72.9781 }),
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            });
+        }
+
+        async function startTrip() {
+            if (!selectedVehicle) return;
+            const dest = document.getElementById('dest-select').value;
+            const pax = parseInt(document.getElementById('pax-count').value) || 0;
+            const c = await getCoords();
+            const res = await fetch('/api/operations/journeys/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicle_reg_number: selectedVehicle.vehicle_reg_number, destination_name: dest, passenger_count: pax, latitude: c.latitude, longitude: c.longitude })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                activeJourneyId = data.journey_id;
+                document.getElementById('start-trip-panel').classList.add('hidden');
+                document.getElementById('active-trip-panel').classList.remove('hidden');
+                document.getElementById('active-journey-code').textContent = data.journey_code;
+                document.getElementById('active-route-label').textContent = `${selectedVehicle.current_hub} → ${dest} (${pax} Pax)`;
+                startGpsWatch();
+                loadDriverData();
+            }
+        }
+
+        function startGpsWatch() {
+            const pill = document.getElementById('gps-pill');
+            pill.textContent = '● GPS LIVE';
+            pill.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white pulse-ring';
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            watchId = navigator.geolocation.watchPosition(async pos => {
+                if (Date.now() - lastPing < 10000) return;
+                lastPing = Date.now();
+                const spd = pos.coords.speed ? Math.round(pos.coords.speed * 3.6 * 10) / 10 : 0;
+                document.getElementById('live-speed-badge').textContent = `${spd} km/h`;
+                const r = await fetch('/api/operations/telemetry/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vehicle_reg_number: selectedVehicle.vehicle_reg_number, journey_id: activeJourneyId, latitude: pos.coords.latitude, longitude: pos.coords.longitude, speed_kmh: spd })
+                });
+                if (r.ok) {
+                    const d = await r.json();
+                    document.getElementById('active-distance').textContent = `${d.total_distance_km.toFixed(2)} km`;
+                    document.getElementById('active-ping-time').textContent = new Date().toLocaleTimeString();
+                }
+            }, null, { enableHighAccuracy: true });
+        }
+
+        async function endTrip() {
+            if (!activeJourneyId) return;
+            const c = await getCoords();
+            const dest = document.getElementById('dest-select').value;
+            const r = await fetch('/api/operations/journeys/end', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ journey_id: activeJourneyId, latitude: c.latitude, longitude: c.longitude, end_location_name: dest })
+            });
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            document.getElementById('gps-pill').textContent = 'GPS OFF';
+            document.getElementById('gps-pill').className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300';
+            if (r.ok) {
+                const d = await r.json();
+                alert(`Trip Completed! Distance: ${d.total_distance_km} km`);
+                activeJourneyId = null;
+                document.getElementById('active-trip-panel').classList.add('hidden');
+                document.getElementById('start-trip-panel').classList.remove('hidden');
+                loadDriverData();
+            }
+        }
+
+        async function quickStatus(st) {
+            if (!selectedVehicle) return;
+            await fetch(`/api/fleet/vehicles/${selectedVehicle.id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: st })
+            });
+            loadDriverData();
+        }
+
+        async function reportBreakdown() {
+            if (!selectedVehicle) return;
+            const issue = prompt('Describe vehicle breakdown issue:');
+            if (!issue) return;
+            await fetch('/api/operations/maintenance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicle_id: selectedVehicle.id, issue_category: 'Roadside Breakdown', severity: 'HIGH', description: issue, reported_by: selectedVehicle.driver_name })
+            });
+            alert('Breakdown alert sent to Control Room!');
+            loadDriverData();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadDriverData);
+    </script>
+</body>
+</html>

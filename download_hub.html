@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Driver & Sevadar Mobile App | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex items-center justify-center">
+    <div class="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
+        <div class="text-center space-y-1">
+            <div class="text-4xl">📱</div>
+            <h1 class="text-xl font-extrabold text-white">Samagam Mobile Apps & Consoles</h1>
+            <p class="text-xs text-slate-400">Install on Android / iPhone for Drivers, Riders & Station Coordinators</p>
+        </div>
+
+        <div class="bg-emerald-950/70 border border-emerald-700 rounded-xl p-4 space-y-2">
+            <h2 class="font-bold text-sm text-emerald-300">1. Direct Android APK (GitHub Actions Build)</h2>
+            <p class="text-xs text-slate-300">Download the compiled Android package from your GitHub repository's <strong>Actions → Build Android APK</strong> artifact or host it in <code>/static/samagam-driver.apk</code>.</p>
+            <a href="/static/samagam-driver.apk" download class="inline-block mt-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg">
+                ⬇ Download Android .APK
+            </a>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 space-y-2">
+            <h2 class="font-bold text-sm text-blue-300">2. Instant Zero-Install Web App (PWA)</h2>
+            <p class="text-xs text-slate-400">Open on Chrome/Safari and tap <strong>"Add to Home Screen"</strong> for offline support:</p>
+            <div class="grid grid-cols-2 gap-2 pt-1 text-xs font-bold text-center">
+                <a href="/driver_rider_companion.html" class="bg-indigo-700 hover:bg-indigo-600 py-2.5 rounded-lg">🚍 Driver & Rider App</a>
+                <a href="/territory_dashboard.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">🚉 Station Console</a>
+                <a href="/ground_dashboard.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">⛺ Ground Gate Console</a>
+                <a href="/radar_map_console.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">🛰️ Live GPS Radar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

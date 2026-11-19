@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Vector Automated Live Browser Test Suite | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 font-sans">
+    <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-extrabold text-emerald-400">🧪 8-Vector Automated System Diagnostics</h1>
+                <p class="text-xs text-slate-400">End-to-end live verification of APIs, Geofence Rejections, Telemetry & Exports</p>
+            </div>
+            <button onclick="runAll8Vectors()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm">
+                ▶ Run All 8 Tests
+            </button>
+        </div>
+
+        <div id="test-results" class="space-y-2.5 text-xs"></div>
+    </div>
+
+    <script>
+        async function runAll8Vectors() {
+            const box = document.getElementById('test-results');
+            box.innerHTML = '';
+
+            const logVector = (idx, title, ok, detail) => {
+                box.innerHTML += `
+                    <div class="p-3 rounded-xl border ${ok ? 'bg-emerald-950/50 border-emerald-700 text-emerald-200' : 'bg-rose-950/50 border-rose-700 text-rose-200'} flex justify-between items-center">
+                        <div><strong>[Vector ${idx}] ${title}</strong><div class="opacity-80 mt-0.5">${detail}</div></div>
+                        <span class="font-extrabold">${ok ? '✅ PASS' : '❌ FAIL'}</span>
+                    </div>
+                `;
+            };
+
+            // Vector 1: Health Check
+            const r1 = await fetch('/health');
+            logVector(1, 'Backend Server Health Check', r1.ok, `HTTP ${r1.status}`);
+
+            // Vector 2: 14 Mumbai Hubs Seeded
+            const r2 = await fetch('/api/operations/hubs');
+            const hubs = await r2.json();
+            logVector(2, '14 Mumbai Stations, Airports & Venue Grounds', hubs.length >= 14, `Loaded ${hubs.length} territories`);
+
+            // Vector 3: Geofence Rejection (>2km away)
+            const r3 = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: 'Test OutOfBounds', mobile_number: '9999988888',
+                    unit_number: 'U1', branch_name: 'Test', duty_location: 'Thane Railway Station',
+                    latitude: 18.5204, longitude: 73.8567 // Pune coordinates (>100km away)
+                })
+            });
+            logVector(3, '2.0km Geofence Out-of-Bounds Rejection Guard', r3.status === 403, `Correctly rejected remote coordinates with HTTP ${r3.status}`);
+
+            // Vector 4: Fleet Registry Fetch
+            const r4 = await fetch('/api/fleet/vehicles');
+            const vehicles = await r4.json();
+            logVector(4, 'Multi-Category Fleet Registry Feed', vehicles.length > 0, `Active fleet count: ${vehicles.length}`);
+
+            // Vector 5: Live GPS Telemetry Ping
+            const sampleBus = vehicles[0]?.vehicle_reg_number || 'MH-04-TR-1001';
+            const r5 = await fetch('/api/operations/telemetry/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicle_reg_number: sampleBus, latitude: 19.1865, longitude: 72.9762, speed_kmh: 35 })
+            });
+            logVector(5, 'Live GPS Telemetry Ping Ingestion', r5.ok, `Ping accepted for ${sampleBus}`);
+
+            // Vector 6: 24-Hour Rolling Contract Live Metrics
+            const r6 = await fetch('/api/fleet/rolling-contracts');
+            const contracts = await r6.json();
+            logVector(6, '24-Hour Rolling Hired Fleet Engine', r6.ok, `Active/Settled contracts: ${contracts.length}`);
+
+            // Vector 7: MSRTC Spot Cash Ledger
+            const r7 = await fetch('/api/fleet/msrtc-ledger');
+            const msrtc = await r7.json();
+            logVector(7, 'MSRTC Spot Cash & Imprest Ledger', r7.ok, `Vouchers logged: ${msrtc.vouchers.length}`);
+
+            // Vector 8: Executive Summary & CSV Export Readiness
+            const r8 = await fetch('/api/reports/executive-summary');
+            const summary = await r8.json();
+            logVector(8, 'Executive Telemetry Aggregation', r8.ok, `Total Pilgrims: ${summary.saints.total_pilgrims} | Spend: ₹${summary.financials_inr.grand_total_transport_spend_inr}`);
+        }
+
+        window.addEventListener('DOMContentLoaded', runAll8Vectors);
+    </script>
+</body>
+</html>

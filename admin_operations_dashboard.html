@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24h Rolling Contracts & MSRTC Cash Audit | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <header class="bg-amber-900 text-white p-4 shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h1 class="font-bold text-lg">💰 Financial Audit: 24-Hour Rolling Fleet & MSRTC Spot Cash</h1>
+                <p class="text-xs text-amber-200">Odometer Quota Billing (300 km/day) & Treasury Imprest Reconciliation</p>
+            </div>
+            <div class="flex gap-2 text-xs font-bold">
+                <a href="/api/reports/export/financials-csv" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg">⬇ Export Audit CSV</a>
+                <a href="/admin_dashboard.html" class="bg-slate-900 hover:bg-slate-800 px-3 py-2 rounded-lg">← Command Hub</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 py-6 space-y-6">
+        <!-- 24-Hour Rolling Hired Contracts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h2 class="font-bold text-base text-blue-900">⏱️ Onboard Hired Bus (Start 24h Clock)</h2>
+                <form onsubmit="startRollingContract(event)" class="space-y-3 text-sm">
+                    <input type="text" name="vehicle_reg_number" required placeholder="Bus Reg No (e.g. MH-01-HR-7788)" class="w-full border rounded-lg px-3 py-2 uppercase">
+                    <input type="text" name="vendor_agency_name" required placeholder="Vendor / Travels Agency Name" class="w-full border rounded-lg px-3 py-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="daily_base_rate_inr" value="7500" required placeholder="Base ₹/24h" class="border rounded-lg px-3 py-2">
+                        <input type="number" name="daily_quota_km" value="300" required placeholder="Quota KM/24h" class="border rounded-lg px-3 py-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="extra_rate_per_km_inr" value="25" required placeholder="Extra ₹/KM" class="border rounded-lg px-3 py-2">
+                        <input type="number" name="entry_odometer_km" required placeholder="Entry Odometer KM" class="border rounded-lg px-3 py-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="driver_name" required placeholder="Driver Name" class="border rounded-lg px-3 py-2">
+                        <input type="text" name="driver_phone" required placeholder="Driver Phone" class="border rounded-lg px-3 py-2">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg">Start 24-Hour Clock</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                <h2 class="font-bold text-base text-slate-900 mb-3">Active & Settled 24-Hour Rolling Contracts</h2>
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-2.5">Contract</th>
+                            <th class="p-2.5">Vehicle & Vendor</th>
+                            <th class="p-2.5">Hours / Billed Days</th>
+                            <th class="p-2.5">Run / Allowed KM</th>
+                            <th class="p-2.5">Accrued / Final ₹</th>
+                            <th class="p-2.5">Gate Settlement</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ops-contracts-body" class="divide-y"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Treasury Petty Cash Float & MSRTC Ledger -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h2 class="font-bold text-base text-emerald-900">🏦 Issue Station Petty Cash Imprest</h2>
+                <form onsubmit="disburseFloat(event)" class="space-y-3 text-sm">
+                    <select name="station_hub" id="float-hub" class="w-full border rounded-lg px-3 py-2"></select>
+                    <input type="number" name="amount_inr" required min="500" placeholder="Cash Float Amount (₹)" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="issued_to_coordinator" required placeholder="Receiving Station Coordinator" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="notes" placeholder="Voucher / Notes" class="w-full border rounded-lg px-3 py-2">
+                    <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-lg">Disburse Cash Float</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+                    <h2 class="font-bold text-base text-amber-900">🧾 MSRTC Spot Cash Conductor Vouchers</h2>
+                    <span id="msrtc-balance-badge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-900">Cash in Hand: ₹--</span>
+                </div>
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-2.5">Voucher</th>
+                            <th class="p-2.5">Station</th>
+                            <th class="p-2.5">MSRTC Bus & Conductor</th>
+                            <th class="p-2.5">ETM Receipt</th>
+                            <th class="p-2.5">Cash Paid</th>
+                            <th class="p-2.5">Gate Audit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ops-msrtc-body" class="divide-y"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function loadOpsFinancials() {
+            const [hRes, cRes, mRes] = await Promise.all([
+                fetch('/api/operations/hubs'),
+                fetch('/api/fleet/rolling-contracts'),
+                fetch('/api/fleet/msrtc-ledger')
+            ]);
+            const hubs = await hRes.json();
+            const contracts = await cRes.json();
+            const msrtc = await mRes.json();
+
+            document.getElementById('float-hub').innerHTML = hubs.map(h => `<option value="${h.hub_name}">${h.hub_name}</option>`).join('');
+            document.getElementById('msrtc-balance-badge').textContent = `Cash in Hand: ₹${msrtc.summary.remaining_cash_in_hand_inr.toLocaleString()} (Spent: ₹${msrtc.summary.total_paid_to_conductors_inr.toLocaleString()})`;
+
+            document.getElementById('ops-contracts-body').innerHTML = contracts.map(c => `
+                <tr>
+                    <td class="p-2.5 font-bold text-blue-800">${c.contract_code}</td>
+                    <td class="p-2.5 font-semibold">${c.vehicle_reg_number}<div class="text-slate-400">${c.vendor_agency_name}</div></td>
+                    <td class="p-2.5">${c.live_metrics.duration_hours}h (${c.live_metrics.billed_days} Day)</td>
+                    <td class="p-2.5">${c.live_metrics.km_run} / ${c.live_metrics.allowed_quota_km} km</td>
+                    <td class="p-2.5 font-extrabold text-slate-900">₹${c.live_metrics.total_settlement_inr.toLocaleString()}</td>
+                    <td class="p-2.5">
+                        ${c.status === 'ACTIVE_ROLLING'
+                            ? `<button onclick="exitAndSettle(${c.id}, ${c.entry_odometer_km})" class="bg-rose-600 text-white px-2.5 py-1 rounded font-bold">Exit & Settle</button>`
+                            : `<span class="text-emerald-700 font-bold">✅ ${c.settlement_voucher_no}</span>`}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('ops-msrtc-body').innerHTML = msrtc.vouchers.map(v => `
+                <tr>
+                    <td class="p-2.5 font-bold text-amber-800">${v.voucher_number}</td>
+                    <td class="p-2.5">${v.station_hub}</td>
+                    <td class="p-2.5">${v.vehicle_reg_number}<div class="text-slate-400">${v.conductor_name}</div></td>
+                    <td class="p-2.5 font-mono">${v.etm_receipt_number}</td>
+                    <td class="p-2.5 font-bold">₹${v.cash_amount_paid_inr.toLocaleString()}</td>
+                    <td class="p-2.5">${v.is_verified_at_gate ? '✅ Verified' : '⏳ Pending Gate'}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function startRollingContract(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.daily_base_rate_inr = parseFloat(payload.daily_base_rate_inr);
+            payload.daily_quota_km = parseFloat(payload.daily_quota_km);
+            payload.extra_rate_per_km_inr = parseFloat(payload.extra_rate_per_km_inr);
+            payload.entry_odometer_km = parseFloat(payload.entry_odometer_km);
+            const res = await fetch('/api/fleet/rolling-contracts/onboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) { e.target.reset(); loadOpsFinancials(); }
+            else { const err = await res.json(); alert(err.detail); }
+        }
+
+        async function exitAndSettle(id, entryOdo) {
+            const exitOdo = prompt(`Enter Outward Gate Exit Odometer KM (Entry: ${entryOdo} km):`, entryOdo + 290);
+            if (!exitOdo) return;
+            const res = await fetch('/api/fleet/rolling-contracts/release', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contract_id: id, exit_odometer_km: parseFloat(exitOdo), exited_by: 'Central Auditor' })
+            });
+            if (res.ok) {
+                const d = await res.json();
+                alert(`Settled! Voucher ${d.voucher_no} | Total: ₹${d.settlement.total_settlement_inr}`);
+                loadOpsFinancials();
+            }
+        }
+
+        async function disburseFloat(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.amount_inr = parseFloat(payload.amount_inr);
+            await fetch('/api/fleet/msrtc-ledger/disburse-float', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            e.target.reset();
+            loadOpsFinancials();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadOpsFinancials);
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Duty Registration (2km GPS Lock) | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
+        <div class="text-center">
+            <span class="text-3xl">📍</span>
+            <h1 class="font-bold text-xl text-white mt-1">Sevadar Duty Onboarding</h1>
+            <p class="text-xs text-slate-400">Strict 2,000m physical geofence check at assigned Station or Ground</p>
+        </div>
+
+        <form onsubmit="submitVolunteerReg(event)" class="space-y-3 text-sm">
+            <input type="text" id="v-name" required placeholder="Full Name" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-white">
+            <input type="text" id="v-mobile" required placeholder="10-Digit Mobile Number" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-white">
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="v-unit" required placeholder="Unit No (e.g. U-104)" class="bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-white">
+                <input type="text" id="v-branch" required placeholder="Branch Name" class="bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">Assigned Duty Territory / Ground</label>
+                <select id="v-hub" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-white"></select>
+            </div>
+            <input type="text" id="v-bus" placeholder="Assigned Bus Reg (Optional, for Drivers/Riders)" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-white uppercase">
+
+            <div id="geo-msg" class="text-xs text-amber-400 min-h-[18px]"></div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg">
+                Verify GPS & Register for Duty
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-slate-400 pt-2 border-t border-slate-700">
+            Already registered? <a href="/login.html" class="text-emerald-400 font-bold underline">Sign In Here</a>
+        </div>
+    </div>
+
+    <script>
+        let hubs = [];
+        async function init() {
+            const res = await fetch('/api/operations/hubs');
+            hubs = await res.json();
+            document.getElementById('v-hub').innerHTML = hubs.map(h => `<option value="${h.hub_name}">${h.hub_name}</option>`).join('');
+        }
+        function submitVolunteerReg(e) {
+            e.preventDefault();
+            const msgEl = document.getElementById('geo-msg');
+            msgEl.textContent = '📡 Locking GPS coordinates...';
+            const hubName = document.getElementById('v-hub').value;
+
+            const sendPayload = async (lat, lng, acc) => {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: document.getElementById('v-name').value,
+                        mobile_number: document.getElementById('v-mobile').value,
+                        unit_number: document.getElementById('v-unit').value,
+                        branch_name: document.getElementById('v-branch').value,
+                        duty_location: hubName,
+                        assigned_vehicle_reg: document.getElementById('v-bus').value || null,
+                        latitude: lat,
+                        longitude: lng,
+                        geo_accuracy: acc
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('samagam_session', JSON.stringify(data));
+                    alert(`✅ Verified! Volunteer Code: ${data.volunteer.volunteer_code}`);
+                    window.location.href = data.volunteer.can_view_all_territories ? '/ground_dashboard.html' : '/territory_dashboard.html';
+                } else {
+                    msgEl.textContent = '❌ ' + (data.detail || 'Geofence verification failed.');
+                }
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                pos => sendPayload(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+                err => { msgEl.textContent = '❌ GPS Permission Required: ' + err.message; },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

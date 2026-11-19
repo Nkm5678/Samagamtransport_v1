@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Coordinator Console | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <header class="bg-emerald-900 text-white p-4 shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h1 class="font-bold text-lg">🚉 Territory & Station Coordinator Console</h1>
+                <p class="text-xs text-emerald-200" id="station-subtitle">Platform Crowd Dispatch & MSRTC Spot Cash Ledger</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+                <select id="active-hub-filter" onchange="refreshStationData()" class="bg-emerald-800 border border-emerald-600 text-white rounded-lg px-3 py-1.5 font-semibold"></select>
+                <a href="/radar_map_console.html" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg">🛰️ Live Radar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 py-6 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Raise Platform Crowd Alert -->
+            <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <h2 class="font-bold text-base text-rose-800">📢 Request Shuttle Buses for Waiting Crowd</h2>
+                <form onsubmit="raiseDemand(event)" class="space-y-3 text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="waiting_passenger_count" required min="1" placeholder="Waiting Pilgrims Count" class="border rounded-lg px-3 py-2">
+                        <select name="priority" class="border rounded-lg px-3 py-2">
+                            <option value="NORMAL">Normal Priority</option>
+                            <option value="HIGH">High Priority</option>
+                            <option value="URGENT">URGENT Train Arrival</option>
+                        </select>
+                    </div>
+                    <input type="text" name="requested_by" required placeholder="Your Sevadar Name" class="w-full border rounded-lg px-3 py-2">
+                    <input type="text" name="notes" placeholder="Platform No. / Train Name (e.g. PF-4 Punjab Mail)" class="w-full border rounded-lg px-3 py-2">
+                    <button type="submit" class="w-full bg-rose-700 hover:bg-rose-600 text-white font-bold py-2.5 rounded-lg">Broadcast Dispatch Request</button>
+                </form>
+                <div id="station-demands-list" class="divide-y text-xs pt-2"></div>
+            </section>
+
+            <!-- MSRTC Spot Cash Hire -->
+            <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <h2 class="font-bold text-base text-amber-800">💵 Hire MSRTC State Bus (Spot Cash ETM Entry)</h2>
+                <form onsubmit="logMsrtcCash(event)" class="space-y-3 text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="vehicle_reg_number" required placeholder="MSRTC Bus No (MH-04-...)" class="border rounded-lg px-3 py-2 uppercase">
+                        <input type="text" name="msrtc_depot_name" value="MSRTC Thane Depot" required class="border rounded-lg px-3 py-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="conductor_name" required placeholder="Conductor Name" class="border rounded-lg px-3 py-2">
+                        <input type="text" name="conductor_buckle_no" placeholder="Buckle No." class="border rounded-lg px-3 py-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="cash_amount_paid_inr" required placeholder="Cash Paid (₹)" class="border rounded-lg px-3 py-2">
+                        <input type="text" name="etm_receipt_number" required placeholder="ETM Ticket No." class="border rounded-lg px-3 py-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="passenger_headcount" value="55" required placeholder="Pilgrims Boarded" class="border rounded-lg px-3 py-2">
+                        <input type="text" name="paid_by_volunteer_name" required placeholder="Paid By Sevadar" class="border rounded-lg px-3 py-2">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-lg">Issue Spot Cash Voucher</button>
+                </form>
+                <div id="station-msrtc-list" class="divide-y text-xs pt-2"></div>
+            </section>
+        </div>
+
+        <!-- Arriving Saints Manifest for Selected Hub -->
+        <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+            <h2 class="font-bold text-base mb-3">🙏 Expected Pilgrim Arrivals at Selected Station</h2>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 border-b">
+                        <th class="p-2">Pass ID</th>
+                        <th class="p-2">Saint / Jatha</th>
+                        <th class="p-2">Pax</th>
+                        <th class="p-2">Train/Flight</th>
+                        <th class="p-2">Target Tent</th>
+                        <th class="p-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="station-saints-body" class="divide-y"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="/static/offline_sync_engine.js"></script>
+    <script src="/static/emergency_dialer_modal.js"></script>
+    <script>
+        async function initStation() {
+            const hRes = await fetch('/api/operations/hubs');
+            const hubs = await hRes.json();
+            const sel = document.getElementById('active-hub-filter');
+            sel.innerHTML = hubs.map(h => `<option value="${h.hub_name}">${h.hub_name}</option>`).join('');
+            const saved = JSON.parse(localStorage.getItem('samagam_session') || '{}');
+            if (saved?.volunteer?.duty_location) sel.value = saved.volunteer.duty_location;
+            refreshStationData();
+        }
+
+        async function refreshStationData() {
+            const hub = document.getElementById('active-hub-filter').value;
+            const [dRes, mRes, sRes] = await Promise.all([
+                fetch('/api/operations/demands'),
+                fetch(`/api/fleet/msrtc-ledger?station_hub=${encodeURIComponent(hub)}`),
+                fetch(`/api/saints/?hub=${encodeURIComponent(hub)}`)
+            ]);
+            const demands = await dRes.json();
+            document.getElementById('station-demands-list').innerHTML = demands
+                .filter(d => d.hub_name === hub)
+                .map(d => `<div class="py-2 flex justify-between"><span><strong>${d.demand_code}</strong>: ${d.waiting_passenger_count} Pax (${d.recommended_buses})</span><span class="font-bold text-rose-700">${d.status}</span></div>`).join('');
+
+            const msrtc = await mRes.json();
+            document.getElementById('station-msrtc-list').innerHTML = msrtc.vouchers
+                .map(v => `<div class="py-2 flex justify-between"><span><strong>${v.voucher_number}</strong> • ${v.vehicle_reg_number} (ETM: ${v.etm_receipt_number})</span><span class="font-bold text-amber-800">₹${v.cash_amount_paid_inr}</span></div>`).join('');
+
+            const saints = await sRes.json();
+            document.getElementById('station-saints-body').innerHTML = saints.map(s => `
+                <tr>
+                    <td class="p-2 font-bold text-emerald-700">${s.pass_code}</td>
+                    <td class="p-2">${s.full_name} (${s.contact_phone})</td>
+                    <td class="p-2 font-bold">${s.group_size}</td>
+                    <td class="p-2">${s.arrival_transit_number || s.arrival_mode}</td>
+                    <td class="p-2 font-semibold">${s.assigned_ground} • ${s.assigned_tent}</td>
+                    <td class="p-2">${s.status}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function raiseDemand(e) {
+            e.preventDefault();
+            const hub = document.getElementById('active-hub-filter').value;
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.hub_name = hub;
+            payload.waiting_passenger_count = parseInt(payload.waiting_passenger_count);
+
+            if (!navigator.onLine) {
+                await enqueueOfflineAction('/api/operations/demands', payload, { volunteer_name: payload.requested_by, station_hub: hub });
+                alert('📴 Offline Mode: Request queued and will auto-sync when signal returns.');
+                e.target.reset();
+                return;
+            }
+            await fetch('/api/operations/demands', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            e.target.reset();
+            refreshStationData();
+        }
+
+        async function logMsrtcCash(e) {
+            e.preventDefault();
+            const hub = document.getElementById('active-hub-filter').value;
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.station_hub = hub;
+            payload.cash_amount_paid_inr = parseFloat(payload.cash_amount_paid_inr);
+            payload.passenger_headcount = parseInt(payload.passenger_headcount);
+            await fetch('/api/fleet/msrtc-ledger/pay-conductor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            e.target.reset();
+            refreshStationData();
+        }
+
+        window.addEventListener('DOMContentLoaded', initStation);
+    </script>
+</body>
+</html>

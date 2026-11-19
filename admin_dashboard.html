@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Super-Admin Command Hub | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <!-- Top Command Navigation -->
+    <header class="bg-emerald-950 text-white p-4 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🏛️</span>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide">CENTRAL SUPER-ADMIN COMMAND HUB</h1>
+                    <p class="text-xs text-emerald-300">All-Territory Telemetry, Fleet Dispatch & Audit Exports</p>
+                </div>
+            </div>
+            <nav class="flex flex-wrap gap-2 text-xs font-bold">
+                <a href="/radar_map_console.html" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-lg">🛰️ Live GPS Radar</a>
+                <a href="/admin_operations_dashboard.html" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-lg">💰 24h Contracts & Cash</a>
+                <a href="/admin_performance_dashboard.html" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-2 rounded-lg">🛠️ Fleet Health & Shifts</a>
+                <a href="/online_test_runner.html" class="bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg">🧪 Test Runner</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 py-6 space-y-6">
+        <!-- Action Bar -->
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-900">Executive Operations Snapshot</h2>
+                <p class="text-xs text-slate-500" id="last-updated">Syncing live metrics...</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs font-bold">
+                <button onclick="loadAdminSummary()" class="bg-slate-800 text-white px-3.5 py-2 rounded-lg">↻ Refresh Now</button>
+                <a href="/api/reports/export/saints-csv" class="bg-emerald-700 text-white px-3.5 py-2 rounded-lg">⬇ Saints CSV</a>
+                <a href="/api/reports/export/financials-csv" class="bg-blue-700 text-white px-3.5 py-2 rounded-lg">⬇ Audit CSV</a>
+            </div>
+        </div>
+
+        <!-- 4 Primary KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-xs font-bold uppercase text-slate-400">Pilgrims & Tent Occupancy</div>
+                <div class="text-3xl font-extrabold text-emerald-700 mt-1" id="adm-pilgrims">--</div>
+                <div class="text-xs text-slate-500 mt-1" id="adm-checked">Checked-in: --</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-xs font-bold uppercase text-slate-400">Active Fleet Deployment</div>
+                <div class="text-3xl font-extrabold text-blue-700 mt-1" id="adm-fleet">--</div>
+                <div class="text-xs text-rose-600 font-semibold mt-1" id="adm-maint">Maintenance hold: --</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-xs font-bold uppercase text-slate-400">Pending Station Queues</div>
+                <div class="text-3xl font-extrabold text-amber-600 mt-1" id="adm-waiting">--</div>
+                <div class="text-xs text-slate-500 mt-1" id="adm-demands">Open alerts: --</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="text-xs font-bold uppercase text-slate-400">Grand Transport Spend</div>
+                <div class="text-3xl font-extrabold text-slate-900 mt-1" id="adm-spend">₹--</div>
+                <div class="text-xs text-emerald-700 font-semibold mt-1" id="adm-imprest">Imprest balance: ₹--</div>
+            </div>
+        </div>
+
+        <!-- Live Station Demands & Dispatch Queue -->
+        <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+            <h3 class="font-bold text-base text-slate-900 mb-3">📢 Live Station Crowd Dispatch Requests</h3>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 border-b">
+                        <th class="p-2.5">Code</th>
+                        <th class="p-2.5">Station / Airport Hub</th>
+                        <th class="p-2.5">Waiting Pax</th>
+                        <th class="p-2.5">Recommended Bus Mix</th>
+                        <th class="p-2.5">Priority</th>
+                        <th class="p-2.5">Status</th>
+                        <th class="p-2.5">Quick Dispatch</th>
+                    </tr>
+                </thead>
+                <tbody id="adm-demands-body" class="divide-y"></tbody>
+            </table>
+        </section>
+
+        <!-- Consoles & Printable Blueprints Directory -->
+        <section class="bg-slate-900 text-slate-100 p-5 rounded-2xl shadow-lg">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-emerald-400 mb-3">Quick Launch Consoles & Printable Blueprints</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-bold text-center">
+                <a href="/register.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🙏 Pilgrim Reg</a>
+                <a href="/territory_dashboard.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🚉 Station Desk</a>
+                <a href="/ground_dashboard.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">⛺ Ground Gate</a>
+                <a href="/driver_rider_companion.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🚍 Driver App</a>
+                <a href="/samagam_master_topology_and_operations.html" target="_blank" class="bg-emerald-900 hover:bg-emerald-800 p-3 rounded-xl">📐 Blueprint PDF</a>
+                <a href="/samagam_implementation_checklist.html" target="_blank" class="bg-emerald-900 hover:bg-emerald-800 p-3 rounded-xl">✅ Go-Live List</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/emergency_dialer_modal.js"></script>
+    <script>
+        let fleetList = [];
+
+        async function loadAdminSummary() {
+            const [sumRes, demRes, fltRes] = await Promise.all([
+                fetch('/api/reports/executive-summary'),
+                fetch('/api/operations/demands'),
+                fetch('/api/fleet/vehicles')
+            ]);
+            const summary = await sumRes.json();
+            const demands = await demRes.json();
+            fleetList = await fltRes.json();
+
+            document.getElementById('adm-pilgrims').textContent = summary.saints.total_pilgrims.toLocaleString();
+            document.getElementById('adm-checked').textContent = `Checked-in at tents: ${summary.saints.checked_in_pilgrims} (${summary.saints.total_groups} Jathas)`;
+            document.getElementById('adm-fleet').textContent = `${summary.fleet.active_in_transit} / ${summary.fleet.total_vehicles}`;
+            document.getElementById('adm-maint').textContent = `Maintenance hold: ${summary.fleet.maintenance_hold}`;
+            document.getElementById('adm-waiting').textContent = `${summary.station_queues.waiting_passengers} Pax`;
+            document.getElementById('adm-demands').textContent = `Pending alerts: ${summary.station_queues.pending_demands}`;
+            document.getElementById('adm-spend').textContent = '₹' + summary.financials_inr.grand_total_transport_spend_inr.toLocaleString();
+            document.getElementById('adm-imprest').textContent = 'MSRTC Cash Bal: ₹' + summary.financials_inr.msrtc_imprest_balance_inr.toLocaleString();
+
+            document.getElementById('adm-demands-body').innerHTML = demands.map(d => `
+                <tr>
+                    <td class="p-2.5 font-bold text-rose-700">${d.demand_code}</td>
+                    <td class="p-2.5 font-semibold">${d.hub_name}</td>
+                    <td class="p-2.5 font-extrabold">${d.waiting_passenger_count}</td>
+                    <td class="p-2.5 text-slate-600">${d.recommended_buses}</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">${d.priority}</span></td>
+                    <td class="p-2.5 font-bold">${d.status}</td>
+                    <td class="p-2.5">
+                        ${d.status === 'PENDING'
+                            ? `<button onclick="dispatchFirstAvailable(${d.id}, '${d.hub_name}', ${d.waiting_passenger_count})" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded font-bold">Dispatch Bus</button>`
+                            : '✅ Dispatched'}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('last-updated').textContent = `Last synced: ${new Date().toLocaleTimeString()}`;
+        }
+
+        async function dispatchFirstAvailable(demandId, hubName, pax) {
+            const readyBus = fleetList.find(v => v.status === 'EMPTY_IN' && !v.is_maintenance_flagged) || fleetList[0];
+            if (!readyBus) return;
+            await fetch('/api/operations/allocate-dispatch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    vehicle_id: readyBus.id,
+                    demand_id: demandId,
+                    source_hub: hubName,
+                    destination_hub: 'Ground 1 (Main Hall)',
+                    allocated_passengers: Math.min(pax, readyBus.capacity)
+                })
+            });
+            loadAdminSummary();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadAdminSummary);
+    </script>
+</body>
+</html>
