@@ -1,0 +1,1 @@
+python apply_all_samagam_updates.py
