@@ -48,13 +48,12 @@ def home():
         return FileResponse(welcome_path)
     return _serve_html("admin_dashboard.html")
 
-@app.get("/driver")
-def serve_driver():
-    return _serve_html("driver_rider_companion.html")
-
 @app.get("/sw.js")
 def service_worker():
-    return FileResponse(os.path.join(ROOT_DIR, "sw.js"), media_type="application/javascript")
+    sw_path = os.path.join(ROOT_DIR, "sw.js")
+    if os.path.exists(sw_path):
+        return FileResponse(sw_path, media_type="application/javascript")
+    return {"status": "ok"}
 
 @app.get("/{page_name}.html")
 def serve_html_page(page_name: str):
