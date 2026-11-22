@@ -1,7 +1,9 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 from app.config import settings
+
 
 def send_email_async_safe(recipient_email: str, subject: str, html_body: str) -> dict:
     if not recipient_email or "@" not in recipient_email:
@@ -12,7 +14,7 @@ def send_email_async_safe(recipient_email: str, subject: str, html_body: str) ->
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"Samagam Transport <{settings.SMTP_SENDER_EMAIL}>"
+        msg["From"] = f"Samagam Transport Operations <{settings.SMTP_SENDER_EMAIL}>"
         msg["To"] = recipient_email
         msg.attach(MIMEText(html_body, "html"))
         with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=10) as server:
@@ -23,5 +25,9 @@ def send_email_async_safe(recipient_email: str, subject: str, html_body: str) ->
     except Exception as e:
         return {"sent": False, "reason": str(e)}
 
+
 def build_saint_confirmation_html(saint_data: dict) -> str:
-    return f"<h2>Samagam Boarding Pass SMG-{saint_data['id']:05d}</h2><p>Name: {saint_data['full_name']} | Ground: {saint_data['assigned_ground']} ({saint_data['assigned_tent']})</p>"
+    return (
+        f"<h2>Samagam Boarding Pass SMG-{saint_data['id']:05d}</h2>"
+        f"<p>Name: {saint_data['full_name']} | Ground: {saint_data['assigned_ground']} ({saint_data['assigned_tent']})</p>"
+    )

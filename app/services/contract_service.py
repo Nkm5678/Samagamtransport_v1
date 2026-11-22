@@ -2,7 +2,10 @@ import math
 from datetime import datetime
 from app.models import HiredRollingContract
 
-def compute_rolling_contract_metrics(contract: HiredRollingContract, current_time: datetime = None, current_odometer_km: float = None) -> dict:
+
+def compute_rolling_contract_metrics(
+    contract: HiredRollingContract, current_time: datetime = None, current_odometer_km: float = None
+) -> dict:
     end_ts = contract.exit_timestamp or current_time or datetime.utcnow()
     delta_seconds = max(0.0, (end_ts - contract.entry_timestamp).total_seconds())
     duration_hours = round(delta_seconds / 3600.0, 2)

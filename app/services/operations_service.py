@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models import Vehicle, Journey, TelemetryPing, TurnaroundMovement
 from app.services.geo_service import haversine_distance_meters
 
+
 def compute_optimal_bus_mix(waiting_passengers: int) -> Dict[str, Any]:
     if waiting_passengers <= 0:
         return {"summary": "0 Buses", "heavy_50": 0, "standard_35": 0, "mini_20": 0, "total_buses": 0}
@@ -19,12 +20,25 @@ def compute_optimal_bus_mix(waiting_passengers: int) -> Dict[str, Any]:
     elif remaining > 0:
         mini_20 += 1
     parts = []
-    if heavy_50: parts.append(f"{heavy_50}x Heavy Bus (50-seat)")
-    if standard_35: parts.append(f"{standard_35}x Standard Bus (35-seat)")
-    if mini_20: parts.append(f"{mini_20}x Mini Shuttle (20-seat)")
-    return {"summary": " + ".join(parts), "heavy_50": heavy_50, "standard_35": standard_35, "mini_20": mini_20, "total_buses": heavy_50 + standard_35 + mini_20}
+    if heavy_50:
+        parts.append(f"{heavy_50}x Heavy Bus (50-seat)")
+    if standard_35:
+        parts.append(f"{standard_35}x Standard Bus (35-seat)")
+    if mini_20:
+        parts.append(f"{mini_20}x Mini Shuttle (20-seat)")
+    return {
+        "summary": " + ".join(parts),
+        "heavy_50": heavy_50,
+        "standard_35": standard_35,
+        "mini_20": mini_20,
+        "total_buses": heavy_50 + standard_35 + mini_20
+    }
 
-def record_turnaround_movement(db: Session, vehicle: Vehicle, movement_type: str, location_hub: str, recorded_by: str, passenger_count: int = 0, destination_hub: str = None, odometer_km: float = None) -> TurnaroundMovement:
+
+def record_turnaround_movement(
+    db: Session, vehicle: Vehicle, movement_type: str, location_hub: str, recorded_by: str,
+    passenger_count: int = 0, destination_hub: str = None, odometer_km: float = None
+) -> TurnaroundMovement:
     now = datetime.utcnow()
     movement = TurnaroundMovement(
         movement_type=movement_type, vehicle_id=vehicle.id, location_hub=location_hub,
@@ -40,7 +54,12 @@ def record_turnaround_movement(db: Session, vehicle: Vehicle, movement_type: str
     vehicle.last_updated = now
     return movement
 
-def process_live_telemetry_ping(db: Session, vehicle: Vehicle, latitude: float, longitude: float, sender_role: str = "SYSTEM", sender_id: int = None, journey_id: int = None, accuracy_meters: float = None, speed_kmh: float = 0.0, heading: float = None, battery_level: int = None) -> Dict[str, Any]:
+
+def process_live_telemetry_ping(
+    db: Session, vehicle: Vehicle, latitude: float, longitude: float, sender_role: str = "SYSTEM",
+    sender_id: int = None, journey_id: int = None, accuracy_meters: float = None,
+    speed_kmh: float = 0.0, heading: float = None, battery_level: int = None
+) -> Dict[str, Any]:
     now = datetime.utcnow()
     active_journey = None
     if journey_id:
