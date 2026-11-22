@@ -1,4 +1,4 @@
-﻿name: Build Android APK
+name: Build Android APK
 
 on:
   push:
@@ -52,21 +52,34 @@ jobs:
             echo "Building $OUT_APK from $HTML_FILE ($PKG_ID)"
             rm -rf www android capacitor.config.json capacitor.config.ts
             mkdir -p www
-            cp *.html www/ 2>/dev/null || true
-            cp -r static www/static 2>/dev/null || true
-            cp sw.js www/ 2>/dev/null || true
+            cp ./*.html www/ 2>/dev/null || true
+            cp ./root/*.html www/ 2>/dev/null || true
+            cp -r ./static www/static 2>/dev/null || true
+            cp -r ./root/static www/static 2>/dev/null || true
+            cp ./sw.js www/ 2>/dev/null || true
+            cp ./root/sw.js www/ 2>/dev/null || true
 
-            if [ -f "$HTML_FILE" ]; then
-              cp "$HTML_FILE" www/index.html
+            RESOLVED_HTML=""
+            for CANDIDATE in "./root/$HTML_FILE" "./$HTML_FILE" "./root/ground_dashboard.html" "./ground_dashboard.html" "./root/admin_dashboard.html" "./admin_dashboard.html" "./root/welcome.html" "./welcome.html"; do
+              if [ -f "$CANDIDATE" ]; then
+                RESOLVED_HTML="$CANDIDATE"
+                break
+              fi
+            done
+
+            if [ -n "$RESOLVED_HTML" ]; then
+              cp "$RESOLVED_HTML" www/index.html
             else
-              echo "<h1>$APP_NAME</h1>" > www/index.html
+              echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><title>$APP_NAME</title></head><body><h1>$APP_NAME</h1></body></html>" > www/index.html
             fi
 
             npx cap init "$APP_NAME" "$PKG_ID" --web-dir=www
             npx cap add android
+            npx cap copy android
+            npx cap sync android
 
             MANIFEST="android/app/src/main/AndroidManifest.xml"
-            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <application android:usesCleartextTraffic="true"|g' $MANIFEST
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <application android:usesCleartextTraffic="true"|g' "$MANIFEST"
 
             cd android
             chmod +x gradlew
