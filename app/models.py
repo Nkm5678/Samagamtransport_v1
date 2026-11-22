@@ -163,6 +163,8 @@ class Vehicle(Base):
     driver_phone = Column(String(20), nullable=False)
     rider_name = Column(String(100), nullable=True)
     rider_phone = Column(String(20), nullable=True)
+    onboarding_team = Column(String(60), default="Control Room")
+    registered_by = Column(String(120), nullable=True)
     current_hub = Column(String(100), ForeignKey("territories.hub_name"), nullable=False, index=True)
     assigned_territory = Column(String(100), nullable=False)
     status = Column(String(50), default="EMPTY_IN", nullable=False, index=True)

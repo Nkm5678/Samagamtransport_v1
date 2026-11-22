@@ -178,7 +178,7 @@
             pill.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-600 text-white pulse-ring';
             if (watchId !== null) navigator.geolocation.clearWatch(watchId);
             watchId = navigator.geolocation.watchPosition(async pos => {
-                if (Date.now() - lastPing < 10000) return;
+                if (Date.now() - lastPing < 180000) return;
                 lastPing = Date.now();
                 const spd = pos.coords.speed ? Math.round(pos.coords.speed * 3.6 * 10) / 10 : 0;
                 document.getElementById('live-speed-badge').textContent = `${spd} km/h`;
@@ -242,5 +242,6 @@
 
         window.addEventListener('DOMContentLoaded', loadDriverData);
     </script>
+    <script src="/static/samagam_app_shell.js"></script>
 </body>
 </html>
