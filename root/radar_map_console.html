@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live GPS Fleet Radar Console | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #radar-map { height: calc(100vh - 140px); width: 100%; border-radius: 1rem; z-index: 1; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans">
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🛰️</span>
+            <div>
+                <h1 class="font-bold text-base text-white">SAMAGAM LIVE FLEET GPS RADAR</h1>
+                <p class="text-xs text-emerald-400" id="sync-status">Auto-refreshing every 300s (5 mins) • Initializing...</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+            <button onclick="refreshRadar()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-lg">↻ Sync GPS Now</button>
+            <a href="/admin_dashboard.html" class="bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-lg font-semibold">Command Hub</a>
+        </div>
+    </header>
+
+    <main class="p-4 grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="lg:col-span-3">
+            <div id="radar-map" class="border border-slate-800 shadow-2xl"></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-y-auto max-h-[calc(100vh-140px)] space-y-3">
+            <h2 class="font-bold text-sm text-emerald-400 uppercase tracking-wider">Active Shuttle Pipeline</h2>
+            <div id="radar-fleet-list" class="space-y-2.5 text-xs"></div>
+        </div>
+    </main>
+
+    <script>
+        const AUTO_REFRESH_MS = 300000; // 300 seconds (5 minutes)
+        let map = null;
+        let markers = [];
+
+        async function refreshRadar() {
+            const [hRes, vRes] = await Promise.all([
+                fetch('/api/operations/hubs'),
+                fetch('/api/fleet/vehicles')
+            ]);
+            const hubs = await hRes.json();
+            const vehicles = await vRes.json();
+
+            if (!map) {
+                map = L.map('radar-map').setView([19.12, 72.92], 11);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap & CARTO'
+                }).addTo(map);
+            }
+
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            hubs.forEach(h => {
+                const circle = L.circleMarker([h.latitude, h.longitude], {
+                    radius: 6, color: '#10b981', fillColor: '#10b981', fillOpacity: 0.7
+                }).addTo(map).bindPopup(`<b>${h.hub_name}</b><br>${h.hub_type}`);
+                markers.push(circle);
+            });
+
+            vehicles.forEach(v => {
+                if (v.current_lat && v.current_lng) {
+                    const m = L.marker([v.current_lat, v.current_lng]).addTo(map)
+                        .bindPopup(`<b>${v.vehicle_reg_number}</b><br>Status: ${v.status}<br>Pax: ${v.current_passengers}/${v.capacity}<br>Speed: ${v.current_speed_kmh} km/h`);
+                    markers.push(m);
+                }
+            });
+
+            document.getElementById('radar-fleet-list').innerHTML = vehicles.map(v => `
+                <div class="p-3 bg-slate-800/80 border border-slate-700 rounded-xl space-y-1">
+                    <div class="flex justify-between font-bold text-white">
+                        <span>${v.vehicle_reg_number}</span>
+                        <span class="text-emerald-400">${v.current_passengers}/${v.capacity} Pax</span>
+                    </div>
+                    <div class="text-slate-400">${v.current_hub} ${v.current_destination ? '→ ' + v.current_destination : ''}</div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="px-2 py-0.5 rounded bg-blue-950 text-blue-300 font-semibold">${v.status}</span>
+                        <span class="text-slate-400">${v.current_speed_kmh} km/h</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('sync-status').textContent = `Auto-refreshing every 300s (5 mins) • Last synced: ${new Date().toLocaleTimeString()}`;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshRadar();
+            setInterval(refreshRadar, AUTO_REFRESH_MS);
+        });
+    </script>
+    <script src="/static/samagam_app_shell.js"></script>
+</body>
+</html>

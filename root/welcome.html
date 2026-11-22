@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>जागृति — The Awakening | निरंकारी सन्त समागम परिवहन सेवा (Samagam Transport)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #ffffff 0%, #eef3fb 55%, #dce4f2 100%);
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #0f172a;
+        }
+        .jagriti-sun-glow {
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.36) 0%, rgba(253, 224, 71, 0.12) 48%, rgba(255, 255, 255, 0) 72%);
+        }
+        .lang-btn.active {
+            background-color: #0f2c59;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(15, 44, 89, 0.25);
+        }
+        .portal-card {
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .portal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 48px -12px rgba(15, 44, 89, 0.18);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Language Bar (Control Room & Hiring Proforma Hidden from Public Welcome Page) -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-extrabold">
+                <button onclick="setLanguage('hi', this)" class="lang-btn px-3.5 py-1.5 rounded-xl transition">हिंदी</button>
+                <button onclick="setLanguage('mr', this)" class="lang-btn px-3.5 py-1.5 rounded-xl transition">मराठी</button>
+                <button onclick="setLanguage('en', this)" class="lang-btn active px-3.5 py-1.5 rounded-xl transition">English</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <a href="/download_hub.html" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition">
+                    📲 <span data-i18n="nav_apps">Field Apps (.APK)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8 flex-1 w-full">
+
+        <!-- Hero Brand Banner -->
+        <section class="text-center max-w-3xl mx-auto space-y-3 pt-1">
+            <div class="inline-block px-4 py-1 rounded-full bg-sky-100 text-[#0f2c59] text-xs font-extrabold tracking-wide">
+                धन निरंकार जी 🙏 • SANT NIRANKARI MANDAL
+            </div>
+
+            <div class="relative mx-auto w-64 h-36 flex flex-col items-center justify-center jagriti-sun-glow rounded-full">
+                <div class="text-5xl sm:text-6xl font-extrabold tracking-tight" style="color: #0f2c59; text-shadow: 0 2px 10px rgba(245, 158, 11, 0.25);">
+                    जागृति
+                </div>
+                <div class="text-sm sm:text-base italic font-bold text-slate-800 -mt-1" style="font-family: 'Playfair Display', serif;">
+                    The Awakening
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: #0f2c59;">
+                निरंकारी सन्त समागम — परिवहन सेवा पोर्टल
+            </h1>
+            <p class="text-xs sm:text-sm font-bold text-slate-600">
+                60th Maharashtra Annual Nirankari Sant Samagam • Kharghar, Navi Mumbai (Central Park) • 23–26 January 2027
+            </p>
+            <p class="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed" data-i18n="hero_desc">
+                Select your transport requirement below. All vehicle requests are connected directly to the Central Transport Database so our team can allocate vehicles and update your request status live within 24 hours.
+            </p>
+        </section>
+
+        <!-- 24-HOUR SELF-SERVICE VEHICLE ALLOCATION STATUS TRACKER -->
+        <section class="max-w-5xl mx-auto bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#0f2c59]/20 shadow-md space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm sm:text-base font-extrabold text-[#0f2c59]" data-i18n="track_title">
+                    🔍 Check Your Vehicle Allocation Status (24-Hour Live Tracker via Mobile No. or Request ID)
+                </h2>
+                <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">Live Database Status</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+                <input type="text" id="track-query-input" placeholder="Enter 10-Digit Mobile Number or Request ID (e.g. ADV-1234, PND-1234, REQ-1234)" class="flex-1 border border-slate-300 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-[#0f2c59]">
+                <button onclick="checkMyRequestStatus()" class="bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold px-6 py-3 rounded-2xl text-sm shadow transition">
+                    <span data-i18n="track_btn">Check Status</span>
+                </button>
+            </div>
+            <div id="track-status-results" class="space-y-2.5"></div>
+        </section>
+
+        <!-- THREE PRIMARY REQUEST PORTALS -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
+
+            <!-- CARD 1: NEED VEHICLE INSIDE SAMAGAM GROUND -->
+            <div class="portal-card bg-white rounded-3xl p-6 border border-sky-200 shadow-lg flex flex-col justify-between space-y-5">
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-sky-100 text-2xl flex items-center justify-center">⛺</span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-50 text-[#0f2c59] border border-sky-200" data-i18n="badge_ground">
+                            Internal Venue Logistics
+                        </span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-[#0f2c59]" data-i18n="card1_title">
+                        Need Vehicle Inside Samagam Ground
+                    </h2>
+                    <p class="text-xs text-slate-600 leading-relaxed" data-i18n="card1_desc">
+                        For Samagam departments (Langar, Tent, Sound, Medical, Security, Sanitation) needing cars, pickups, tempos, or e-rickshaws inside Central Park Kharghar grounds—or to donate a vehicle for Seva.
+                    </p>
+                    <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+                        <li class="flex items-center gap-1.5"><span class="text-emerald-600 font-bold">✓</span> <span data-i18n="card1_pt1">Dept. Requisition with Sign & Stamp</span></li>
+                        <li class="flex items-center gap-1.5"><span class="text-emerald-600 font-bold">✓</span> <span data-i18n="card1_pt2">Donate Vehicle for Seva (वाहन प्राप्ती फॉर्म)</span></li>
+                    </ul>
+                </div>
+
+                <div class="pt-1">
+                    <a href="/in_ground_seva_vehicles.html" class="w-full bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-between shadow-lg transition">
+                        <span data-i18n="card1_btn">Request / Donate In-Ground</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CARD 2: NEED VEHICLE FOR PICKUP & DROP -->
+            <div class="portal-card bg-white rounded-3xl p-6 border border-emerald-200 shadow-lg flex flex-col justify-between space-y-5">
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-emerald-100 text-2xl flex items-center justify-center">🚉</span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200" data-i18n="badge_transit">
+                            Station • Airport • Bus Depot
+                        </span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-emerald-950" data-i18n="card2_title">
+                        Need Vehicle for Pickup & Drop
+                    </h2>
+                    <p class="text-xs text-slate-600 leading-relaxed" data-i18n="card2_desc">
+                        Request shuttle buses, tempo travellers, or cars for Saints, Jathas, or guests arriving at or departing from Railway Stations, Mumbai Airports (T1/T2), or ST Bus Depots.
+                    </p>
+                    <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+                        <li class="flex items-center gap-1.5"><span class="text-emerald-600 font-bold">✓</span> <span data-i18n="card2_pt1">Direct Sync with Transport Database</span></li>
+                        <li class="flex items-center gap-1.5"><span class="text-emerald-600 font-bold">✓</span> <span data-i18n="card2_pt3">Live Driver & Bus Allocation Status</span></li>
+                    </ul>
+                </div>
+
+                <div class="pt-1">
+                    <button onclick="openPickupDropModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-between shadow-lg transition">
+                        <span data-i18n="card2_btn">Raise Pickup / Drop Request</span>
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD 3: SERVICE FOR ADVANCE SEWA -->
+            <div class="portal-card bg-white rounded-3xl p-6 border border-amber-300 shadow-lg flex flex-col justify-between space-y-5">
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="w-12 h-12 rounded-2xl bg-amber-100 text-2xl flex items-center justify-center">🙏</span>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300" data-i18n="badge_adv">
+                            24-Hr Status Update
+                        </span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-amber-950" data-i18n="card3_title">
+                        Service for Advance Sewa
+                    </h2>
+                    <p class="text-xs text-slate-600 leading-relaxed" data-i18n="card3_desc">
+                        Raise advance transport request for Pre-Samagam Ground & Branch Sewa with Branch, Unit No., Landmark, Nearest Railway Station, Date of Sewa, Start Journey & Return Time.
+                    </p>
+                    <ul class="text-[11px] text-slate-600 space-y-1 pt-1">
+                        <li class="flex items-center gap-1.5"><span class="text-amber-600 font-bold">✓</span> <span data-i18n="card3_pt1">Connected Directly to Central Database</span></li>
+                        <li class="flex items-center gap-1.5"><span class="text-amber-600 font-bold">✓</span> <span data-i18n="card3_pt2">Check Allocation Status Within 24 Hours</span></li>
+                    </ul>
+                </div>
+
+                <div class="pt-1">
+                    <button onclick="openAdvanceSewaModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-between shadow-lg transition">
+                        <span data-i18n="card3_btn">Raise Advance Sewa Request</span>
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- LIVE SUBMITTED REQUESTS FEED -->
+        <section class="max-w-5xl mx-auto bg-white/90 rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-sm text-[#0f2c59]" data-i18n="live_feed_title">
+                    📡 Live Pickup, Drop, Advance Sewa & Ground Requests in Transport Database
+                </h3>
+                <button onclick="loadRecentRequests()" class="text-xs font-bold text-emerald-700">↻ Refresh</button>
+            </div>
+            <div id="recent-requests-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <p class="text-slate-400">Loading live database requests...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: PICKUP & DROP VEHICLE REQUEST -->
+    <div id="pickup-drop-modal" class="fixed inset-0 bg-slate-950/75 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-start border-b pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
+                        Station • Airport • Bus Depot Shuttle
+                    </span>
+                    <h3 class="text-lg font-extrabold text-slate-900 mt-1" data-i18n="modal_pd_title">
+                        Pickup & Drop Vehicle Requirement Form
+                    </h3>
+                </div>
+                <button onclick="closePickupDropModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="pickup-drop-form" onsubmit="submitPickupDropRequest(event)" class="space-y-3 text-xs sm:text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_trip_dir">Trip Type *</label>
+                        <select name="trip_direction" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <option value="PICKUP_TO_SAMAGAM">Pickup → Samagam Ground (Kharghar)</option>
+                            <option value="DROP_FROM_SAMAGAM">Samagam Ground → Drop at Station/Airport</option>
+                            <option value="ROUND_TRIP">Both Pickup & Return Drop</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_transit_hub">Railway Station / Airport / Bus Depot *</label>
+                        <select name="transit_hub" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <option value="Panvel Junction (PNVL)">Panvel Railway Station (PNVL)</option>
+                            <option value="Kharghar / Belapur Station">Kharghar / CBD Belapur Station</option>
+                            <option value="Thane Railway Station">Thane Railway Station (TNA)</option>
+                            <option value="Lokmanya Tilak Terminus (LTT)">Lokmanya Tilak Terminus (LTT)</option>
+                            <option value="Dadar Terminal (DR/DDR)">Dadar Railway Terminal (DR)</option>
+                            <option value="Chhatrapati Shivaji Maharaj Terminus (CSMT)">CSMT Mumbai</option>
+                            <option value="Mumbai Central (MMCT)">Mumbai Central (MMCT)</option>
+                            <option value="Bandra Terminus (BDTS)">Bandra Terminus (BDTS)</option>
+                            <option value="Kalyan Junction (KYN)">Kalyan Junction (KYN)</option>
+                            <option value="Mumbai Airport Terminal 1 (Domestic)">Mumbai Airport Terminal 1 (Domestic)</option>
+                            <option value="Mumbai Airport Terminal 2 (International)">Mumbai Airport Terminal 2 (International)</option>
+                            <option value="Panvel / Sion ST Bus Depot">Panvel / Sion / Dadar ST Bus Depot</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_pax">Total Pilgrims / Pax *</label>
+                        <input type="number" name="passenger_count" value="45" min="1" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_veh_pref">Preferred Vehicle *</label>
+                        <select name="vehicle_type_requested" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                            <option value="Heavy Bus (50-Seater)">Heavy Bus (50-Seater)</option>
+                            <option value="Mini Bus / Tempo Traveller (20-35 Seat)">Mini Bus / Tempo Traveller</option>
+                            <option value="Car / Innova / SUV (VIP/Elderly)">Car / Innova / SUV</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_veh_qty">No. of Vehicles *</label>
+                        <input type="number" name="vehicles_needed" value="1" min="1" max="50" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_dt">Arrival / Departure Date & Time *</label>
+                        <input type="datetime-local" name="scheduled_datetime" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_train">Train / Flight / Bus Number</label>
+                        <input type="text" name="train_flight_details" placeholder="e.g. 12138 Punjab Mail / AI-602" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_req_name">Jatha / Coordinator Name *</label>
+                        <input type="text" name="requester_name" required placeholder="Sevadar / Jatha Leader Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_req_phone">10-Digit Mobile Number *</label>
+                        <input type="tel" name="requester_phone" required maxlength="10" inputmode="numeric" placeholder="98XXXXXXXX" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Special Notes (Wheelchair / Luggage / Zone)</label>
+                    <input type="text" name="notes" placeholder="Optional remarks for Transport Control Room" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-lg transition">
+                    ✅ <span data-i18n="btn_submit_pd">Submit Pickup/Drop Request to Transport Control</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: SERVICE FOR ADVANCE SEWA REQUEST -->
+    <div id="advance-sewa-modal" class="fixed inset-0 bg-slate-950/75 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-start border-b pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950">
+                        Advance Sewa Transport • 24-Hour Status Update
+                    </span>
+                    <h3 class="text-lg font-extrabold text-slate-900 mt-1" data-i18n="modal_adv_title">
+                        Service for Advance Sewa — Vehicle Request Form
+                    </h3>
+                </div>
+                <button onclick="closeAdvanceSewaModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
+            </div>
+
+            <form id="advance-sewa-form" onsubmit="submitAdvanceSewaRequest(event)" class="space-y-3 text-xs sm:text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_name">Name *</label>
+                        <input type="text" name="requester_name" required placeholder="Full Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_phone">Contact Number *</label>
+                        <input type="tel" name="contact_number" required maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile Number" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_branch">Branch *</label>
+                        <input type="text" name="branch_name" required placeholder="e.g. Thane / Mulund / Panvel" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_unit">Unit Number *</label>
+                        <input type="text" name="unit_number" required placeholder="e.g. Unit-104" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_landmark">Landmark *</label>
+                        <input type="text" name="landmark" required placeholder="Pickup Landmark / Bhawan" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_station">Nearest Railway Station *</label>
+                        <input type="text" name="nearest_railway_station" required placeholder="e.g. Panvel / Thane / Kalyan" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_date">Date of Sewa *</label>
+                        <input type="date" name="date_of_sewa" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_start">Time to Start Journey *</label>
+                        <input type="time" name="start_journey_time" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_return">Time to Return *</label>
+                        <input type="time" name="return_time" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_adv_pax">Sevadars Count</label>
+                        <input type="number" name="passenger_count" value="25" min="1" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Sewa Department / Remarks</label>
+                        <input type="text" name="notes" placeholder="e.g. Ground Preparation / Tent / Langar Sewa" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-950 font-semibold">
+                    ⏱️ Your request will be saved in the Central Transport Database. Check your vehicle allocation status on this homepage within 24 hours using your Contact Number or Request ID.
+                </div>
+
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 rounded-2xl text-sm shadow-lg transition">
+                    ✅ <span data-i18n="btn_submit_adv">Submit Advance Sewa Request</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-white/80 border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-10">
+        धन निरंकार जी 🙏 • Sant Nirankari Mandal Transport & Logistics Cell • www.samagamtransport.in
+    </footer>
+
+    <script>
+        const TRANSLATIONS = {
+            en: {
+                nav_apps: "Field Apps (.APK)",
+                hero_desc: "Select your transport requirement below. All vehicle requests are connected directly to the Central Transport Database so our team can allocate vehicles and update your request status live within 24 hours.",
+                track_title: "🔍 Check Your Vehicle Allocation Status (24-Hour Live Tracker via Mobile No. or Request ID)",
+                track_btn: "Check Status",
+                badge_ground: "Internal Venue Logistics",
+                card1_title: "Need Vehicle Inside Samagam Ground",
+                card1_desc: "For Samagam departments (Langar, Tent, Sound, Medical, Security, Sanitation) needing cars, pickups, tempos, or e-rickshaws inside Central Park Kharghar grounds—or to donate a vehicle for Seva.",
+                card1_pt1: "Dept. Requisition with Sign & Stamp",
+                card1_pt2: "Donate Vehicle for Seva (वाहन प्राप्ती फॉर्म)",
+                card1_btn: "Request / Donate In-Ground",
+                badge_transit: "Station • Airport • Bus Depot",
+                card2_title: "Need Vehicle for Pickup & Drop",
+                card2_desc: "Request shuttle buses, tempo travellers, or cars for Saints, Jathas, or guests arriving at or departing from Railway Stations, Mumbai Airports (T1/T2), or ST Bus Depots.",
+                card2_pt1: "Direct Sync with Transport Database",
+                card2_pt3: "Live Driver & Bus Allocation Status",
+                card2_btn: "Raise Pickup / Drop Request",
+                badge_adv: "24-Hr Status Update",
+                card3_title: "Service for Advance Sewa",
+                card3_desc: "Raise advance transport request for Pre-Samagam Ground & Branch Sewa with Branch, Unit No., Landmark, Nearest Railway Station, Date of Sewa, Start Journey & Return Time.",
+                card3_pt1: "Connected Directly to Central Database",
+                card3_pt2: "Check Allocation Status Within 24 Hours",
+                card3_btn: "Raise Advance Sewa Request",
+                live_feed_title: "📡 Live Pickup, Drop, Advance Sewa & Ground Requests in Transport Database",
+                modal_pd_title: "Pickup & Drop Vehicle Requirement Form",
+                modal_adv_title: "Service for Advance Sewa — Vehicle Request Form",
+                lbl_trip_dir: "Trip Type *",
+                lbl_transit_hub: "Railway Station / Airport / Bus Depot *",
+                lbl_pax: "Total Pilgrims / Pax *",
+                lbl_veh_pref: "Preferred Vehicle *",
+                lbl_veh_qty: "No. of Vehicles *",
+                lbl_dt: "Arrival / Departure Date & Time *",
+                lbl_train: "Train / Flight / Bus Number",
+                lbl_req_name: "Jatha / Coordinator Name *",
+                lbl_req_phone: "10-Digit Mobile Number *",
+                btn_submit_pd: "Submit Pickup/Drop Request to Transport Control",
+                lbl_adv_name: "Name *",
+                lbl_adv_phone: "Contact Number *",
+                lbl_adv_branch: "Branch *",
+                lbl_adv_unit: "Unit Number *",
+                lbl_adv_landmark: "Landmark *",
+                lbl_adv_station: "Nearest Railway Station *",
+                lbl_adv_date: "Date of Sewa *",
+                lbl_adv_start: "Time to Start Journey *",
+                lbl_adv_return: "Time to Return *",
+                lbl_adv_pax: "Sevadars Count",
+                btn_submit_adv: "Submit Advance Sewa Request"
+            },
+            hi: {
+                nav_apps: "फील्ड ऐप्स (.APK)",
+                hero_desc: "नीचे अपनी परिवहन आवश्यकता चुनें। सभी वाहन अनुरोध सीधे मुख्य डेटाबेस से जुड़े हैं ताकि परिवहन टीम तुरंत वाहन आवंटित कर सके और आपको 24 घंटे के भीतर लाइव अपडेट मिल सके।",
+                track_title: "🔍 अपने वाहन आवंटन की स्थिति जांचें (24 घंटे के भीतर मोबाइल नंबर या रिक्वेस्ट कोड द्वारा)",
+                track_btn: "स्थिति जांचें",
+                badge_ground: "समागम ग्राउंड आंतरिक सेवा",
+                card1_title: "समागम ग्राउंड के अंदर वाहन चाहिए",
+                card1_desc: "लंगर, टेंट, साउंड, मेडिकल, सुरक्षा और स्वच्छता विभागों के लिए खारघर ग्राउंड के अंदर कार, पिकअप, टेम्पो की मांग करें या सेवा हेतु वाहन जमा करें।",
+                card1_pt1: "विभाग प्रमुख के हस्ताक्षर व मोहर सहित मांग पत्र",
+                card1_pt2: "सेवा के लिए वाहन समर्पित करने का फॉर्म",
+                card1_btn: "ग्राउंड के अंदर वाहन मांगें / जमा करें",
+                badge_transit: "रेलवे स्टेशन • एयरपोर्ट • बस डिपो",
+                card2_title: "पिकअप और ड्रॉप के लिए वाहन चाहिए",
+                card2_desc: "पनवेल, ठाणे, CSMT, LTT, दादर, कल्याण रेलवे स्टेशन, मुंबई एयरपोर्ट या बस डिपो से सन्तों और जत्थों को लाने-ले जाने हेतु बस बुक करें।",
+                card2_pt1: "मुख्य परिवहन डेटाबेस से सीधा जुड़ाव",
+                card2_pt3: "मोबाइल नंबर द्वारा ड्राइवर व बस का लाइव अपडेट",
+                card2_btn: "पिकअप / ड्रॉप वाहन अनुरोध दर्ज करें",
+                badge_adv: "24 घंटे में स्टेटस अपडेट",
+                card3_title: "अग्रिम सेवा हेतु वाहन अनुरोध (Service for Advance Sewa)",
+                card3_desc: "अग्रिम सेवा (Advance Sewa) के लिए नाम, संपर्क नंबर, ब्रांच, यूनिट नंबर, लैंडमार्क, नजदीकी रेलवे स्टेशन, सेवा दिनांक, प्रस्थान व वापसी समय सहित वाहन अनुरोध दर्ज करें।",
+                card3_pt1: "सीधे केंद्रीय डेटाबेस से जुड़ा हुआ",
+                card3_pt2: "24 घंटे के भीतर होमपेज पर आवंटन स्थिति देखें",
+                card3_btn: "अग्रिम सेवा वाहन अनुरोध दर्ज करें",
+                live_feed_title: "📡 मुख्य परिवहन डेटाबेस में दर्ज लाइव अनुरोध",
+                modal_pd_title: "पिकअप और ड्रॉप वाहन आवश्यकता फॉर्म",
+                modal_adv_title: "अग्रिम सेवा (Advance Sewa) — वाहन अनुरोध फॉर्म",
+                lbl_trip_dir: "यात्रा का प्रकार *",
+                lbl_transit_hub: "रेलवे स्टेशन / एयरपोर्ट / बस डिपो *",
+                lbl_pax: "कुल श्रद्धालु / यात्री संख्या *",
+                lbl_veh_pref: "आवश्यक वाहन का प्रकार *",
+                lbl_veh_qty: "वाहनों की संख्या *",
+                lbl_dt: "आगमन / प्रस्थान दिनांक व समय *",
+                lbl_train: "ट्रेन / फ्लाइट / बस नंबर",
+                lbl_req_name: "जत्था प्रमुख / संयोजक का नाम *",
+                lbl_req_phone: "10-अंकीय मोबाइल नंबर *",
+                btn_submit_pd: "परिवहन कंट्रोल रूम को अनुरोध भेजें",
+                lbl_adv_name: "नाम (Name) *",
+                lbl_adv_phone: "संपर्क नंबर (Contact Number) *",
+                lbl_adv_branch: "ब्रांच (Branch) *",
+                lbl_adv_unit: "यूनिट नंबर (Unit Number) *",
+                lbl_adv_landmark: "लैंडमार्क (Landmark) *",
+                lbl_adv_station: "नजदीकी रेलवे स्टेशन (Nearest Railway Station) *",
+                lbl_adv_date: "सेवा दिनांक (Date of Sewa) *",
+                lbl_adv_start: "यात्रा शुरू करने का समय (Time to Start Journey) *",
+                lbl_adv_return: "वापसी का समय (Time to Return) *",
+                lbl_adv_pax: "सेवादारों की संख्या",
+                btn_submit_adv: "अग्रिम सेवा अनुरोध जमा करें"
+            },
+            mr: {
+                nav_apps: "फील्ड ॲप्स (.APK)",
+                hero_desc: "खालीलपैकी आपली वाहन आवश्यकता निवडा. सर्व वाहन विनंत्या थेट मुख्य डेटाबेसशी जोडलेल्या आहेत जेणेकरून परिवहन टीम तात्काळ वाहन देऊ शकेल आणि तुम्हाला २४ तासांत थेट अपडेट मिळेल.",
+                track_title: "🔍 तुमच्या वाहन वाटपाची स्थिती तपासा (२४ तासांच्या आत मोबाईल नंबर किंवा रिक्वेस्ट कोडद्वारे)",
+                track_btn: "स्थिती तपासा",
+                badge_ground: "समागम ग्राउंड अंतर्गत सेवा",
+                card1_title: "समागम ग्राउंडच्या आत वाहन हवे आहे",
+                card1_desc: "लंगर, टेंट, साउंड, मेडिकल, सुरक्षा व स्वच्छता विभागांसाठी खारघर ग्राउंडच्या आत कार, पिकअप, टेम्पोची मागणी करा अथवा सेवेसाठी वाहन जमा करा.",
+                card1_pt1: "विभाग प्रमुखांची सही व शिक्का असलेला मागणी अर्ज",
+                card1_pt2: "सेवा करण्यासाठी वाहन प्राप्ती फॉर्म",
+                card1_btn: "ग्राउंडसाठी वाहन मागणी / जमा करा",
+                badge_transit: "रेल्वे स्टेशन • एअरपोर्ट • बस डेपो",
+                card2_title: "पिकअप आणि ड्रॉपसाठी वाहन हवे आहे",
+                card2_desc: "पनवेल, ठाणे, CSMT, LTT, दादर, कल्याण रेल्वे स्टेशन, मुंबई एअरपोर्ट किंवा बस डेपोवरून संत व जत्थ्यांच्या ने-आण करण्यासाठी वाहन मागणी नोंदवा.",
+                card2_pt1: "मुख्य परिवहन डेटाबेसशी थेट जोडणी",
+                card2_pt3: "मोबाईल नंबरद्वारे ड्रायव्हर व वाहनाचे थेट अपडेट",
+                card2_btn: "पिकअप / ड्रॉप वाहन मागणी नोंदवा",
+                badge_adv: "२४ तासांत स्टेटस अपडेट",
+                card3_title: "आगाऊ सेवेसाठी वाहन विनंती (Service for Advance Sewa)",
+                card3_desc: "आगाऊ सेवेसाठी नाव, संपर्क क्रमांक, ब्रांच, युनिट नंबर, लँडमार्क, जवळचे रेल्वे स्टेशन, सेवेची तारीख, प्रवास सुरू करण्याची व परतीची वेळ यासह विनंती नोंदवा.",
+                card3_pt1: "थेट मुख्य डेटाबेसशी जोडलेले",
+                card3_pt2: "२४ तासांत मुख्य पानावर वाहन वाटपाची स्थिती पहा",
+                card3_btn: "आगाऊ सेवा वाहन विनंती नोंदवा",
+                live_feed_title: "📡 मुख्य परिवहन डेटाबेसमध्ये नोंदवलेल्या थेट विनंत्या",
+                modal_pd_title: "पिकअप आणि ड्रॉप वाहन मागणी फॉर्म",
+                modal_adv_title: "आगाऊ सेवेसाठी वाहन विनंती (Service for Advance Sewa)",
+                lbl_trip_dir: "प्रवासाचा प्रकार *",
+                lbl_transit_hub: "रेल्वे स्टेशन / एअरपोर्ट / बस डेपो *",
+                lbl_pax: "एकूण प्रवासी संख्या *",
+                lbl_veh_pref: "आवश्यक वाहनाचा प्रकार *",
+                lbl_veh_qty: "वाहनांची संख्या *",
+                lbl_dt: "आगमन / प्रस्थान दिनांक व वेळ *",
+                lbl_train: "ट्रेन / फ्लाईट / बस क्रमांक",
+                lbl_req_name: "जत्था प्रमुख / समन्वयकाचे नाव *",
+                lbl_req_phone: "१०-अंकी मोबाईल नंबर *",
+                btn_submit_pd: "परिवहन कंट्रोल रूमकडे मागणी पाठवा",
+                lbl_adv_name: "नाव (Name) *",
+                lbl_adv_phone: "संपर्क क्रमांक (Contact Number) *",
+                lbl_adv_branch: "ब्रांच (Branch) *",
+                lbl_adv_unit: "युनिट नंबर (Unit Number) *",
+                lbl_adv_landmark: "लँडमार्क (Landmark) *",
+                lbl_adv_station: "जवळचे रेल्वे स्टेशन (Nearest Railway Station) *",
+                lbl_adv_date: "सेवेची तारीख (Date of Sewa) *",
+                lbl_adv_start: "प्रवास सुरू करण्याची वेळ (Time to Start Journey) *",
+                lbl_adv_return: "परतीची वेळ (Time to Return) *",
+                lbl_adv_pax: "सेवादार संख्या",
+                btn_submit_adv: "आगाऊ सेवा विनंती सादर करा"
+            }
+        };
+
+        function setLanguage(lang, btn) {
+            const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.textContent = dict[key];
+            });
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            localStorage.setItem('samagam_portal_lang', lang);
+        }
+
+        function openPickupDropModal() {
+            document.getElementById('pickup-drop-modal').classList.remove('hidden');
+            document.getElementById('pickup-drop-modal').classList.add('flex');
+        }
+
+        function closePickupDropModal() {
+            document.getElementById('pickup-drop-modal').classList.add('hidden');
+            document.getElementById('pickup-drop-modal').classList.remove('flex');
+        }
+
+        function openAdvanceSewaModal() {
+            document.getElementById('advance-sewa-modal').classList.remove('hidden');
+            document.getElementById('advance-sewa-modal').classList.add('flex');
+        }
+
+        function closeAdvanceSewaModal() {
+            document.getElementById('advance-sewa-modal').classList.add('hidden');
+            document.getElementById('advance-sewa-modal').classList.remove('flex');
+        }
+
+        async function submitPickupDropRequest(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.passenger_count = parseInt(payload.passenger_count) || 1;
+            payload.vehicles_needed = parseInt(payload.vehicles_needed) || 1;
+
+            const res = await fetch('/api/operations/pickup-drop-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('last_requester_query', payload.requester_phone);
+                document.getElementById('track-query-input').value = payload.requester_phone;
+                alert(`धन निरंकार जी 🙏
+Pickup/Drop Vehicle Request Submitted!
+Request ID: ${data.request_code}
+
+Enter your mobile number (${payload.requester_phone}) in the Status Tracker box on this page anytime for live bus & driver allocation updates.`);
+                e.target.reset();
+                closePickupDropModal();
+                checkMyRequestStatus();
+                loadRecentRequests();
+            } else {
+                alert('❌ ' + (data.detail || 'Could not submit request.'));
+            }
+        }
+
+        async function submitAdvanceSewaRequest(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.passenger_count = parseInt(payload.passenger_count) || 1;
+
+            const res = await fetch('/api/operations/advance-sewa-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('last_requester_query', payload.contact_number);
+                document.getElementById('track-query-input').value = payload.contact_number;
+                alert(`धन निरंकार जी 🙏
+Advance Sewa Request Saved!
+Request ID: ${data.request_code}
+
+You can check your vehicle allocation status on this homepage within 24 hours using your Contact Number (${payload.contact_number}) or Request ID (${data.request_code}).`);
+                e.target.reset();
+                closeAdvanceSewaModal();
+                checkMyRequestStatus();
+                loadRecentRequests();
+            } else {
+                alert('❌ ' + (data.detail || 'Could not submit Advance Sewa request.'));
+            }
+        }
+
+        async function checkMyRequestStatus() {
+            const q = document.getElementById('track-query-input').value.trim();
+            if (!q) return;
+            localStorage.setItem('last_requester_query', q);
+            const box = document.getElementById('track-status-results');
+            box.innerHTML = '<div class="text-xs text-slate-500">Checking live allocation status...</div>';
+
+            const res = await fetch(`/api/operations/request-status-lookup?query=${encodeURIComponent(q)}`);
+            if (!res.ok) {
+                box.innerHTML = '<div class="p-3 rounded-2xl bg-rose-50 text-rose-700 text-xs font-semibold">No requests found for that mobile number or request code.</div>';
+                return;
+            }
+            const items = await res.json();
+            if (!items.length) {
+                box.innerHTML = '<div class="p-3 rounded-2xl bg-amber-50 text-amber-800 text-xs font-semibold">No matching requests found yet.</div>';
+                return;
+            }
+
+            box.innerHTML = items.map(item => {
+                const isAllocated = item.is_allocated;
+                return `
+                    <div class="p-4 rounded-2xl border-2 ${isAllocated ? 'bg-emerald-50 border-emerald-500' : 'bg-amber-50/70 border-amber-300'} flex flex-wrap justify-between items-center gap-3 text-xs">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-extrabold text-sm text-slate-900">${item.code}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isAllocated ? 'bg-emerald-700 text-white' : 'bg-amber-500 text-slate-950'}">
+                                    ${isAllocated ? '✅ VEHICLE ALLOCATED' : '⏳ PENDING ALLOCATION'}
+                                </span>
+                            </div>
+                            <div class="font-semibold text-slate-700">${item.category} • ${item.summary}</div>
+                            <div class="text-slate-500">Requester: ${item.requester_name} (${item.requester_phone})</div>
+                        </div>
+                        ${isAllocated ? `
+                            <div class="bg-white p-3 rounded-xl border border-emerald-300 text-right space-y-1 shadow-sm">
+                                <div class="text-[10px] uppercase font-bold text-emerald-700">Assigned Vehicle & Driver</div>
+                                <div class="text-sm font-black text-slate-900">${item.assigned_vehicle_reg}</div>
+                                <div class="text-slate-700 font-bold">${item.driver_name || 'Assigned Sevadar'}</div>
+                                ${item.driver_phone ? `<a href="tel:${item.driver_phone}" class="inline-block mt-1 bg-emerald-700 text-white font-bold px-3 py-1 rounded-lg">📞 Call ${item.driver_phone}</a>` : ''}
+                            </div>
+                        ` : `
+                            <div class="text-right text-amber-900 font-bold">
+                                Transport Control Room is reviewing.<br>Refresh or check back within 24 hours.
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadRecentRequests() {
+            try {
+                const [pdRes, deptRes, advRes] = await Promise.all([
+                    fetch('/api/operations/pickup-drop-requests'),
+                    fetch('/api/fleet/dept-requisitions'),
+                    fetch('/api/operations/advance-sewa-requests')
+                ]);
+                const pdList = pdRes.ok ? await pdRes.json() : [];
+                const deptList = deptRes.ok ? await deptRes.json() : [];
+                const advList = advRes.ok ? await advRes.json() : [];
+                const grid = document.getElementById('recent-requests-grid');
+
+                const cards = [];
+                advList.slice(0, 4).forEach(a => {
+                    cards.push(`
+                        <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-300 flex justify-between items-center">
+                            <div>
+                                <div class="font-extrabold text-amber-950">${a.request_code} • Advance Sewa (${a.branch_name})</div>
+                                <div class="text-slate-700">${a.nearest_railway_station} • ${a.date_of_sewa} (${a.start_journey_time}–${a.return_time})</div>
+                                <div class="text-[11px] text-slate-500">By: ${a.requester_name} (Unit ${a.unit_number})</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-600 text-slate-950">${a.status}</span>
+                        </div>
+                    `);
+                });
+                pdList.slice(0, 4).forEach(r => {
+                    cards.push(`
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-extrabold text-emerald-950">${r.request_code} • ${r.transit_hub}</div>
+                                <div class="text-slate-600">${r.trip_direction} • ${r.passenger_count} Pax • ${r.vehicles_needed}x ${r.vehicle_type_requested}</div>
+                                <div class="text-[11px] text-slate-500">By: ${r.requester_name} (${r.requester_phone})</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-700 text-white">${r.status}</span>
+                        </div>
+                    `);
+                });
+                deptList.slice(0, 4).forEach(d => {
+                    cards.push(`
+                        <div class="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-extrabold text-[#0f2c59]">${d.requisition_code} • ${d.department_name}</div>
+                                <div class="text-slate-600">In-Ground: ${d.quantity_needed}x ${d.required_vehicle_type}</div>
+                                <div class="text-[11px] text-slate-500">Dept Head: ${d.department_head_name}</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#0f2c59] text-white">${d.status}</span>
+                        </div>
+                    `);
+                });
+
+                grid.innerHTML = cards.length ? cards.join('') : '<p class="text-slate-400">No requests logged yet. Submit one above!</p>';
+            } catch (_) {}
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('samagam_portal_lang') || 'en';
+            const btn = document.querySelector(`.lang-btn[onclick*="'${savedLang}'"]`);
+            if (btn) setLanguage(savedLang, btn);
+
+            const lastQ = localStorage.getItem('last_requester_query');
+            if (lastQ) {
+                document.getElementById('track-query-input').value = lastQ;
+                checkMyRequestStatus();
+            }
+            loadRecentRequests();
+            setInterval(() => {
+                if (document.getElementById('track-query-input').value.trim()) {
+                    checkMyRequestStatus();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

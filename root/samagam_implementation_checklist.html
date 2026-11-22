@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Samagam Transport Go-Live Implementation Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@media print { .no-print { display: none; } }</style>
+</head>
+<body class="bg-slate-100 text-slate-900 p-6 font-sans">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-6">
+        <div class="flex justify-between items-center border-b pb-4">
+            <div>
+                <h1 class="text-xl font-extrabold text-slate-900">✅ SAMAGAM TRANSPORT — PRE-EVENT GO-LIVE CHECKLIST</h1>
+                <p class="text-xs text-slate-500">Field Readiness & Control Room Sign-Off Sheet</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-xs">🖨️ Print Checklist</button>
+        </div>
+
+        <div class="space-y-4 text-sm">
+            <div class="p-4 border rounded-xl space-y-2">
+                <h2 class="font-bold text-emerald-800">1. Cloud Server & Database Readiness</h2>
+                <label class="flex items-center gap-2"><input type="checkbox"> Deploy repository to production server and verify <code>/health</code> returns HTTP 200.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Confirm all 14 Mumbai Railway Stations, Airports & Venue Grounds are seeded.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Configure Gmail SMTP App Password for automated Pilgrim E-Boarding Pass emails.</label>
+            </div>
+
+            <div class="p-4 border rounded-xl space-y-2">
+                <h2 class="font-bold text-blue-800">2. Fleet, Drivers & Android APK Distribution</h2>
+                <label class="flex items-center gap-2"><input type="checkbox"> Download compiled Android <code>.apk</code> from GitHub Actions and host on Download Hub.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Pair every Driver/Rider smartphone to their assigned Bus Registration Number.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Verify live GPS pins appear on <code>radar_map_console.html</code> (300s auto-refresh).</label>
+            </div>
+
+            <div class="p-4 border rounded-xl space-y-2">
+                <h2 class="font-bold text-amber-800">3. Treasury Cash Imprest & Gate Marshalls</h2>
+                <label class="flex items-center gap-2"><input type="checkbox"> Disburse initial MSRTC Petty Cash Imprest to each Station Coordinator.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Train Inward/Outward Gate Marshalls on 24-Hour Rolling Contract odometer entry.</label>
+                <label class="flex items-center gap-2"><input type="checkbox"> Run <code>online_test_runner.html</code> and confirm all 8 diagnostic vectors pass.</label>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

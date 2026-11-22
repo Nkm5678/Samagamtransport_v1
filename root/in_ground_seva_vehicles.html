@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>सेवा करण्यासाठी वाहन प्राप्ती व वाटप | In-Ground Seva Vehicles</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(180deg, #dff1fb 0%, #eef6fc 45%, #e2e8f0 100%);
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #0f172a;
+        }
+        .tab-pill.active {
+            background-color: #0f2c59;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(15, 44, 89, 0.25);
+        }
+        .seva-form-card {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(10px);
+            border: 1px solid #bae6fd;
+            box-shadow: 0 20px 45px -15px rgba(14, 116, 144, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <header class="bg-[#0f2c59] text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-sky-100 text-[#0f2c59] flex items-center justify-center font-extrabold text-lg shadow">🙏</div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg tracking-wide">सेवा करण्यासाठी वाहन प्राप्ती व वाटप प्रणाली</h1>
+                    <p class="text-xs text-sky-200">In-Ground Seva Vehicle Donation, Dept. Requisition & Ground Transport Allocation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-bold">
+                <a href="/" class="bg-sky-800 hover:bg-sky-700 px-3.5 py-2 rounded-xl">← Welcome Portal</a>
+                <a href="/admin_dashboard.html" class="bg-[#f28b82] text-white px-3.5 py-2 rounded-xl">🏛️ Control Room</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-4 pt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-white/80 p-2 rounded-2xl shadow-sm border border-sky-100 text-xs sm:text-sm font-bold">
+            <button onclick="switchSevaTab('donate', this)" class="tab-pill active py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                <span>🚘</span> 1. सेवा वाहन प्राप्ती फॉर्म (Donate Vehicle)
+            </button>
+            <button onclick="switchSevaTab('request', this)" class="tab-pill py-3 px-4 rounded-xl text-slate-700 hover:bg-sky-50 transition flex items-center justify-center gap-2">
+                <span>📋</span> 2. Dept. Vehicle Requisition (Sign & Stamp)
+            </button>
+            <button onclick="switchSevaTab('allocate', this)" class="tab-pill py-3 px-4 rounded-xl text-slate-700 hover:bg-sky-50 transition flex items-center justify-center gap-2">
+                <span>🔐</span> 3. Ground Transport Allocation
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-5xl mx-auto px-4 pt-6">
+        <!-- TAB 1: DONATE VEHICLE FOR SEVA -->
+        <section id="section-donate" class="max-w-2xl mx-auto">
+            <div class="seva-form-card rounded-3xl p-6 sm:p-8 space-y-6">
+                <div class="text-center border-b border-sky-100 pb-5 space-y-1.5">
+                    <div class="inline-flex items-center justify-center px-5 py-2 rounded-full bg-sky-100 text-[#0f2c59] font-extrabold text-sm gap-2">
+                        <span>🚘 🙏</span> <span>(सेवा)</span>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-[#0f2c59] pt-1">सेवा करण्यासाठी वाहन प्राप्ती फॉर्म</h2>
+                    <p class="text-sm font-bold text-sky-800">धन निरंकार जी 🙏</p>
+                </div>
+
+                <form id="seva-donate-form" onsubmit="submitSevaVehicleDonation(event)" class="space-y-4 text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-sky-50/70 p-4 rounded-2xl border border-sky-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">📅 दिनांक (Date) *</label>
+                            <input type="date" id="seva-date" name="handover_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">⏰ वेळ (Time) *</label>
+                            <input type="time" id="seva-time" name="handover_time" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन क्रमांक (Vehicle Reg. No) *</label>
+                            <input type="text" name="vehicle_reg_number" required placeholder="MH-04-AB-1234" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 uppercase font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन प्रकार (Vehicle Type) *</label>
+                            <select name="vehicle_type" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                                <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
+                                <option value="Bolero / Pickup / Camper">Bolero / Pickup</option>
+                                <option value="Chhota Hathi / Tata Ace">Chhota Hathi / Tata Ace</option>
+                                <option value="Tempo / Eicher Mini Truck">Tempo / Eicher</option>
+                                <option value="Ambulance / Medical Van">Ambulance / Medical Van</option>
+                                <option value="Two-Wheeler / E-Rickshaw">Two-Wheeler / E-Rickshaw</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">झोन आणि ब्रांच चे नाव (Zone & Branch) *</label>
+                        <input type="text" name="zone_and_branch" required placeholder="उदा. झोन ३ - ठाणे / पनवेल ब्रांच" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन मालकाचे नाव (Owner Name) *</label>
+                            <input type="text" name="owner_name" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">संपर्क क्रमांक (Contact No) *</label>
+                            <input type="text" name="owner_phone" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">पासून दिनांक (From Date) *</label>
+                            <input type="date" name="seva_from_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">पर्यंत दिनांक (Till Date) *</label>
+                            <input type="date" name="seva_till_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">इंधन क्षमता (Fuel Level)</label>
+                            <select name="fuel_level" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                                <option value="Full (100%)">Full Tank</option>
+                                <option value="3/4 Tank">3/4 Tank</option>
+                                <option value="Half Tank">Half Tank</option>
+                                <option value="1/4 Tank">1/4 Tank</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">इंधन प्रकार (Fuel Type)</label>
+                            <select name="fuel_type" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                                <option value="Diesel">Diesel</option>
+                                <option value="Petrol">Petrol</option>
+                                <option value="CNG">CNG</option>
+                                <option value="Electric">Electric</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">किमी मीटर (Odometer) *</label>
+                            <input type="number" name="odometer_km" required placeholder="45200" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">📸 वाहन फोटो अपलोड (Vehicle Photo)</label>
+                        <input type="file" accept="image/*" onchange="previewImageFile(this, 'donation-photo-preview', 'donation-photo-b64')" class="w-full text-xs">
+                        <input type="hidden" id="donation-photo-b64" name="vehicle_photo_b64">
+                        <img id="donation-photo-preview" class="hidden mt-2 max-h-40 rounded-xl border mx-auto" alt="Preview">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" name="handed_over_by_name" required placeholder="वाहन सुपूर्द करणाऱ्याचे नाव *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="text" name="received_by_sevadar_name" required placeholder="स्वीकारणाऱ्या सेवादाराचे नाव *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold py-4 rounded-2xl text-base shadow-xl">
+                        🙏 सेवा वाहन जमा करा (Submit Seva Vehicle)
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: DEPARTMENT VEHICLE REQUISITION -->
+        <section id="section-request" class="hidden grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-3 seva-form-card rounded-3xl p-6 space-y-4">
+                <h2 class="text-xl font-extrabold text-[#0f2c59]">📋 Raise In-Ground Vehicle Requirement</h2>
+                <form id="dept-req-form" onsubmit="submitDeptRequisition(event)" class="space-y-3.5 text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <select name="department_name" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <option value="Langar & Ration Supply">🍲 Langar & Ration Supply</option>
+                            <option value="Tent, Pandal & Material">⛺ Tent, Pandal & Material</option>
+                            <option value="Sevadal Security & Traffic">🛡️ Sevadal Security & Traffic</option>
+                            <option value="Medical & Dispensary">🏥 Medical & Dispensary</option>
+                            <option value="Stage, Sound & Exhibition">🎙️ Stage, Sound & Exhibition</option>
+                            <option value="Water & Sanitation">🚰 Water & Sanitation</option>
+                        </select>
+                        <select name="required_vehicle_type" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
+                            <option value="Bolero / Pickup / Camper">Bolero / Pickup</option>
+                            <option value="Chhota Hathi / Tata Ace">Chhota Hathi / Tata Ace</option>
+                            <option value="Tempo / Eicher Mini Truck">Tempo / Eicher</option>
+                            <option value="Ambulance / Medical Van">Ambulance / Medical Van</option>
+                            <option value="Two-Wheeler / E-Rickshaw">Two-Wheeler / E-Rickshaw</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <input type="number" name="quantity_needed" value="1" min="1" required placeholder="Qty" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        <input type="text" name="requester_name" required placeholder="Requester Name *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="text" name="requester_phone" required placeholder="Mobile *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" name="required_duration" required placeholder="Duty Duration (e.g. 23-26 Jan)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                        <input type="text" name="department_head_name" required placeholder="Dept. Head Name *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                    </div>
+                    <textarea name="purpose_details" rows="2" required placeholder="Duty Purpose & Route Details *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2"></textarea>
+                    <div class="bg-amber-50 border-2 border-dashed border-amber-400 rounded-2xl p-3 space-y-1.5">
+                        <label class="block text-xs font-extrabold text-amber-950">🖋️ Upload Dept. Head Approval Slip (Sign & Stamp) *</label>
+                        <input type="file" accept="image/*" required onchange="previewImageFile(this, 'stamp-preview', 'stamp-b64')" class="w-full text-xs">
+                        <input type="hidden" id="stamp-b64" name="approval_stamp_b64">
+                        <img id="stamp-preview" class="hidden mt-2 max-h-36 rounded-xl border mx-auto" alt="Stamp">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 rounded-2xl text-sm shadow-lg">
+                        📤 Submit Vehicle Requisition
+                    </button>
+                </form>
+            </div>
+            <div class="lg:col-span-2 seva-form-card rounded-3xl p-5 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-extrabold text-sm text-[#0f2c59]">📌 Submitted Requisitions</h3>
+                    <button onclick="loadSevaAndRequisitions()" class="text-xs font-bold text-sky-700">↻ Refresh</button>
+                </div>
+                <div id="public-requisitions-list" class="space-y-2.5 text-xs"></div>
+            </div>
+        </section>
+
+        <!-- TAB 3: GROUND TRANSPORT MEMBER ALLOCATION -->
+        <section id="section-allocate" class="space-y-6 hidden">
+            <div id="ground-auth-gate" class="max-w-md mx-auto seva-form-card rounded-3xl p-6 space-y-4">
+                <div class="text-center">
+                    <span class="text-3xl">🔐</span>
+                    <h2 class="text-lg font-extrabold text-[#0f2c59] mt-1">Transport Ground Member Login</h2>
+                </div>
+                <form onsubmit="authenticateGroundAllocator(event)" class="space-y-3 text-sm">
+                    <input type="text" id="alloc-login-mobile" required placeholder="Registered Sevadar Mobile (e.g. 9820110001)" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 font-bold">
+                    <input type="text" id="alloc-login-passcode" required value="GND-2026" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5">
+                    <div id="alloc-login-msg" class="text-xs text-rose-600 font-semibold"></div>
+                    <button type="submit" class="w-full bg-[#0f2c59] text-white font-extrabold py-3 rounded-xl">Unlock Allocation Console</button>
+                </form>
+            </div>
+
+            <div id="ground-allocator-workspace" class="hidden space-y-6">
+                <div class="bg-[#0f2c59] text-white rounded-2xl p-4 flex justify-between items-center">
+                    <div class="font-extrabold text-sm" id="allocator-identity">--</div>
+                    <button onclick="logoutGroundAllocator()" class="text-xs bg-rose-600 px-3 py-1.5 rounded-lg font-bold">Sign Out</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="seva-form-card rounded-3xl p-5 space-y-3">
+                        <h3 class="font-extrabold text-base text-[#0f2c59]">1. Pending Dept. Requests</h3>
+                        <div id="allocator-requests-list" class="space-y-3 text-xs"></div>
+                    </div>
+                    <div class="seva-form-card rounded-3xl p-5 space-y-3">
+                        <h3 class="font-extrabold text-base text-emerald-900">2. Available Seva Donated Vehicles</h3>
+                        <div id="allocator-vehicles-list" class="space-y-3 text-xs"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="img-lightbox" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-50 p-4" onclick="this.classList.add('hidden')">
+        <div class="bg-white p-3 rounded-2xl max-w-lg w-full space-y-2" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center"><span class="font-extrabold text-xs" id="lightbox-caption">Preview</span><button onclick="document.getElementById('img-lightbox').classList.add('hidden')">✕</button></div>
+            <img id="lightbox-img" class="w-full max-h-[75vh] object-contain rounded-xl border" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        let donatedVehicles = [], deptRequisitions = [];
+        let currentAllocator = JSON.parse(localStorage.getItem('ground_allocator_session') || 'null');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            document.getElementById('seva-date').value = now.toISOString().split('T')[0];
+            document.getElementById('seva-time').value = now.toTimeString().slice(0, 5);
+            if (currentAllocator) showAllocatorWorkspace();
+            loadSevaAndRequisitions();
+        });
+
+        function switchSevaTab(tabName, btn) {
+            ['donate', 'request', 'allocate'].forEach(t => document.getElementById('section-' + t).classList.add('hidden'));
+            document.getElementById('section-' + tabName).classList.remove('hidden');
+            document.querySelectorAll('.tab-pill').forEach(b => { b.classList.remove('active'); b.classList.add('text-slate-700'); });
+            btn.classList.add('active'); btn.classList.remove('text-slate-700');
+        }
+
+        function previewImageFile(input, previewImgId, hiddenInputId) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, 900 / img.width);
+                    canvas.width = img.width * scale; canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const b64 = canvas.toDataURL('image/jpeg', 0.78);
+                    document.getElementById(hiddenInputId).value = b64;
+                    const prev = document.getElementById(previewImgId);
+                    prev.src = b64; prev.classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openLightbox(src, title) {
+            if (!src) return;
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox-caption').textContent = title;
+            document.getElementById('img-lightbox').classList.remove('hidden');
+            document.getElementById('img-lightbox').classList.add('flex');
+        }
+
+        async function submitSevaVehicleDonation(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.odometer_km = parseFloat(payload.odometer_km);
+            const res = await fetch('/api/fleet/seva-donations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) {
+                const data = await res.json();
+                alert('धन निरंकार जी 🙏 Receipt No: ' + data.receipt_code);
+                e.target.reset(); document.getElementById('donation-photo-preview').classList.add('hidden');
+                loadSevaAndRequisitions();
+            }
+        }
+
+        async function submitDeptRequisition(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.quantity_needed = parseInt(payload.quantity_needed);
+            const res = await fetch('/api/fleet/dept-requisitions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) {
+                const data = await res.json();
+                alert('✅ Requisition Submitted! Code: ' + data.requisition_code);
+                e.target.reset(); document.getElementById('stamp-preview').classList.add('hidden');
+                loadSevaAndRequisitions();
+            }
+        }
+
+        async function loadSevaAndRequisitions() {
+            const [dRes, rRes] = await Promise.all([fetch('/api/fleet/seva-donations'), fetch('/api/fleet/dept-requisitions')]);
+            donatedVehicles = dRes.ok ? await dRes.json() : [];
+            deptRequisitions = rRes.ok ? await rRes.json() : [];
+            const availablePool = donatedVehicles.filter(v => v.status === 'AVAILABLE_AT_GROUND');
+
+            document.getElementById('public-requisitions-list').innerHTML = deptRequisitions.map(r => `
+                <div class="p-3 bg-white rounded-2xl border border-slate-200">
+                    <div class="flex justify-between font-bold"><span>${r.requisition_code} • ${r.department_name}</span><span>${r.status}</span></div>
+                    <div>${r.quantity_needed}x ${r.required_vehicle_type} ${r.allocated_vehicle_reg ? '→ ✅ ' + r.allocated_vehicle_reg : ''}</div>
+                </div>
+            `).join('') || '<p class="text-slate-500">No requisitions yet.</p>';
+
+            document.getElementById('allocator-requests-list').innerHTML = deptRequisitions.map(r => `
+                <div class="p-3 bg-white rounded-2xl border space-y-2">
+                    <div class="flex justify-between">
+                        <div><strong>${r.requisition_code} — ${r.department_name}</strong><div>${r.quantity_needed}x ${r.required_vehicle_type}</div></div>
+                        ${r.approval_stamp_b64 ? `<button onclick="openLightbox('${r.approval_stamp_b64}', '${r.requisition_code} Stamp')" class="bg-amber-100 px-2.5 py-1 rounded-lg font-bold">🖋️ Stamp</button>` : ''}
+                    </div>
+                    ${r.status !== 'ALLOCATED' ? `
+                        <div class="flex gap-2">
+                            <select id="pick-veh-${r.id}" class="flex-1 border rounded-xl px-2 py-1.5 font-bold">
+                                ${availablePool.map(v => `<option value="${v.id}">${v.vehicle_reg_number} (${v.vehicle_type})</option>`).join('') || '<option value="">No Seva vehicles</option>'}
+                            </select>
+                            <button onclick="allocateVehicleToDept(${r.id})" class="bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl">Allocate</button>
+                        </div>` : `<div class="text-emerald-700 font-bold">✅ Allocated ${r.allocated_vehicle_reg}</div>`}
+                </div>
+            `).join('') || '<p class="text-slate-500">No pending requests.</p>';
+
+            document.getElementById('allocator-vehicles-list').innerHTML = donatedVehicles.map(v => `
+                <div class="p-3 bg-white rounded-2xl border flex justify-between items-center">
+                    <div><strong>${v.vehicle_reg_number}</strong> • ${v.vehicle_type}<div class="text-slate-500">${v.owner_name} (${v.owner_phone})</div></div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">${v.status}</span>
+                </div>
+            `).join('') || '<p class="text-slate-500">No Seva vehicles donated yet.</p>';
+        }
+
+        async function authenticateGroundAllocator(e) {
+            e.preventDefault();
+            const res = await fetch('/api/fleet/ground-allocator-login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile_number: document.getElementById('alloc-login-mobile').value.trim(), passcode: document.getElementById('alloc-login-passcode').value.trim() })
+            });
+            const data = await res.json();
+            if (res.ok) { currentAllocator = data.member; localStorage.setItem('ground_allocator_session', JSON.stringify(currentAllocator)); showAllocatorWorkspace(); }
+            else { document.getElementById('alloc-login-msg').textContent = data.detail || 'Invalid passcode'; }
+        }
+        function showAllocatorWorkspace() { document.getElementById('ground-auth-gate').classList.add('hidden'); document.getElementById('ground-allocator-workspace').classList.remove('hidden'); document.getElementById('allocator-identity').textContent = `${currentAllocator.full_name} (${currentAllocator.mobile_number})`; }
+        function logoutGroundAllocator() { localStorage.removeItem('ground_allocator_session'); currentAllocator = null; document.getElementById('ground-allocator-workspace').classList.add('hidden'); document.getElementById('ground-auth-gate').classList.remove('hidden'); }
+        async function allocateVehicleToDept(reqId) {
+            const vehId = parseInt(document.getElementById('pick-veh-' + reqId)?.value);
+            if (!vehId) return;
+            await fetch('/api/fleet/dept-requisitions/allocate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requisition_id: reqId, seva_vehicle_id: vehId, allocated_by_member: currentAllocator?.full_name || 'Ground Team' }) });
+            loadSevaAndRequisitions();
+        }
+    </script>
+</body>
+</html>

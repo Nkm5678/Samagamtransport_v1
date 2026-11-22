@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilgrim Arrival Registration & E-Pass | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <header class="bg-emerald-900 text-white p-4 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="font-bold text-lg">🙏 Samagam Pilgrim Arrival & Boarding Pass</h1>
+                <p class="text-xs text-emerald-200">Register your arrival or retrieve your assigned Tent & Shuttle Pass</p>
+            </div>
+            <a href="/login.html" class="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded-lg font-semibold">Staff Login →</a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 py-6 space-y-6">
+        <!-- Self-Service Pass Lookup -->
+        <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <h2 class="font-bold text-base text-emerald-900 mb-2">🔍 Already Registered? Find Your E-Boarding Pass</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="lookup-q" placeholder="Enter Mobile Number, PNR, or Pass ID (e.g. SMG-00001)" class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                <button onclick="findPass()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-5 py-2 rounded-lg text-sm">Search Pass</button>
+            </div>
+            <div id="lookup-results" class="mt-3 space-y-2"></div>
+        </section>
+
+        <!-- New Pilgrim Registration Form -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 class="font-bold text-lg text-slate-900 mb-4">📝 New Pilgrim / Jatha Travel Registration</h2>
+            <form id="reg-form" onsubmit="registerPilgrim(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Full Name / Jatha Leader *</label>
+                    <input type="text" name="full_name" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Ashram / Branch / Spiritual Order</label>
+                    <input type="text" name="spiritual_order" placeholder="e.g. Delhi Zone" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Mobile Number *</label>
+                    <input type="text" name="contact_phone" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Email (for E-Boarding Pass)</label>
+                    <input type="email" name="contact_email" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Total Group Size (Passengers) *</label>
+                    <input type="number" name="group_size" value="1" min="1" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Arrival Mode *</label>
+                    <select name="arrival_mode" class="w-full border rounded-lg px-3 py-2">
+                        <option value="Train">Train</option>
+                        <option value="Flight">Flight</option>
+                        <option value="Private Bus">Private Bus</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Mumbai Arrival Station / Airport *</label>
+                    <select name="arrival_hub" id="arr-hub" class="w-full border rounded-lg px-3 py-2"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Train / Flight Number & PNR</label>
+                    <input type="text" name="arrival_transit_number" placeholder="e.g. 12138 Punjab Mail" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Arrival Date & Time *</label>
+                    <input type="text" name="arrival_datetime" value="2026-11-20 08:30" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Return Departure Hub *</label>
+                    <select name="departure_hub" id="dep-hub" class="w-full border rounded-lg px-3 py-2"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Return Date & Time *</label>
+                    <input type="text" name="departure_datetime" value="2026-11-24 19:00" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Special Assistance (Wheelchair/Elderly)</label>
+                    <input type="text" name="special_assistance_notes" placeholder="Optional" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="md:col-span-2 pt-2">
+                    <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow">
+                        Generate Official E-Boarding Pass
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="/static/emergency_dialer_modal.js"></script>
+    <script>
+        async function loadHubs() {
+            const res = await fetch('/api/operations/hubs');
+            const hubs = await res.json();
+            const opts = hubs.map(h => `<option value="${h.hub_name}">${h.hub_name}</option>`).join('');
+            document.getElementById('arr-hub').innerHTML = opts;
+            document.getElementById('dep-hub').innerHTML = opts;
+        }
+        async function registerPilgrim(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            payload.group_size = parseInt(payload.group_size);
+            if (!payload.contact_email) delete payload.contact_email;
+            const res = await fetch('/api/saints/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`✅ Registration Confirmed!\nYour Boarding Pass ID: ${data.pass_code}`);
+                e.target.reset();
+            } else {
+                alert(data.detail || 'Error registering.');
+            }
+        }
+        async function findPass() {
+            const q = document.getElementById('lookup-q').value.trim();
+            if (!q) return;
+            const res = await fetch('/api/saints/public-pass-lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: q })
+            });
+            const box = document.getElementById('lookup-results');
+            if (!res.ok) {
+                box.innerHTML = `<div class="p-3 bg-rose-50 text-rose-700 rounded-lg text-xs">No boarding pass found.</div>`;
+                return;
+            }
+            const list = await res.json();
+            box.innerHTML = list.map(p => `
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-emerald-900 text-sm">${p.pass_code} • ${p.full_name} (${p.group_size} Pax)</div>
+                        <div>Arrival: ${p.arrival_hub} (${p.arrival_datetime})</div>
+                    </div>
+                    <div class="text-right font-bold text-emerald-800">${p.assigned_ground}<br>${p.assigned_tent}</div>
+                </div>
+            `).join('');
+        }
+        window.addEventListener('DOMContentLoaded', loadHubs);
+    </script>
+</body>
+</html>

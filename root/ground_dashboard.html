@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ground Venue & Tent Reception Console | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <header class="bg-emerald-950 text-white p-4 shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h1 class="font-bold text-lg">⛺ Samagam Ground Reception & Gate Marshall Console</h1>
+                <p class="text-xs text-emerald-300">Tent Check-In, MSRTC Gate Arrival Audit & Return Departure Shuttles</p>
+            </div>
+            <div class="flex gap-2 text-xs">
+                <a href="/admin_dashboard.html" class="bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded-lg font-semibold">Central Admin →</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 py-6 space-y-6">
+        <!-- Tent Check-In Manifest -->
+        <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-base text-emerald-900">🛏️ Pilgrim Tent Check-In & Return Shuttle Dispatch</h2>
+                <button onclick="loadGroundData()" class="text-xs text-emerald-700 font-bold">↻ Refresh</button>
+            </div>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 border-b">
+                        <th class="p-2.5">Pass ID</th>
+                        <th class="p-2.5">Saint / Jatha</th>
+                        <th class="p-2.5">Pax</th>
+                        <th class="p-2.5">Assigned Tent</th>
+                        <th class="p-2.5">Return Departure</th>
+                        <th class="p-2.5">Status</th>
+                        <th class="p-2.5">Gate Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ground-saints-body" class="divide-y"></tbody>
+            </table>
+        </section>
+
+        <!-- MSRTC Gate Arrival Verification -->
+        <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+            <h2 class="font-bold text-base text-amber-900 mb-3">🧾 MSRTC State Bus Gate Arrival Verification</h2>
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 border-b">
+                        <th class="p-2.5">Voucher</th>
+                        <th class="p-2.5">Origin Station</th>
+                        <th class="p-2.5">Bus Reg</th>
+                        <th class="p-2.5">ETM Ticket</th>
+                        <th class="p-2.5">Pax</th>
+                        <th class="p-2.5">Cash Paid</th>
+                        <th class="p-2.5">Gate Verification</th>
+                    </tr>
+                </thead>
+                <tbody id="ground-msrtc-body" class="divide-y"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="/static/emergency_dialer_modal.js"></script>
+    <script>
+        let availableVehicles = [];
+
+        async function loadGroundData() {
+            const [sRes, mRes, vRes] = await Promise.all([
+                fetch('/api/saints/'),
+                fetch('/api/fleet/msrtc-ledger'),
+                fetch('/api/fleet/vehicles')
+            ]);
+            const saints = await sRes.json();
+            const msrtc = await mRes.json();
+            availableVehicles = await vRes.json();
+
+            document.getElementById('ground-saints-body').innerHTML = saints.map(s => `
+                <tr>
+                    <td class="p-2.5 font-bold text-emerald-700">${s.pass_code}</td>
+                    <td class="p-2.5 font-semibold">${s.full_name}<div class="text-slate-400">${s.contact_phone}</div></td>
+                    <td class="p-2.5 font-bold">${s.group_size}</td>
+                    <td class="p-2.5 font-bold">${s.assigned_ground} (${s.assigned_tent})</td>
+                    <td class="p-2.5">${s.departure_hub}<div class="text-slate-400">${s.departure_datetime}</div></td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-slate-100 font-bold">${s.status}</span></td>
+                    <td class="p-2.5 space-x-1">
+                        ${s.status !== 'Checked-In at Tent'
+                            ? `<button onclick="checkinTent(${s.id})" class="bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Tent Check-In</button>`
+                            : `<button onclick="scheduleReturn(${s.id}, '${s.departure_hub}')" class="bg-indigo-700 text-white px-2.5 py-1 rounded font-semibold">Assign Return Bus</button>`}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('ground-msrtc-body').innerHTML = msrtc.vouchers.map(v => `
+                <tr>
+                    <td class="p-2.5 font-bold">${v.voucher_number}</td>
+                    <td class="p-2.5">${v.station_hub}</td>
+                    <td class="p-2.5 font-bold">${v.vehicle_reg_number}</td>
+                    <td class="p-2.5 font-mono">${v.etm_receipt_number}</td>
+                    <td class="p-2.5 font-bold">${v.passenger_headcount}</td>
+                    <td class="p-2.5 font-bold">₹${v.cash_amount_paid_inr}</td>
+                    <td class="p-2.5">
+                        ${v.is_verified_at_gate
+                            ? `<span class="text-emerald-700 font-bold">✅ Verified by ${v.verified_by_ground_sevadar}</span>`
+                            : `<button onclick="verifyGate(${v.id})" class="bg-amber-600 text-white px-3 py-1 rounded font-bold">Confirm Arrival</button>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function checkinTent(id) {
+            await fetch('/api/saints/checkin-tent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ saint_id: id })
+            });
+            loadGroundData();
+        }
+
+        async function verifyGate(id) {
+            await fetch('/api/fleet/msrtc-ledger/verify-gate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voucher_id: id, verified_by_ground_sevadar: 'Ground Gate Marshall' })
+            });
+            loadGroundData();
+        }
+
+        async function scheduleReturn(saintId, depHub) {
+            if (!availableVehicles.length) return;
+            const bus = availableVehicles[0];
+            await fetch('/api/saints/allocate-return-shuttle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicle_id: bus.id, saint_ids: [saintId], departure_hub: depHub })
+            });
+            alert(`Assigned return shuttle ${bus.vehicle_reg_number} to ${depHub}`);
+            loadGroundData();
+        }
+
+        window.addEventListener('DOMContentLoaded', loadGroundData);
+    </script>
+</body>
+</html>
