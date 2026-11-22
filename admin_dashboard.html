@@ -7,6 +7,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
+    <div id="admin-auth-gate" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl">
+            <div class="text-center space-y-1">
+                <span class="text-3xl">🛡️</span>
+                <h2 class="text-xl font-extrabold text-white">Admin Control Room Login</h2>
+                <p class="text-xs text-emerald-300 font-semibold">admin.samagamtransport.in • Restricted HQ Access</p>
+            </div>
+            <form onsubmit="submitAdminSubdomainLogin(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Admin Mobile Number *</label>
+                    <input type="tel" id="admin-login-mobile" required maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Admin Password *</label>
+                    <input type="password" id="admin-login-password" required placeholder="Enter Admin Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-semibold">
+                </div>
+                <div id="admin-login-error" class="text-xs text-rose-400 font-bold text-center"></div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3 rounded-xl shadow-lg transition">
+                    Authenticate & Open Control Room
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Top Command Navigation -->
     <header class="bg-emerald-950 text-white p-4 shadow-lg sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
@@ -157,6 +181,40 @@
         }
 
         window.addEventListener('DOMContentLoaded', loadAdminSummary);
+    </script>
+    <script>
+        async function submitAdminSubdomainLogin(e) {
+            e.preventDefault();
+            const mobile = document.getElementById('admin-login-mobile').value.trim();
+            const password = document.getElementById('admin-login-password').value;
+            const errEl = document.getElementById('admin-login-error');
+            errEl.textContent = '';
+
+            const res = await fetch('/api/auth/control-room-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile_number: mobile, access_code: password, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('samagam_admin_token', data.session_token);
+                localStorage.setItem('samagam_driver_token', data.session_token);
+                document.getElementById('admin-auth-gate').classList.add('hidden');
+                if (typeof loadAdminSummary === 'function') loadAdminSummary();
+            } else {
+                errEl.textContent = data.detail || 'Invalid Admin credentials.';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const tok = localStorage.getItem('samagam_admin_token');
+            if (tok) {
+                const hb = await fetch('/api/auth/session-heartbeat', { headers: { 'X-Driver-Token': tok } });
+                if (hb.ok) {
+                    document.getElementById('admin-auth-gate').classList.add('hidden');
+                }
+            }
+        });
     </script>
 </body>
 </html>

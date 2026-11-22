@@ -21,6 +21,7 @@ OTP_TTL = 300
 OTP_MAX_TRIES = 5
 REG_CODE = os.environ.get("REG_CODE", "SAMAGAM26").strip()
 ADMIN_ACCESS_CODE = os.environ.get("ADMIN_ACCESS_CODE", "SAMAGAM-HQ-2026").strip()
+ADMIN_MASTER_PASSWORD = os.environ.get("ADMIN_MASTER_PASSWORD", "Narendra@2183").strip()
 OTP_DEV_ECHO = os.environ.get("OTP_DEV_ECHO", "1") == "1"
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 
@@ -119,16 +120,17 @@ def _driver_payload(db: Session, vol: Volunteer, token: str = None) -> dict:
 def control_room_admin_login(data: dict, db: Session = Depends(get_db)):
     """Restricts Control Room access strictly to dedicated members & admins."""
     mobile = _norm_phone(data.get("mobile_number"))
-    passcode = str(data.get("access_code") or "").strip()
+    passcode = str(data.get("access_code") or data.get("password") or "").strip()
     if len(mobile) != 10:
         raise HTTPException(status_code=400, detail="Enter a valid 10-digit registered mobile number.")
 
     vol = db.query(Volunteer).filter(Volunteer.mobile_number == mobile, Volunteer.is_active == True).first()
     is_admin_role = bool(vol and vol.system_role in ("GROUND_ADMIN", "ADMIN", "CONTROL_ROOM"))
     pin_valid = bool(vol and vol.pin_hash and len(_norm_pin(passcode)) == 4 and check_password_hash(vol.pin_hash, _norm_pin(passcode)))
+    master_pwd_valid = bool(ADMIN_MASTER_PASSWORD and hmac.compare_digest(passcode, ADMIN_MASTER_PASSWORD))
     code_valid = bool(ADMIN_ACCESS_CODE and hmac.compare_digest(passcode, ADMIN_ACCESS_CODE))
 
-    if not ((is_admin_role and pin_valid) or code_valid):
+    if not ((is_admin_role and pin_valid) or master_pwd_valid or code_valid):
         raise HTTPException(status_code=403, detail="Access Denied: Restricted to dedicated Control Room members and Admins only.")
 
     if not vol:

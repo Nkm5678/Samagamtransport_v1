@@ -94,6 +94,10 @@ def _serve_html(filename: str):
 @app.get("/")
 def home(request: Request):
     host = (request.headers.get("host") or "").lower()
+    if host == "admin.samagamtransport.in" or host.startswith("admin."):
+        adm = os.path.join(ROOT_DIR, "admin_dashboard.html")
+        if os.path.exists(adm):
+            return FileResponse(adm)
     if host.startswith("parking."):
         p = os.path.join(ROOT_DIR, "parking_portal.html")
         if os.path.exists(p):
@@ -117,7 +121,14 @@ def service_worker():
 
 
 @app.get("/{page_name}.html")
-def serve_html_page(page_name: str):
+def serve_html_page(page_name: str, request: Request):
+    host = (request.headers.get("host") or "").lower().split(":")[0]
+    admin_pages = {"admin_dashboard", "admin_operations_dashboard", "admin_performance_dashboard"}
+    if page_name in admin_pages and not (host == "admin.samagamtransport.in" or host.startswith("admin.")):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Control Room & Admin pages are restricted to https://admin.samagamtransport.in"}
+        )
     return _serve_html(f"{page_name}.html")
 
 
