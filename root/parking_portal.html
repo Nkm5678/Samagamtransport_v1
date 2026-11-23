@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samagam Devotee Parking Portal | parking.samagamtransport.in</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #ecfdf5 0%, #f1f5f9 55%, #e2e8f0 100%);
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #0f172a;
+        }
+        .tab-btn.active {
+            background-color: #064e3b;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(6, 78, 59, 0.25);
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-windshield-pass, #printable-windshield-pass * { visibility: visible; }
+            #printable-windshield-pass {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: 3px solid #000 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header class="bg-emerald-950 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+                <img src="/static/samagam_79_logo.svg" alt="79 Samagam Logo" class="h-10 sm:h-12 w-auto rounded-xl border border-amber-400/50 shadow">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow">
+                    🅿️
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-wide">SAMAGAM PARKING & GATE QR PORTAL</h1>
+                        <span class="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-200">parking.samagamtransport.in</span>
+                    </div>
+                    <p class="text-xs text-emerald-200">60th Maharashtra Annual Nirankari Sant Samagam • Kharghar, Navi Mumbai</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-bold">
+                <a href="https://www.samagamtransport.in" class="bg-emerald-900 hover:bg-emerald-800 px-3 py-2 rounded-xl border border-emerald-700">🚌 Main Transport Portal</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto w-full px-4 pt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-white p-2 rounded-2xl shadow-sm border border-slate-200 text-xs sm:text-sm font-extrabold">
+            <button onclick="switchParkingTab('register', this)" class="tab-btn active py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                <span>🎫</span> 1. Register Vehicle & Print Windshield QR
+            </button>
+            <button onclick="switchParkingTab('retrieve', this)" class="tab-btn py-3 px-4 rounded-xl text-slate-700 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                <span>🔍</span> 2. Retrieve / Reprint My QR Pass
+            </button>
+            <button onclick="switchParkingTab('scanner', this)" class="tab-btn py-3 px-4 rounded-xl text-slate-700 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                <span>📷</span> 3. Gate Entry & Exit QR Matcher
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-5xl mx-auto w-full px-4 py-6 flex-1">
+        <!-- TAB 1 -->
+        <section id="tab-register" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-emerald-200 shadow-lg space-y-4">
+                <div class="border-b pb-3">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
+                        Step 1 • Devotee Self-Registration
+                    </span>
+                    <h2 class="text-xl font-extrabold text-slate-900 mt-1">Register Vehicle for Samagam Parking</h2>
+                    <p class="text-xs text-slate-500">Fill in your details below. Your unique QR code will be sent to your Email/WhatsApp—take a printout and paste it clearly on your vehicle windshield.</p>
+                </div>
+
+                <form id="parking-reg-form" onsubmit="registerParkingVehicle(event)" class="space-y-3 text-xs sm:text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Devotee / Owner Full Name *</label>
+                            <input type="text" name="owner_name" required placeholder="e.g. Sant Rajesh Sharma Ji" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp Mobile Number *</label>
+                            <input type="tel" name="owner_phone" required maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Email Address (For QR Delivery) *</label>
+                            <input type="email" name="owner_email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Number Plate *</label>
+                            <input type="text" name="vehicle_reg_number" required placeholder="MH-04-AB-1234" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 uppercase font-black text-base tracking-wide">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Type *</label>
+                            <select name="vehicle_category" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                                <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
+                                <option value="Two-Wheeler / Bike / Scooter">Two-Wheeler / Bike</option>
+                                <option value="Tempo Traveller / Van / Jeep">Tempo Traveller / Van / Jeep</option>
+                                <option value="Private / Branch Bus">Private / Branch Bus</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Model & Color *</label>
+                            <input type="text" name="vehicle_color_model" required placeholder="e.g. White Swift Dzire" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Branch Name *</label>
+                            <input type="text" name="branch_name" required placeholder="e.g. Panvel / Thane / Pune" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Zone Name / Number *</label>
+                            <input type="text" name="zone_name" required placeholder="e.g. Zone 3 / Mumbai Zone" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Preferred Samagam Parking Gate</label>
+                        <select name="parking_zone" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                            <option value="Parking Zone P1 (Gate 1)">Parking Zone P1 (Gate 1 — Cars & SUVs)</option>
+                            <option value="Parking Zone P2 (Gate 2)">Parking Zone P2 (Gate 2 — Cars & Vans)</option>
+                            <option value="Two-Wheeler Bay W1 (Gate 3)">Two-Wheeler Bay W1 (Gate 3 — Bikes)</option>
+                            <option value="Bus & Heavy Fleet Bay B1 (Gate 4)">Bus & Heavy Fleet Bay B1 (Gate 4)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-extrabold py-4 rounded-2xl text-sm sm:text-base shadow-xl transition">
+                        🎫 Generate Windshield QR Sticker & Send Pass
+                    </button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-6 space-y-4">
+                <div id="printable-windshield-pass" class="bg-white rounded-3xl p-6 border-4 border-emerald-900 shadow-xl space-y-4">
+                    <div class="bg-emerald-950 text-white rounded-2xl p-4 text-center space-y-0.5">
+                        <div class="text-[11px] font-bold uppercase tracking-widest text-amber-300">धन निरंकार जी 🙏 • SANT NIRANKARI MANDAL</div>
+                        <div class="text-lg font-black tracking-wide">OFFICIAL VEHICLE PARKING PASS</div>
+                        <div class="text-[11px] text-emerald-200">60th Maharashtra Annual Sant Samagam • Kharghar, Navi Mumbai</div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-dashed border-slate-300">
+                        <div class="text-center shrink-0">
+                            <img id="qr-sticker-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SAMAGAM-PARKING-SAMPLE" alt="Vehicle Parking QR" class="w-44 h-44 mx-auto border-4 border-white shadow-md rounded-xl bg-white p-1">
+                            <div class="text-[10px] font-extrabold uppercase text-slate-600 mt-1.5">Scan at Entry & Exit Gate</div>
+                        </div>
+
+                        <div class="flex-1 space-y-2 text-xs w-full">
+                            <div class="bg-amber-100 border border-amber-400 rounded-xl p-2.5 text-center">
+                                <span class="text-[10px] font-bold uppercase text-amber-900 block">Parking Pass Token</span>
+                                <span id="pass-token-display" class="text-xl font-black text-slate-950 tracking-wider">PKG-SAMPLE</span>
+                            </div>
+
+                            <div class="space-y-1 text-slate-800">
+                                <div><span class="text-slate-500 font-bold">Vehicle No:</span> <strong id="pass-plate-display" class="text-base font-black text-emerald-950">MH-04-AB-1234</strong></div>
+                                <div><span class="text-slate-500 font-bold">Vehicle:</span> <span id="pass-veh-display" class="font-bold">Car / Sedan / SUV</span></div>
+                                <div><span class="text-slate-500 font-bold">Owner:</span> <span id="pass-owner-display" class="font-bold">Register on left to generate</span></div>
+                                <div><span class="text-slate-500 font-bold">Branch & Zone:</span> <span id="pass-branch-display" class="font-bold">--</span></div>
+                                <div><span class="text-slate-500 font-bold">Assigned Bay:</span> <span id="pass-zone-display" class="font-bold text-emerald-800">Parking Zone P1</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-rose-50 border-2 border-rose-300 rounded-2xl p-3.5 flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                            <div class="text-xs font-extrabold text-rose-950">🔐 OWNER EXIT VERIFICATION PIN (Keep With Owner)</div>
+                            <div class="text-[11px] text-rose-800">Paste QR printout on windshield. Show this PIN + your copy at Exit Gate.</div>
+                        </div>
+                        <div class="text-2xl font-black tracking-widest bg-white border-2 border-rose-500 text-rose-950 px-4 py-1 rounded-xl" id="pass-pin-display">
+                            ****
+                        </div>
+                    </div>
+
+                    <div class="text-center text-[11px] font-bold text-slate-600 border-t pt-2.5">
+                        📌 INSTRUCTION: Take a printout of this QR pass and paste it visibly inside your front windshield before arriving at Samagam Gate.
+                    </div>
+                </div>
+
+                <div id="pass-share-actions" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm font-extrabold">
+                    <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white py-3.5 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                        <span>🖨️ Print Windshield QR Sticker</span>
+                    </button>
+                    <a id="whatsapp-share-btn" href="#" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                        <span>💬 Send QR Pass to WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2 -->
+        <section id="tab-retrieve" class="hidden max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-lg space-y-4">
+            <h2 class="text-xl font-extrabold text-slate-900">🔍 Retrieve & Reprint Your Parking QR Sticker</h2>
+            <p class="text-xs text-slate-500">Enter your registered <strong>10-Digit Mobile Number</strong>, <strong>Vehicle Number Plate</strong>, or <strong>Token (PKG-XXXX)</strong> to view, print, or share your windshield QR pass again.</p>
+            <div class="flex gap-2">
+                <input type="text" id="lookup-parking-input" placeholder="e.g. MH-04-AB-1234 or 98XXXXXXXX or PKG-1234" class="flex-1 border border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold">
+                <button onclick="lookupExistingParkingPass()" class="bg-emerald-800 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-2xl text-sm">
+                    Find Pass
+                </button>
+            </div>
+            <div id="lookup-parking-results" class="space-y-3 text-xs"></div>
+        </section>
+
+        <!-- TAB 3 -->
+        <section id="tab-scanner" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="lg:col-span-6 bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-xl space-y-4">
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                        Gate Security & Volunteers
+                    </span>
+                    <h2 class="text-lg font-extrabold mt-1.5">📷 Gate Entry & Exit QR Matcher</h2>
+                    <p class="text-xs text-slate-400">Scan the QR pasted on the vehicle windshield at Entry Gate, and match the same QR + Owner Exit PIN at Exit Gate.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                        <label class="block text-slate-400 font-bold mb-1">Gate Mode *</label>
+                        <select id="gate-scan-direction" onchange="toggleExitPinInput()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 font-extrabold text-white">
+                            <option value="ENTRY">🟢 INWARD ENTRY GATE</option>
+                            <option value="EXIT">🔵 OUTWARD EXIT GATE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-bold mb-1">Gate Number *</label>
+                        <select id="gate-scan-name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 font-bold text-white">
+                            <option value="Gate 1 (Zone P1)">Gate 1 (Zone P1)</option>
+                            <option value="Gate 2 (Zone P2)">Gate 2 (Zone P2)</option>
+                            <option value="Gate 3 (2-Wheeler Bay)">Gate 3 (2-Wheeler Bay)</option>
+                            <option value="Gate 4 (Bus Bay)">Gate 4 (Bus Bay)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="exit-owner-pin-box" class="hidden bg-amber-950/60 border border-amber-500/60 rounded-2xl p-3.5 space-y-1.5">
+                    <label class="block text-xs font-extrabold text-amber-300">🔐 Owner Exit Verification PIN (From Owner's Copy / SMS) *</label>
+                    <input type="password" id="gate-owner-exit-pin" maxlength="4" inputmode="numeric" placeholder="Enter Owner 4-Digit Exit PIN" class="w-full bg-slate-950 border border-amber-400 rounded-xl px-3 py-2.5 text-center text-lg font-black tracking-widest text-white">
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5 text-center">
+                    <div id="qr-camera-reader" class="rounded-xl overflow-hidden mx-auto max-w-xs"></div>
+                    <div class="flex gap-2 justify-center text-xs font-bold">
+                        <button onclick="startQrCameraScanner()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl">📷 Start Camera Scan</button>
+                        <button onclick="stopQrCameraScanner()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl">Stop Camera</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-800">
+                    <label class="block text-xs font-bold text-slate-400">Or Scan / Type Windshield QR Token or Plate No.:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="manual-qr-code-input" placeholder="e.g. PKG-4821 or MH-04-AB-1234" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-extrabold uppercase text-white">
+                        <button onclick="processGateQrScan()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl text-xs">
+                            Verify QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 space-y-4">
+                <div id="gate-scan-result-card" class="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-lg text-center space-y-2">
+                    <div class="text-3xl">🛡️</div>
+                    <h3 class="text-base font-extrabold text-slate-800">Ready to Scan Windshield QR Sticker</h3>
+                    <p class="text-xs text-slate-500">Scan a vehicle's windshield QR pass on the left to verify Entry or match Owner Exit PIN at Exit Gate.</p>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-extrabold text-xs uppercase text-slate-700">Recent Gate QR Verifications</h4>
+                        <button onclick="loadRecentGatePasses()" class="text-xs font-bold text-emerald-700">↻ Refresh</button>
+                    </div>
+                    <div id="recent-gate-passes-list" class="space-y-2 text-xs max-h-80 overflow-y-auto"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        धन निरंकार जी 🙏 • Samagam Dedicated Parking Control • parking.samagamtransport.in
+    </footer>
+
+    <script>
+        let html5QrScanner = null;
+
+        function switchParkingTab(tab, btn) {
+            ['register', 'retrieve', 'scanner'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+            });
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.add('text-slate-700');
+            });
+            btn.classList.add('active');
+            btn.classList.remove('text-slate-700');
+            if (tab === 'scanner') loadRecentGatePasses();
+        }
+
+        function toggleExitPinInput() {
+            const dir = document.getElementById('gate-scan-direction').value;
+            const box = document.getElementById('exit-owner-pin-box');
+            if (dir === 'EXIT') box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+
+        function renderWindshieldPass(passData) {
+            const qrPayload = encodeURIComponent(`SAMAGAM-PKG|${passData.parking_token}|${passData.vehicle_reg_number}`);
+            document.getElementById('qr-sticker-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${qrPayload}`;
+            document.getElementById('pass-token-display').textContent = passData.parking_token;
+            document.getElementById('pass-plate-display').textContent = passData.vehicle_reg_number;
+            document.getElementById('pass-veh-display').textContent = `${passData.vehicle_category} (${passData.vehicle_color_model || ''})`;
+            document.getElementById('pass-owner-display').textContent = `${passData.owner_name} (${passData.owner_phone})`;
+            document.getElementById('pass-branch-display').textContent = `${passData.branch_name || '-'} • ${passData.zone_name || '-'}`;
+            document.getElementById('pass-zone-display').textContent = passData.parking_zone;
+            document.getElementById('pass-pin-display').textContent = passData.exit_pin || '****';
+
+            const waText = encodeURIComponent(
+                `धन निरंकार जी 🙏\n*Samagam Official Parking QR Pass*\n` +
+                `Token: *${passData.parking_token}*\n` +
+                `Vehicle: *${passData.vehicle_reg_number}* (${passData.vehicle_category})\n` +
+                `Owner: ${passData.owner_name}\n` +
+                `Branch & Zone: ${passData.branch_name} / ${passData.zone_name}\n` +
+                `Parking Bay: ${passData.parking_zone}\n` +
+                `Secret Exit PIN (Keep Private): *${passData.exit_pin}*\n\n` +
+                `📌 Print & paste your QR sticker on your windshield from: https://parking.samagamtransport.in`
+            );
+            const cleanPhone = (passData.owner_phone || '').replace(/\D/g, '');
+            const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+            document.getElementById('whatsapp-share-btn').href = `https://wa.me/${waPhone}?text=${waText}`;
+            document.getElementById('pass-share-actions').classList.remove('hidden');
+        }
+
+        async function registerParkingVehicle(e) {
+            e.preventDefault();
+            const payload = Object.fromEntries(new FormData(e.target).entries());
+            const res = await fetch('/api/fleet/parking-passes/register-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                renderWindshieldPass(data);
+                alert(`धन निरंकार जी 🙏\nParking QR Sticker Generated!\nToken: ${data.parking_token}\nSecret Exit PIN: ${data.exit_pin}\n\nSent to ${payload.owner_email}. Please print and paste the QR pass on your vehicle windshield!`);
+            } else {
+                alert('❌ ' + (data.detail || 'Could not generate parking QR pass.'));
+            }
+        }
+
+        async function lookupExistingParkingPass() {
+            const q = document.getElementById('lookup-parking-input').value.trim();
+            if (!q) return;
+            const res = await fetch(`/api/fleet/parking-passes?query=${encodeURIComponent(q)}&status=ALL`);
+            const list = await res.json();
+            const box = document.getElementById('lookup-parking-results');
+            if (!list.length) {
+                box.innerHTML = '<div class="p-3 bg-rose-50 text-rose-700 rounded-xl font-bold">No parking registration found for that query.</div>';
+                return;
+            }
+            box.innerHTML = list.map(p => `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <div class="font-black text-sm text-emerald-950">${p.parking_token} • ${p.vehicle_reg_number}</div>
+                        <div class="text-slate-700 font-semibold">${p.owner_name} (${p.owner_phone}) • ${p.branch_name || ''} / ${p.zone_name || ''}</div>
+                        <div class="text-slate-500">Status: <strong>${p.status}</strong> • ${p.parking_zone}</div>
+                    </div>
+                    <button onclick='loadIntoPrintCard(${JSON.stringify(p)})' class="bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl">
+                        🖨️ Load & Print QR
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadIntoPrintCard(passObj) {
+            renderWindshieldPass(passObj);
+            const regBtn = document.querySelector(".tab-btn[onclick*='register']");
+            switchParkingTab('register', regBtn);
+        }
+
+        function startQrCameraScanner() {
+            if (html5QrScanner) return;
+            html5QrScanner = new Html5Qrcode("qr-camera-reader");
+            html5QrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    document.getElementById('manual-qr-code-input').value = decodedText;
+                    processGateQrScan();
+                },
+                () => {}
+            ).catch(() => {
+                alert("Camera permission denied or unavailable. Use manual token/plate input below.");
+            });
+        }
+
+        function stopQrCameraScanner() {
+            if (html5QrScanner) {
+                html5QrScanner.stop().then(() => {
+                    html5QrScanner.clear();
+                    html5QrScanner = null;
+                }).catch(() => {});
+            }
+        }
+
+        async function processGateQrScan() {
+            const rawCode = document.getElementById('manual-qr-code-input').value.trim();
+            const direction = document.getElementById('gate-scan-direction').value;
+            const gateName = document.getElementById('gate-scan-name').value;
+            const exitPin = document.getElementById('gate-owner-exit-pin').value.trim();
+
+            if (!rawCode) {
+                alert("Scan or enter the QR code / Vehicle Plate first.");
+                return;
+            }
+
+            const res = await fetch('/api/fleet/parking-passes/scan-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    qr_data: rawCode,
+                    gate_direction: direction,
+                    gate_name: gateName,
+                    owner_exit_pin: exitPin
+                })
+            });
+            const data = await res.json();
+            const card = document.getElementById('gate-scan-result-card');
+
+            if (res.ok) {
+                card.className = "bg-emerald-50 rounded-3xl p-6 border-4 border-emerald-600 shadow-xl text-center space-y-2";
+                card.innerHTML = `
+                    <div class="text-4xl">✅</div>
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-800">${data.action_status}</div>
+                    <h3 class="text-xl font-black text-slate-950">${data.vehicle_reg_number} (${data.parking_token})</h3>
+                    <p class="text-xs font-bold text-slate-700">Owner: ${data.owner_name} (${data.owner_phone}) • Branch: ${data.branch_name || '-'} / ${data.zone_name || '-'}</p>
+                    <p class="text-xs text-emerald-900 font-semibold">${data.message}</p>
+                `;
+                document.getElementById('gate-owner-exit-pin').value = '';
+                loadRecentGatePasses();
+            } else {
+                card.className = "bg-rose-50 rounded-3xl p-6 border-4 border-rose-600 shadow-xl text-center space-y-2";
+                card.innerHTML = `
+                    <div class="text-4xl">🚨</div>
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-rose-800">GATE VERIFICATION FAILED / HOLD</div>
+                    <h3 class="text-lg font-black text-rose-950">${data.detail || 'QR / Owner Mismatch'}</h3>
+                `;
+            }
+        }
+
+        async function loadRecentGatePasses() {
+            const res = await fetch('/api/fleet/parking-passes?status=ALL');
+            if (!res.ok) return;
+            const list = await res.json();
+            document.getElementById('recent-gate-passes-list').innerHTML = list.slice(0, 15).map(p => `
+                <div class="p-3 bg-slate-50 border rounded-xl flex justify-between items-center">
+                    <div>
+                        <span class="font-extrabold text-slate-900">${p.parking_token} • ${p.vehicle_reg_number}</span>
+                        <div class="text-slate-500">${p.owner_name} • ${p.branch_name || ''} (${p.zone_name || ''})</div>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        p.status === 'PARKED_INSIDE' ? 'bg-emerald-100 text-emerald-800' :
+                        p.status === 'EXITED_VERIFIED' ? 'bg-blue-100 text-blue-800' :
+                        p.status === 'PRE_REGISTERED' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-800'
+                    }">${p.status}</span>
+                </div>
+            `).join('');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tokenParam = params.get('token');
+            if (tokenParam) {
+                document.getElementById('lookup-parking-input').value = tokenParam;
+                lookupExistingParkingPass();
+            }
+        });
+    </script>
+</body>
+</html>
