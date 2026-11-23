@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central Super-Admin Command Hub | Samagam Transport</title>
+    <title>Admin Control Room | admin.samagamtransport.in</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #020617;
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #f8fafc;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Admin Login Gate -->
     <div id="admin-auth-gate" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl">
             <div class="text-center space-y-1">
@@ -31,160 +41,151 @@
         </div>
     </div>
 
-    <!-- Top Command Navigation -->
-    <header class="bg-emerald-950 text-white p-4 shadow-lg sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🏛️</span>
-                <div>
-                    <h1 class="font-bold text-lg tracking-wide">CENTRAL SUPER-ADMIN COMMAND HUB</h1>
-                    <p class="text-xs text-emerald-300">All-Territory Telemetry, Fleet Dispatch & Audit Exports</p>
-                </div>
+    <!-- Top Admin Control Room Bar with Direct Links to Communication Directory & Reports -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap justify-between items-center gap-3 sticky top-0 z-40 shadow-xl">
+        <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🛡️</span>
+            <div>
+                <h1 class="font-extrabold text-sm sm:text-base text-white">SAMAGAM ADMIN CONTROL ROOM HQ</h1>
+                <p class="text-[11px] text-emerald-300">Live Fleet, Reports, Communication Directory & Database Control</p>
             </div>
-            <nav class="flex flex-wrap gap-2 text-xs font-bold">
-                <a href="/radar_map_console.html" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-lg">🛰️ Live GPS Radar</a>
-                <a href="/admin_operations_dashboard.html" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-lg">💰 24h Contracts & Cash</a>
-                <a href="/admin_performance_dashboard.html" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-2 rounded-lg">🛠️ Fleet Health & Shifts</a>
-                <a href="/online_test_runner.html" class="bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg">🧪 Test Runner</a>
-            </nav>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs font-extrabold">
+            <a href="/samagam_master_topology_and_operations.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg shadow">📡 Communication & Contacts</a>
+            <a href="#admin-reports-center" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg shadow">📊 All Reports</a>
+            <a href="/api/reports/export/full-database.xlsx" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-2 rounded-lg shadow">🗄️ Full DB (.xlsx)</a>
+            <a href="/api/reports/export/saints-csv" class="bg-sky-500 hover:bg-sky-400 text-slate-950 px-3 py-2 rounded-lg shadow">📋 Pilgrims CSV</a>
+            <a href="/api/reports/export/financials-csv" class="bg-amber-400 hover:bg-amber-300 text-slate-950 px-3 py-2 rounded-lg shadow">💰 Financials CSV</a>
+            <button onclick="cleanTestDatabaseRecords(event)" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-lg shadow">🧹 Clean Test Data</button>
+            <button onclick="logoutAdminSubdomain()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg shadow">🔒 Lock</button>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-4 py-6 space-y-6">
-<section id="samagam-live-pipeline-board" class="max-w-6xl mx-auto px-4 pt-4"></section>
+    <main class="max-w-7xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
+        <section id="samagam-live-pipeline-board"></section>
 
-        <!-- Action Bar -->
-        <div class="flex flex-wrap justify-between items-center gap-3">
-            <div>
-                <h2 class="text-xl font-extrabold text-slate-900">Executive Operations Snapshot</h2>
-                <p class="text-xs text-slate-500" id="last-updated">Syncing live metrics...</p>
+        <!-- ALL EXECUTIVE & OPERATIONAL REPORTS CENTER -->
+        <section id="admin-reports-center" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                        Live Control Room Reports & Exports
+                    </span>
+                    <h2 class="text-lg font-extrabold text-white mt-1">📊 Executive Reports, Fleet, Requests & Financial Audit</h2>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-extrabold">
+                    <button onclick="loadAllAdminReports()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3.5 py-2 rounded-xl border border-slate-700">↻ Refresh All Reports</button>
+                    <a href="/api/reports/export/full-database.xlsx" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl">⬇ Export 15-Sheet Excel (.xlsx)</a>
+                </div>
             </div>
-            <div class="flex flex-wrap gap-2 text-xs font-bold">
-                <button onclick="loadAdminSummary()" class="bg-slate-800 text-white px-3.5 py-2 rounded-lg">↻ Refresh Now</button>
-                <a href="/api/reports/export/saints-csv" class="bg-emerald-700 text-white px-3.5 py-2 rounded-lg">⬇ Saints CSV</a>
-                <a href="/api/reports/export/financials-csv" class="bg-blue-700 text-white px-3.5 py-2 rounded-lg">⬇ Audit CSV</a>
-            </div>
-        </div>
 
-        <!-- 4 Primary KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-bold uppercase text-slate-400">Pilgrims & Tent Occupancy</div>
-                <div class="text-3xl font-extrabold text-emerald-700 mt-1" id="adm-pilgrims">--</div>
-                <div class="text-xs text-slate-500 mt-1" id="adm-checked">Checked-in: --</div>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-bold uppercase text-slate-400">Active Fleet Deployment</div>
-                <div class="text-3xl font-extrabold text-blue-700 mt-1" id="adm-fleet">--</div>
-                <div class="text-xs text-rose-600 font-semibold mt-1" id="adm-maint">Maintenance hold: --</div>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-bold uppercase text-slate-400">Pending Station Queues</div>
-                <div class="text-3xl font-extrabold text-amber-600 mt-1" id="adm-waiting">--</div>
-                <div class="text-xs text-slate-500 mt-1" id="adm-demands">Open alerts: --</div>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div class="text-xs font-bold uppercase text-slate-400">Grand Transport Spend</div>
-                <div class="text-3xl font-extrabold text-slate-900 mt-1" id="adm-spend">₹--</div>
-                <div class="text-xs text-emerald-700 font-semibold mt-1" id="adm-imprest">Imprest balance: ₹--</div>
-            </div>
-        </div>
+            <div id="admin-kpi-cards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs"></div>
 
-        <!-- Live Station Demands & Dispatch Queue -->
-        <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
-            <h3 class="font-bold text-base text-slate-900 mb-3">📢 Live Station Crowd Dispatch Requests</h3>
-            <table class="w-full text-left text-xs border-collapse">
-                <thead>
-                    <tr class="bg-slate-100 text-slate-600 border-b">
-                        <th class="p-2.5">Code</th>
-                        <th class="p-2.5">Station / Airport Hub</th>
-                        <th class="p-2.5">Waiting Pax</th>
-                        <th class="p-2.5">Recommended Bus Mix</th>
-                        <th class="p-2.5">Priority</th>
-                        <th class="p-2.5">Status</th>
-                        <th class="p-2.5">Quick Dispatch</th>
-                    </tr>
-                </thead>
-                <tbody id="adm-demands-body" class="divide-y"></tbody>
-            </table>
-        </section>
-
-        <!-- Consoles & Printable Blueprints Directory -->
-        <section class="bg-slate-900 text-slate-100 p-5 rounded-2xl shadow-lg">
-            <h3 class="font-bold text-sm uppercase tracking-wider text-emerald-400 mb-3">Quick Launch Consoles & Printable Blueprints</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-bold text-center">
-                <a href="/register.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🙏 Pilgrim Reg</a>
-                <a href="/territory_dashboard.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🚉 Station Desk</a>
-                <a href="/ground_dashboard.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">⛺ Ground Gate</a>
-                <a href="/driver_rider_companion.html" class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl">🚍 Driver App</a>
-                <a href="/samagam_master_topology_and_operations.html" target="_blank" class="bg-emerald-900 hover:bg-emerald-800 p-3 rounded-xl">📐 Blueprint PDF</a>
-                <a href="/samagam_implementation_checklist.html" target="_blank" class="bg-emerald-900 hover:bg-emerald-800 p-3 rounded-xl">✅ Go-Live List</a>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="font-extrabold text-emerald-300">🚉 Pickup & Drop Requests Report</div>
+                    <div id="rep-pickup-drop" class="space-y-1.5 max-h-60 overflow-y-auto text-slate-300">Loading...</div>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="font-extrabold text-sky-300">⛺ In-Ground Department Requisitions Report</div>
+                    <div id="rep-dept-req" class="space-y-1.5 max-h-60 overflow-y-auto text-slate-300">Loading...</div>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="font-extrabold text-amber-300">🅿️ Parking QR Passes & Gate Log Report</div>
+                    <div id="rep-parking" class="space-y-1.5 max-h-60 overflow-y-auto text-slate-300">Loading...</div>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="font-extrabold text-purple-300">💰 24h Contracts & MSRTC Cash Vouchers Report</div>
+                    <div id="rep-financials" class="space-y-1.5 max-h-60 overflow-y-auto text-slate-300">Loading...</div>
+                </div>
             </div>
         </section>
     </main>
 
-    <script src="/static/emergency_dialer_modal.js"></script>
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        धन निरंकार जी 🙏 • Sant Nirankari Mandal Transport & Logistics Cell • admin.samagamtransport.in
+    </footer>
+
+    <script src="/static/operations_pipeline_board.js"></script>
     <script>
-        let fleetList = [];
+        async function loadAllAdminReports() {
+            try {
+                const res = await fetch('/api/reports/admin-overview');
+                if (!res.ok) return;
+                const data = await res.json();
+                const s = data.summary || {};
+                const fl = s.fleet || {};
+                const dm = s.demands || {};
+                const cr = s.crew || {};
 
-        async function loadAdminSummary() {
-            const [sumRes, demRes, fltRes] = await Promise.all([
-                fetch('/api/reports/executive-summary'),
-                fetch('/api/operations/demands'),
-                fetch('/api/fleet/vehicles')
-            ]);
-            const summary = await sumRes.json();
-            const demands = await demRes.json();
-            fleetList = await fltRes.json();
+                const kpiEl = document.getElementById('admin-kpi-cards');
+                if (kpiEl) {
+                    kpiEl.innerHTML = `
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">Total Vehicles</div><div class="text-xl font-black text-white">${fl.total_vehicles || 0}</div></div>
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">In Transit</div><div class="text-xl font-black text-emerald-400">${fl.active_in_transit || 0}</div></div>
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">Pickup/Drop Req</div><div class="text-xl font-black text-sky-400">${dm.pickup_drop_requests || 0}</div></div>
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">Dept Requisitions</div><div class="text-xl font-black text-amber-400">${dm.dept_requisitions || 0}</div></div>
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">Parked Inside</div><div class="text-xl font-black text-teal-400">${dm.parking_inside || 0}</div></div>
+                        <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800"><div class="text-slate-400">Active Crew</div><div class="text-xl font-black text-purple-400">${cr.total_volunteers || 0}</div></div>
+                    `;
+                }
 
-            document.getElementById('adm-pilgrims').textContent = summary.saints.total_pilgrims.toLocaleString();
-            document.getElementById('adm-checked').textContent = `Checked-in at tents: ${summary.saints.checked_in_pilgrims} (${summary.saints.total_groups} Jathas)`;
-            document.getElementById('adm-fleet').textContent = `${summary.fleet.active_in_transit} / ${summary.fleet.total_vehicles}`;
-            document.getElementById('adm-maint').textContent = `Maintenance hold: ${summary.fleet.maintenance_hold}`;
-            document.getElementById('adm-waiting').textContent = `${summary.station_queues.waiting_passengers} Pax`;
-            document.getElementById('adm-demands').textContent = `Pending alerts: ${summary.station_queues.pending_demands}`;
-            document.getElementById('adm-spend').textContent = '₹' + summary.financials_inr.grand_total_transport_spend_inr.toLocaleString();
-            document.getElementById('adm-imprest').textContent = 'MSRTC Cash Bal: ₹' + summary.financials_inr.msrtc_imprest_balance_inr.toLocaleString();
+                const pdEl = document.getElementById('rep-pickup-drop');
+                if (pdEl) {
+                    pdEl.innerHTML = (data.pickup_drop && data.pickup_drop.length)
+                        ? data.pickup_drop.map(r => `<div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between"><span><strong>${r.code}</strong> • ${r.hub} (${r.pax} pax)</span><span class="text-emerald-400 font-bold">${r.status}</span></div>`).join('')
+                        : '<div class="text-slate-500">No Pickup/Drop records (Clean).</div>';
+                }
 
-            document.getElementById('adm-demands-body').innerHTML = demands.map(d => `
-                <tr>
-                    <td class="p-2.5 font-bold text-rose-700">${d.demand_code}</td>
-                    <td class="p-2.5 font-semibold">${d.hub_name}</td>
-                    <td class="p-2.5 font-extrabold">${d.waiting_passenger_count}</td>
-                    <td class="p-2.5 text-slate-600">${d.recommended_buses}</td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">${d.priority}</span></td>
-                    <td class="p-2.5 font-bold">${d.status}</td>
-                    <td class="p-2.5">
-                        ${d.status === 'PENDING'
-                            ? `<button onclick="dispatchFirstAvailable(${d.id}, '${d.hub_name}', ${d.waiting_passenger_count})" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded font-bold">Dispatch Bus</button>`
-                            : '✅ Dispatched'}
-                    </td>
-                </tr>
-            `).join('');
+                const deptEl = document.getElementById('rep-dept-req');
+                if (deptEl) {
+                    deptEl.innerHTML = (data.dept_requisitions && data.dept_requisitions.length)
+                        ? data.dept_requisitions.map(r => `<div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between"><span><strong>${r.code}</strong> • ${r.department} (${r.vehicle_type})</span><span class="text-sky-400 font-bold">${r.status}</span></div>`).join('')
+                        : '<div class="text-slate-500">No Department Requisitions (Clean).</div>';
+                }
 
-            document.getElementById('last-updated').textContent = `Last synced: ${new Date().toLocaleTimeString()}`;
+                const pkgEl = document.getElementById('rep-parking');
+                if (pkgEl) {
+                    pkgEl.innerHTML = (data.parking_passes && data.parking_passes.length)
+                        ? data.parking_passes.map(p => `<div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between"><span><strong>${p.token}</strong> • ${p.plate} (${p.owner})</span><span class="text-amber-400 font-bold">${p.status}</span></div>`).join('')
+                        : '<div class="text-slate-500">No Parking Passes logged (Clean).</div>';
+                }
+
+                const finEl = document.getElementById('rep-financials');
+                if (finEl) {
+                    const rows = [];
+                    (data.contracts || []).forEach(c => rows.push(`<div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between"><span><strong>${c.code}</strong> • ${c.plate} (${c.vendor})</span><span class="text-purple-300 font-bold">₹${c.settlement_inr}</span></div>`));
+                    (data.msrtc_vouchers || []).forEach(v => rows.push(`<div class="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between"><span><strong>${v.voucher}</strong> • ${v.station}</span><span class="text-emerald-300 font-bold">₹${v.amount_inr}</span></div>`));
+                    finEl.innerHTML = rows.length ? rows.join('') : '<div class="text-slate-500">No Contracts or MSRTC Vouchers (Clean).</div>';
+                }
+            } catch (_) {}
         }
 
-        async function dispatchFirstAvailable(demandId, hubName, pax) {
-            const readyBus = fleetList.find(v => v.status === 'EMPTY_IN' && !v.is_maintenance_flagged) || fleetList[0];
-            if (!readyBus) return;
-            await fetch('/api/operations/allocate-dispatch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    vehicle_id: readyBus.id,
-                    demand_id: demandId,
-                    source_hub: hubName,
-                    destination_hub: 'Ground 1 (Main Hall)',
-                    allocated_passengers: Math.min(pax, readyBus.capacity)
-                })
-            });
-            loadAdminSummary();
+        async function cleanTestDatabaseRecords(ev) {
+            const btn = ev && ev.target ? ev.target : null;
+            if (btn) btn.textContent = '⏳ Cleaning...';
+            try {
+                const tok = localStorage.getItem('samagam_admin_token') || '';
+                const res = await fetch('/api/reports/admin-purge-test-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Driver-Token': tok },
+                    body: JSON.stringify({ mode: 'ALL_OPERATIONAL' })
+                });
+                if (res.ok) {
+                    await loadAllAdminReports();
+                    if (typeof renderOperationsPipelineWidget === 'function') {
+                        renderOperationsPipelineWidget('samagam-live-pipeline-board', 'Control Room HQ');
+                    }
+                    if (btn) {
+                        btn.textContent = '✅ Database Cleaned!';
+                        setTimeout(() => { btn.textContent = '🧹 Clean Test Data'; }, 2500);
+                    }
+                }
+            } catch (_) {
+                if (btn) btn.textContent = '🧹 Clean Test Data';
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', loadAdminSummary);
-    </script>
-    <script>
         async function submitAdminSubdomainLogin(e) {
             e.preventDefault();
             const mobile = document.getElementById('admin-login-mobile').value.trim();
@@ -202,10 +203,16 @@
                 localStorage.setItem('samagam_admin_token', data.session_token);
                 localStorage.setItem('samagam_driver_token', data.session_token);
                 document.getElementById('admin-auth-gate').classList.add('hidden');
-                if (typeof loadAdminSummary === 'function') loadAdminSummary();
+                loadAllAdminReports();
             } else {
                 errEl.textContent = data.detail || 'Invalid Admin credentials.';
             }
+        }
+
+        function logoutAdminSubdomain() {
+            localStorage.removeItem('samagam_admin_token');
+            localStorage.removeItem('samagam_driver_token');
+            document.getElementById('admin-auth-gate').classList.remove('hidden');
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -216,9 +223,11 @@
                     document.getElementById('admin-auth-gate').classList.add('hidden');
                 }
             }
+            if (typeof renderOperationsPipelineWidget === 'function') {
+                renderOperationsPipelineWidget('samagam-live-pipeline-board', 'Control Room HQ');
+            }
+            loadAllAdminReports();
         });
     </script>
-    <script src="/static/operations_pipeline_board.js"></script>
-    <script>window.addEventListener("DOMContentLoaded", () => renderOperationsPipelineWidget("samagam-live-pipeline-board", "Control Room HQ"));</script>
 </body>
 </html>

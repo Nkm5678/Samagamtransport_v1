@@ -14,6 +14,7 @@ for _root in _CANDIDATE_ROOTS:
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from werkzeug.security import generate_password_hash
 
 from app.database import get_db
 from app.models import (
@@ -497,3 +498,123 @@ def advance_vehicle_sequence_step(data: dict, db: Session = Depends(get_db)):
         return {"status": "MOVED_TO_STAGE_2_READY", "vehicle": veh.vehicle_reg_number, "next_step": "Assign Next Pilgrim Demand"}
 
     raise HTTPException(status_code=400, detail=f"Unsupported pipeline action: {action}")
+
+
+# ==============================================================================
+# MASTER CONTACT DIRECTORY (ADMIN, INCHARGES, COORDINATORS, CONTRACTORS, COMMITTEE)
+# ==============================================================================
+
+ROLE_LABELS = {
+    "ADMIN": "Admin HQ",
+    "GROUND_ADMIN": "Admin HQ",
+    "INCHARGE": "Dept / Committee Incharge",
+    "STATION_COORDINATOR": "Station Coordinator",
+    "GROUND_COORDINATOR": "Ground Coordinator",
+    "CONTRACTOR": "Bus Contractor / Vendor",
+    "COMMITTEE_MEMBER": "Committee Member",
+}
+
+
+@router.get("/directory-contacts")
+def list_master_directory_contacts(db: Session = Depends(get_db)):
+    vols = db.query(Volunteer).filter(Volunteer.is_active == True).order_by(Volunteer.id.desc()).all()
+    out = []
+    for v in vols:
+        raw_role = (v.system_role or "COMMITTEE_MEMBER").upper()
+        norm_role = "ADMIN" if raw_role in ("GROUND_ADMIN", "ADMIN", "CONTROL_ROOM") else raw_role
+        out.append({
+            "id": v.id,
+            "code": v.volunteer_code,
+            "role": norm_role,
+            "role_label": ROLE_LABELS.get(norm_role, norm_role.replace("_", " ").title()),
+            "full_name": v.full_name,
+            "mobile_number": v.mobile_number,
+            "duty_location": v.duty_location or "",
+            "branch_name": v.branch_name or "",
+            "unit_number": v.unit_number or "",
+        })
+    return out
+
+
+@router.post("/directory-contacts")
+def upsert_master_directory_contact(data: dict, db: Session = Depends(get_db)):
+    cid = data.get("id")
+    role = str(data.get("role") or "COMMITTEE_MEMBER").upper().strip()
+    name = str(data.get("full_name") or "").strip()
+    digits = "".join(ch for ch in str(data.get("mobile_number") or "") if ch.isdigit())
+    phone = digits[-10:] if len(digits) >= 10 else digits
+    hub = str(data.get("duty_location") or "Ground 1 (Main Hall)").strip()
+    branch = str(data.get("branch_name") or "Samagam Transport").strip()
+    unit = str(data.get("unit_number") or "HQ-Dir").strip()
+    pin = "".join(ch for ch in str(data.get("pin") or "") if ch.isdigit())
+
+    if not name or len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Full Name and a valid 10-digit Mobile Number are required.")
+
+    vol = db.query(Volunteer).filter(Volunteer.id == int(cid)).first() if cid else None
+    if not vol:
+        vol = db.query(Volunteer).filter(Volunteer.mobile_number == phone).first()
+
+    db_role = "GROUND_ADMIN" if role == "ADMIN" else role
+    if vol:
+        vol.full_name = name
+        vol.mobile_number = phone
+        vol.system_role = db_role
+        vol.duty_location = hub
+        vol.branch_name = branch
+        vol.unit_number = unit
+        vol.is_active = True
+        if len(pin) == 4:
+            vol.pin_hash = generate_password_hash(pin)
+    else:
+        vol = Volunteer(
+            volunteer_code=f"DIR-{secrets.randbelow(9000) + 1000}",
+            full_name=name,
+            mobile_number=phone,
+            pin_hash=generate_password_hash(pin if len(pin) == 4 else "1234"),
+            duty_location=hub,
+            branch_name=branch,
+            unit_number=unit,
+            system_role=db_role,
+            is_driver=False,
+            geofence_verified=True,
+        )
+        db.add(vol)
+
+    db.commit()
+    db.refresh(vol)
+    return {"status": "SAVED", "id": vol.id, "full_name": vol.full_name, "mobile_number": vol.mobile_number}
+
+
+@router.post("/directory-contacts/bulk")
+def bulk_upsert_master_directory_contacts(data: dict, db: Session = Depends(get_db)):
+    items = data.get("items") or []
+    saved = 0
+    for item in items:
+        name = str(item.get("full_name") or "").strip()
+        digits = "".join(ch for ch in str(item.get("mobile_number") or "") if ch.isdigit())
+        phone = digits[-10:] if len(digits) >= 10 else digits
+        if not name or len(phone) != 10:
+            continue
+        upsert_master_directory_contact({
+            "role": item.get("role") or "COMMITTEE_MEMBER",
+            "full_name": name,
+            "mobile_number": phone,
+            "duty_location": item.get("duty_location") or "Ground 1 (Main Hall)",
+            "branch_name": item.get("branch_name") or "Samagam Transport",
+            "unit_number": item.get("unit_number") or "HQ-Dir",
+        }, db)
+        saved += 1
+    return {"status": "BULK_SAVED", "saved_count": saved}
+
+
+@router.delete("/directory-contacts/{contact_id}")
+def delete_master_directory_contact(contact_id: int, db: Session = Depends(get_db)):
+    vol = db.query(Volunteer).filter(Volunteer.id == contact_id).first()
+    if not vol:
+        raise HTTPException(status_code=404, detail="Contact not found.")
+    if vol.mobile_number == "9820110001":
+        raise HTTPException(status_code=403, detail="Primary HQ Admin account cannot be deleted.")
+    vol.is_active = False
+    db.commit()
+    return {"status": "DELETED", "id": contact_id}
