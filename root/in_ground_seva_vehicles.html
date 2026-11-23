@@ -29,6 +29,7 @@
 
     <header class="bg-[#0f2c59] text-white shadow-lg sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+                <img src="/static/samagam_79_logo.svg" alt="79 Samagam Logo" class="h-10 sm:h-12 w-auto rounded-xl border border-amber-400/50 shadow">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-sky-100 text-[#0f2c59] flex items-center justify-center font-extrabold text-lg shadow">🙏</div>
                 <div>
@@ -38,7 +39,7 @@
             </div>
             <div class="flex items-center gap-2 text-xs font-bold">
                 <a href="/" class="bg-sky-800 hover:bg-sky-700 px-3.5 py-2 rounded-xl">← Welcome Portal</a>
-                <a href="/admin_dashboard.html" class="bg-[#f28b82] text-white px-3.5 py-2 rounded-xl">🏛️ Control Room</a>
+                <a href="/download_hub.html" class="bg-[#f28b82] text-white px-3.5 py-2 rounded-xl">📲 Mobile Apps</a>
             </div>
         </div>
     </header>
@@ -176,14 +177,48 @@
                 <h2 class="text-xl font-extrabold text-[#0f2c59]">📋 Raise In-Ground Vehicle Requirement</h2>
                 <form id="dept-req-form" onsubmit="submitDeptRequisition(event)" class="space-y-3.5 text-sm">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <select name="department_name" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                            <option value="Langar & Ration Supply">🍲 Langar & Ration Supply</option>
-                            <option value="Tent, Pandal & Material">⛺ Tent, Pandal & Material</option>
-                            <option value="Sevadal Security & Traffic">🛡️ Sevadal Security & Traffic</option>
-                            <option value="Medical & Dispensary">🏥 Medical & Dispensary</option>
-                            <option value="Stage, Sound & Exhibition">🎙️ Stage, Sound & Exhibition</option>
-                            <option value="Water & Sanitation">🚰 Water & Sanitation</option>
-                        </select>
+                        <select id="dept-select" name="base_department_name" onchange="onDepartmentSelectionChange()" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                                <optgroup label="Primary Field Units (Sub-Number Required)">
+                                    <option value="Sewadal" data-sublabel="Sewadal Unit Number *" data-subplaceholder="e.g. Unit No. 214" data-incharge="Rev. Manmohan Chhabra Ji / Kshetriya Sanchalak">🛡️ Sewadal (With Unit Number)</option>
+                                    <option value="Canteen Committee (No. 12)" data-sublabel="Canteen Number *" data-subplaceholder="e.g. Canteen No. 03" data-incharge="Shri Amarlal Ji">☕ Canteen (With Canteen No.) — Shri Amarlal Ji</option>
+                                    <option value="Langar Working Committee (No. 14)" data-sublabel="Langar Number *" data-subplaceholder="e.g. Langar No. 02" data-incharge="Shri Hiralal Asaram Patil Ji">🍲 Langar (With Langar No.) — Shri Hiralal Asaram Patil Ji</option>
+                                    <option value="Pyau / Water & Sanitation (No. 6)" data-sublabel="Pyau Number *" data-subplaceholder="e.g. Pyau No. 07" data-incharge="Shri Anil Shinde Ji">🚰 Pyau (With Pyau No.) — Shri Anil Shinde Ji</option>
+                                    <option value="Account Department (No. 21)" data-sublabel="Accounts Office Number *" data-subplaceholder="e.g. Office No. 01" data-incharge="Rev. J.K Manchanda Ji (Treasurer - SNM)">💼 Account Department (With Office No.) — Rev. J.K Manchanda Ji</option>
+                                </optgroup>
+                                <optgroup label="Official Samagam Committees (PDF Notification)">
+                                    <option value="Samagam Coordination Committee" data-incharge="Rev. Shambhunath Tiwari Ji (Chairman) / Rev. Lalit Dalvi Ji (Coordinator)">🏛️ Samagam Coordination Committee</option>
+                                    <option value="1. Tents, Electricals, Sound & Tin Boundaries" data-incharge="Shri S.S. Tiwari Ji">⛺ 1. Tents, Electricals, Sound & Tin Boundaries</option>
+                                    <option value="2. Purchase of Langar & Canteen Material" data-incharge="Shri Gurnaam Singh Ji">🛒 2. Purchase of Langar & Canteen Material</option>
+                                    <option value="3. Layout Planning" data-incharge="Shri S.S. Tiwari Ji">📐 3. Layout Planning</option>
+                                    <option value="3A. Sub-Committee Ground No. 1" data-incharge="Shri Shankar Sonawane Ji">📍 Sub-Committee — Ground No. 1</option>
+                                    <option value="3B. Sub-Committee Ground No. 2" data-incharge="Shri Mukund Deve Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 2</option>
+                                    <option value="3C. Sub-Committee Ground No. 3" data-incharge="Shri Praful Mandavakar Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 3</option>
+                                    <option value="4. Installation & Decoration of Gates" data-incharge="Shri Gopi Bamugade Ji">🎀 4. Installation & Decoration of Gates</option>
+                                    <option value="5. Electrical Installation" data-incharge="Shri Virendra Bamne Ji">⚡ 5. Electrical Installation</option>
+                                    <option value="6. Water Installation & Sanitation" data-incharge="Shri Anil Shinde Ji">💧 6. Water Installation & Sanitation</option>
+                                    <option value="7. Transport Committee" data-incharge="Shri Janardan Hasha Patil Ji">🚌 7. Transport Committee</option>
+                                    <option value="8. Railway Facility Committee" data-incharge="Shri Kishan Nagdeve Ji">🚆 8. Railway Facility Committee</option>
+                                    <option value="9. Press and Publicity Committee" data-incharge="Smt Primal Singh Ji">📰 9. Press and Publicity Committee</option>
+                                    <option value="10. Liaison with Government Offices" data-incharge="Shri Shambhunath Tiwari Ji">🏢 10. Liaison with Government Offices</option>
+                                    <option value="11. Arrangement at Chembur Bhawan" data-incharge="Shri Vijay Vichare Ji">🏠 11. Arrangement at Chembur Bhawan</option>
+                                    <option value="13. Canteen & Langar Eatables Store" data-incharge="Shri Yashwant Ji">📦 13. Canteen & Langar Eatables Store</option>
+                                    <option value="15. Medical Committee" data-incharge="Dr. Purshottam Ji">🏥 15. Medical Committee</option>
+                                    <option value="16. Publication Committee" data-incharge="Shri Chandrakant Jadhav Ji">📚 16. Publication Committee</option>
+                                    <option value="17. General Purchase Committee" data-incharge="Shri Jayprakash Upadhyay Ji">🛍️ 17. General Purchase Committee</option>
+                                    <option value="18. General Store Committee" data-incharge="Shri Janardhan Hasha Patil Ji">🏬 18. General Store Committee</option>
+                                    <option value="19. Arrangement of Gyan Kaksh" data-incharge="Shri Prakash Janardan Mahatre Ji">📖 19. Arrangement of Gyan Kaksh</option>
+                                    <option value="20. Speakers, Geetkar, Guru Vandana & Shobha Yatra" data-incharge="Shri Ashok Ahuja Ji">🎤 20. Speakers, Geetkar, Guru Vandana & Shobha Yatra</option>
+                                    <option value="22. Arrangement of Mass Marriages" data-incharge="Shri Harish Aildas Khubchandani Ji">💐 22. Arrangement of Mass Marriages</option>
+                                    <option value="23. Fire Service Committee" data-incharge="Shri Rajendra Kadam Ji">🚒 23. Fire Service Committee</option>
+                                    <option value="24. CCTV & Telephone Installation" data-incharge="Shri Ravasaheb Ramrao Hasbe Ji">📹 24. CCTV & Telephone Installation</option>
+                                    <option value="25. Studio, IT, Internet, Telephony & Live Support" data-incharge="Dr. Vinod Gandharv Ji">💻 25. Studio, IT, Internet, Telephony & Live Support</option>
+                                    <option value="26. Ground Services Committee" data-incharge="Shri Somnath Mane Ji">🌱 26. Ground Services Committee</option>
+                                    <option value="27. Signage Committee" data-incharge="Shri Praveen Solanki Ji">🪧 27. Signage Committee</option>
+                                </optgroup>
+                                <optgroup label="Unlisted / External Department">
+                                    <option value="OTHER_UNLISTED" data-sublabel="Other Department Name *" data-subplaceholder="Enter Department Name" data-incharge="">🚨 Other Department (Written Letter from Incharge Required)</option>
+                                </optgroup>
+                            </select>
                         <select name="required_vehicle_type" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
                             <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
                             <option value="Bolero / Pickup / Camper">Bolero / Pickup</option>
