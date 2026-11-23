@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STATION TEAM FIELD APP | Samagam Transport</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 max-w-md mx-auto border-x border-slate-800 flex flex-col justify-between">
+    <header class="bg-rose-950 border-b border-rose-800 px-4 py-3.5 flex items-center justify-between">
+        <div>
+            <h1 class="font-extrabold text-sm text-white">STATION TEAM FIELD APP</h1>
+            <p class="text-[11px] text-rose-300">Platform Crowd, MSRTC Cash & Intercom</p>
+        </div>
+        <a href="/" class="text-xs bg-slate-800 px-2.5 py-1.5 rounded-lg font-bold">Home</a>
+    </header>
+    <main class="p-4 space-y-4 flex-1">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-2 text-xs">
+            <div class="font-extrabold text-emerald-400">● Active Field Terminal</div>
+            <p class="text-slate-300">Connected to Central Samagam Transport Database. Use the top bar to switch hubs, log movements, or message Control Room.</p>
+        </div>
+        <div id="live-hubs-box" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-2 text-xs">
+            <div class="font-bold text-amber-300">Active Hubs & Fleet Status</div>
+            <div id="hubs-list" class="text-slate-300">Loading live data...</div>
+        </div>
+    </main>
+    <script src="/static/samagam_app_shell.js"></script>
+    <script>
+        fetch('/api/operations/hubs').then(r => r.json()).then(hubs => {
+            document.getElementById('hubs-list').innerHTML = hubs.map(h =>
+                `<div class="py-1 border-b border-slate-700/60 flex justify-between"><span>${h.hub_name}</span><span class="text-emerald-400">${h.hub_code}</span></div>`
+            ).join('');
+        }).catch(() => {});
+    </script>
+</body>
+</html>
