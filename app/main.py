@@ -93,16 +93,17 @@ def _serve_html(filename: str):
 
 @app.get("/")
 def home(request: Request):
-    host = (request.headers.get("host") or "").lower()
+    raw_host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    host = raw_host.split(",")[0].strip().lower().split(":")[0]
     if host == "admin.samagamtransport.in" or host.startswith("admin."):
-        adm = os.path.join(ROOT_DIR, "admin_dashboard.html")
-        if os.path.exists(adm):
-            return FileResponse(adm)
-    if host.startswith("parking."):
+        admin_path = os.path.join(ROOT_DIR, "admin_dashboard.html")
+        if os.path.exists(admin_path):
+            return FileResponse(admin_path)
+    if host == "parking.samagamtransport.in" or host.startswith("parking."):
         p = os.path.join(ROOT_DIR, "parking_portal.html")
         if os.path.exists(p):
             return FileResponse(p)
-    if host.startswith("advancesewa."):
+    if host == "advancesewa.samagamtransport.in" or host.startswith("advancesewa."):
         a = os.path.join(ROOT_DIR, "advance_sewa_portal.html")
         if os.path.exists(a):
             return FileResponse(a)

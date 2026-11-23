@@ -3,35 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Driver & Sevadar Mobile App | Samagam Transport</title>
+    <title>Samagam Field Apps (.APK) & Web Launchers</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex items-center justify-center">
-    <div class="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
-        <div class="text-center space-y-1">
-            <div class="text-4xl">📱</div>
-            <h1 class="text-xl font-extrabold text-white">Samagam Mobile Apps & Consoles</h1>
-            <p class="text-xs text-slate-400">Install on Android / iPhone for Drivers, Riders & Station Coordinators</p>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3.5">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <img src="/static/samagam_79_logo.svg" alt="79 Samagam Logo" class="h-10 sm:h-12 w-auto rounded-xl border border-amber-400/50 shadow">
+                <h1 class="font-extrabold text-base text-white">📲 SAMAGAM FIELD APPS (.APK)</h1>
+            </div>
+            <a href="/" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl">← Home</a>
         </div>
+    </header>
 
-        <div class="bg-emerald-950/70 border border-emerald-700 rounded-xl p-4 space-y-2">
-            <h2 class="font-bold text-sm text-emerald-300">1. Direct Android APK (GitHub Actions Build)</h2>
-            <p class="text-xs text-slate-300">Download the compiled Android package from your GitHub repository's <strong>Actions → Build Android APK</strong> artifact or host it in <code>/static/samagam-driver.apk</code>.</p>
-            <a href="/static/samagam-driver.apk" download class="inline-block mt-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg">
-                ⬇ Download Android .APK
-            </a>
-        </div>
+    <main class="max-w-5xl mx-auto w-full px-4 py-8 flex-1">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-xs">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">🚍</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Driver & Rider Companion</h2>
+                    <p class="text-slate-400 mt-1">1-tap Start/End Trip, 180s GPS tracking & breakdown alerts.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Driver-App.apk" class="block w-full text-center bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl">⬇ Download Driver .APK</a>
+                    <a href="/driver_rider_companion.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-emerald-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
+            </div>
 
-        <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 space-y-2">
-            <h2 class="font-bold text-sm text-blue-300">2. Instant Zero-Install Web App (PWA)</h2>
-            <p class="text-xs text-slate-400">Open on Chrome/Safari and tap <strong>"Add to Home Screen"</strong> for offline support:</p>
-            <div class="grid grid-cols-2 gap-2 pt-1 text-xs font-bold text-center">
-                <a href="/driver_rider_companion.html" class="bg-indigo-700 hover:bg-indigo-600 py-2.5 rounded-lg">🚍 Driver & Rider App</a>
-                <a href="/territory_dashboard.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">🚉 Station Console</a>
-                <a href="/ground_dashboard.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">⛺ Ground Gate Console</a>
-                <a href="/radar_map_console.html" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg">🛰️ Live GPS Radar</a>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">🚉</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Station Team App</h2>
+                    <p class="text-slate-400 mt-1">Platform crowd bus demand, MSRTC spot cash & two-way intercom.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Station-Team.apk" class="block w-full text-center bg-rose-600 hover:bg-rose-500 text-white py-2.5 rounded-xl">⬇ Download Station .APK</a>
+                    <a href="/station_team_app.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-rose-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">⛺</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Ground Team App</h2>
+                    <p class="text-slate-400 mt-1">In-ground dispatch, Seva vehicle allocation & intercom.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Ground-Team.apk" class="block w-full text-center bg-sky-600 hover:bg-sky-500 text-white py-2.5 rounded-xl">⬇ Download Ground .APK</a>
+                    <a href="/ground_team_app.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-sky-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">🚧</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Gate Keeper App</h2>
+                    <p class="text-slate-400 mt-1">Inward/Outward turnaround & 24h hired bus odometer checks.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Gate-Keeper.apk" class="block w-full text-center bg-teal-600 hover:bg-teal-500 text-white py-2.5 rounded-xl">⬇ Download Gate Keeper .APK</a>
+                    <a href="/gate_keeper_app.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-teal-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">⛽</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Diesel & Fuel App</h2>
+                    <p class="text-slate-400 mt-1">Fuel fill-up slips & pre-trip tire/brake safety audits.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Diesel-Team.apk" class="block w-full text-center bg-amber-600 hover:bg-amber-500 text-slate-950 py-2.5 rounded-xl">⬇ Download Diesel .APK</a>
+                    <a href="/diesel_team_app.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-amber-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="text-2xl">💼</div>
+                    <h2 class="text-base font-extrabold text-white mt-1">Accounts Team App</h2>
+                    <p class="text-slate-400 mt-1">Petty cash floats, MSRTC audit & 24h settlements.</p>
+                </div>
+                <div class="space-y-2 font-bold">
+                    <a href="https://github.com/Nkm5678/Samagamtransport_v1/releases/download/latest-apks/Samagam-Accounts-Team.apk" class="block w-full text-center bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl">⬇ Download Accounts .APK</a>
+                    <a href="/accounts_team_app.html" class="block w-full text-center bg-slate-800 hover:bg-slate-700 text-blue-300 py-2 rounded-xl border border-slate-700">🌐 Open Web App</a>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Samagam Transport & Logistics Cell • samagamtransport.in
+    </footer>
 </body>
 </html>
