@@ -219,3 +219,257 @@ def acknowledge_intercom_message(msg_id: int, data: dict = None, db: Session = D
     entry.acknowledged_by = str(data.get("acknowledged_by") or "Station Sevadar")
     db.commit()
     return {"status": "ACKNOWLEDGED"}
+
+
+
+# ==============================================================================
+# END-TO-END OPERATIONS PIPELINE & CHRONOLOGICAL SEQUENCE ENGINE
+# ==============================================================================
+
+SEQUENCE_STAGES = [
+    {
+        "step": 1,
+        "key": "INTAKE_DEMAND",
+        "title": "1. Request & Demand Intake",
+        "owner_team": "Devotee / Station / Dept",
+        "description": "Pickup/Drop, Advance Sewa, or Station Crowd Demand logged into Central Queue."
+    },
+    {
+        "step": 2,
+        "key": "DISPATCH_ASSIGNED",
+        "title": "2. Fleet Allocation & Dispatch",
+        "owner_team": "Control Room / Ground Team",
+        "description": "Bus & Driver assigned; vehicle dispatched empty or staged for boarding."
+    },
+    {
+        "step": 3,
+        "key": "IN_TRANSIT_LOADED",
+        "title": "3. Boarding & Live GPS Transit",
+        "owner_team": "Station Team & Driver App",
+        "description": "Pilgrims boarded; Driver started trip with 180s live GPS telemetry."
+    },
+    {
+        "step": 4,
+        "key": "GATE_UNLOADED_VERIFIED",
+        "title": "4. Venue Gate Unload & Audit",
+        "owner_team": "Gate Keeper & Ground Team",
+        "description": "Bus arrived at Samagam Gate, pilgrims unloaded, MSRTC ETM voucher verified."
+    },
+    {
+        "step": 5,
+        "key": "TURNAROUND_FUEL_SAFETY",
+        "title": "5. Fuel, Safety & Loop Return",
+        "owner_team": "Diesel & Workshop Marshall",
+        "description": "Pre-trip tire/brake check & diesel refill before next shuttle loop."
+    },
+    {
+        "step": 6,
+        "key": "EXIT_AND_SETTLEMENT",
+        "title": "6. Outward Exit & Accounts Billing",
+        "owner_team": "Gate Keeper & Accounts Cell",
+        "description": "24h Rolling Contract exit odometer logged & final bill settled."
+    }
+]
+
+
+@router.get("/pipeline/live-board")
+def get_live_operations_pipeline(db: Session = Depends(get_db)):
+    """Returns the complete 6-stage chronological sequence with live counts, items & next-action triggers."""
+    from app.models import (
+        PickupDropVehicleRequest, AdvanceSewaVehicleRequest,
+        DepartmentVehicleRequisition, MSRTCSpotCashVoucher,
+        HiredRollingContract
+    )
+
+    pending_demands = db.query(StationDemand).filter(StationDemand.status == "PENDING").order_by(StationDemand.id.desc()).all()
+    pending_adv = db.query(AdvanceSewaVehicleRequest).filter(AdvanceSewaVehicleRequest.status == "PENDING_ALLOCATION").all()
+    pending_dept = db.query(DepartmentVehicleRequisition).filter(DepartmentVehicleRequisition.status == "PENDING_ALLOCATION").all()
+
+    vehicles = db.query(Vehicle).order_by(Vehicle.last_updated.desc()).all()
+    stage2_ready = [v for v in vehicles if v.status == "EMPTY_IN" and not v.is_maintenance_flagged]
+    stage3_transit = [v for v in vehicles if v.status in ("LOADED_OUT", "EMPTY_OUT")]
+    stage4_unloaded = [v for v in vehicles if v.status == "UNLOADED_IN"]
+    stage5_maint = [v for v in vehicles if v.is_maintenance_flagged or v.status == "MAINTENANCE_HOLD"]
+
+    unverified_msrtc = db.query(MSRTCSpotCashVoucher).filter(MSRTCSpotCashVoucher.is_verified_at_gate == False).all()
+    active_contracts = db.query(HiredRollingContract).filter(HiredRollingContract.status == "ACTIVE_ROLLING").all()
+    settled_contracts = db.query(HiredRollingContract).filter(HiredRollingContract.status == "SETTLED_AND_EXITED").order_by(HiredRollingContract.id.desc()).limit(10).all()
+
+    return {
+        "sequence_definition": SEQUENCE_STAGES,
+        "stages": {
+            "stage_1_intake": {
+                "count": len(pending_demands) + len(pending_adv) + len(pending_dept),
+                "demands": [
+                    {
+                        "id": d.id,
+                        "code": d.demand_code,
+                        "hub": d.hub_name,
+                        "pax": d.waiting_passenger_count,
+                        "mix": d.recommended_buses,
+                        "requested_by": d.requested_by,
+                        "notes": d.notes or ""
+                    }
+                    for d in pending_demands
+                ],
+                "advance_sewa": [
+                    {
+                        "id": a.id,
+                        "code": a.request_code,
+                        "name": a.requester_name,
+                        "phone": a.contact_number,
+                        "branch": f"{a.branch_name} (Unit {a.unit_number})",
+                        "station": a.nearest_railway_station,
+                        "schedule": f"{a.date_of_sewa} {a.start_journey_time}-{a.return_time}",
+                        "pax": a.passenger_count
+                    }
+                    for a in pending_adv
+                ]
+            },
+            "stage_2_ready_fleet": {
+                "count": len(stage2_ready),
+                "vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "type": v.vehicle_type,
+                        "capacity": v.capacity,
+                        "hub": v.current_hub,
+                        "driver": f"{v.driver_name} ({v.driver_phone})",
+                        "ownership": v.ownership_type
+                    }
+                    for v in stage2_ready
+                ]
+            },
+            "stage_3_in_transit": {
+                "count": len(stage3_transit),
+                "vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "status": v.status,
+                        "hub": v.current_hub,
+                        "destination": v.current_destination or "Samagam Ground",
+                        "pax": v.current_passengers,
+                        "capacity": v.capacity,
+                        "speed_kmh": v.current_speed_kmh,
+                        "driver": f"{v.driver_name} ({v.driver_phone})"
+                    }
+                    for v in stage3_transit
+                ]
+            },
+            "stage_4_gate_unload_audit": {
+                "count": len(stage4_unloaded) + len(unverified_msrtc),
+                "unloaded_vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "hub": v.current_hub,
+                        "driver": v.driver_name,
+                        "ownership": v.ownership_type
+                    }
+                    for v in stage4_unloaded
+                ],
+                "pending_msrtc_gate_checks": [
+                    {
+                        "id": m.id,
+                        "voucher": m.voucher_number,
+                        "station": m.station_hub,
+                        "etm": m.etm_receipt_number,
+                        "amount": m.cash_amount_paid_inr,
+                        "pax": m.passenger_headcount
+                    }
+                    for m in unverified_msrtc
+                ]
+            },
+            "stage_5_fuel_and_safety": {
+                "count": len(stage5_maint),
+                "maintenance_holds": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "health": v.health_score_pct,
+                        "reason": v.maintenance_reason or "Workshop Hold"
+                    }
+                    for v in stage5_maint
+                ]
+            },
+            "stage_6_contracts_settlement": {
+                "active_rolling_count": len(active_contracts),
+                "settled_count": len(settled_contracts),
+                "active_contracts": [
+                    {
+                        "id": c.id,
+                        "code": c.contract_code,
+                        "reg": c.vehicle.vehicle_reg_number if c.vehicle else "",
+                        "vendor": c.vendor_agency_name,
+                        "entry_odo": c.entry_odometer_km
+                    }
+                    for c in active_contracts
+                ]
+            }
+        }
+    }
+
+
+@router.post("/pipeline/advance-step")
+def advance_vehicle_sequence_step(data: dict, db: Session = Depends(get_db)):
+    """Moves a vehicle or demand cleanly to the next valid step in the 6-stage sequence."""
+    action = str(data.get("action") or "").upper().strip()
+    vehicle_id = data.get("vehicle_id")
+    demand_id = data.get("demand_id")
+    actor = str(data.get("actor_name") or "Operations Controller").strip()
+    destination = str(data.get("destination_hub") or "Ground 1 (Main Hall)").strip()
+    pax = int(data.get("passenger_count") or 0)
+
+    veh = db.query(Vehicle).filter(Vehicle.id == int(vehicle_id)).first() if vehicle_id else None
+
+    if action == "ASSIGN_AND_DISPATCH":
+        if not veh:
+            raise HTTPException(status_code=400, detail="Select an available bus to dispatch.")
+        if veh.is_maintenance_flagged:
+            raise HTTPException(status_code=409, detail=f"Blocked: {veh.vehicle_reg_number} is on Maintenance Hold.")
+        if demand_id:
+            dem = db.query(StationDemand).filter(StationDemand.id == int(demand_id)).first()
+            if dem:
+                dem.status = "DISPATCHED"
+                pax = pax or dem.waiting_passenger_count
+                from app.models import PickupDropVehicleRequest, AdvanceSewaVehicleRequest
+                pd = db.query(PickupDropVehicleRequest).filter(PickupDropVehicleRequest.request_code == dem.demand_code).first()
+                if pd:
+                    pd.status = "DISPATCHED"
+                    pd.assigned_vehicle_reg = veh.vehicle_reg_number
+                adv = db.query(AdvanceSewaVehicleRequest).filter(AdvanceSewaVehicleRequest.request_code == dem.demand_code).first()
+                if adv:
+                    adv.status = "ALLOCATED"
+                    adv.assigned_vehicle_reg = veh.vehicle_reg_number
+                    adv.assigned_driver_name = veh.driver_name
+                    adv.assigned_driver_phone = veh.driver_phone
+        record_turnaround_movement(db, veh, "LOADED_OUT", veh.current_hub, actor, min(pax or veh.capacity, veh.capacity), destination)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_3_TRANSIT", "vehicle": veh.vehicle_reg_number, "next_step": "Arrival & Unload at Venue Gate"}
+
+    if action == "GATE_ARRIVE_UNLOAD":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        record_turnaround_movement(db, veh, "UNLOADED_IN", destination, actor, 0, None)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_4_UNLOADED", "vehicle": veh.vehicle_reg_number, "next_step": "Fuel/Safety Check or Return Loop"}
+
+    if action == "RELEASE_EMPTY_LOOP":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        if veh.is_maintenance_flagged:
+            raise HTTPException(status_code=409, detail="Cannot release bus on Maintenance Hold.")
+        record_turnaround_movement(db, veh, "EMPTY_OUT", veh.current_hub, actor, 0, destination)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_5_RETURN_LOOP", "vehicle": veh.vehicle_reg_number, "next_step": "Arrive Empty at Station Staging"}
+
+    if action == "MARK_READY_AT_HUB":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        record_turnaround_movement(db, veh, "EMPTY_IN", destination, actor, 0, None)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_2_READY", "vehicle": veh.vehicle_reg_number, "next_step": "Assign Next Pilgrim Demand"}
+
+    raise HTTPException(status_code=400, detail=f"Unsupported pipeline action: {action}")

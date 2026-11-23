@@ -20,6 +20,8 @@
     </header>
 
     <main class="max-w-6xl mx-auto p-4 py-6 space-y-6">
+<section id="samagam-live-pipeline-board" class="max-w-6xl mx-auto px-4 pt-4"></section>
+
         <!-- Tent Check-In Manifest -->
         <section class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
             <div class="flex justify-between items-center mb-3">
@@ -142,5 +144,7 @@
         window.addEventListener('DOMContentLoaded', loadGroundData);
     </script>
     <script src="/static/samagam_app_shell.js"></script>
+    <script src="/static/operations_pipeline_board.js"></script>
+    <script>window.addEventListener("DOMContentLoaded", () => renderOperationsPipelineWidget("samagam-live-pipeline-board", "Ground Team"));</script>
 </body>
 </html>
