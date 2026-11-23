@@ -1,19 +1,86 @@
+/**
+ * जागृति — The Awakening | निरंकारी सन्त समागम
+ * 1. Connects Android APKs & Instant Web Apps seamlessly to https://www.samagamtransport.in
+ * 2. Keeps Android APK hardware/gesture Back button inside the app's own Login/Register/Workspace
+ *    instead of jumping to the Admin login or closing unexpectedly.
+ * 3. Polls session heartbeat every 10s so Admin Termination immediately locks out revoked users.
+ */
 (function initJagritiAuthAndShell() {
     const PRODUCTION_ORIGIN = "https://www.samagamtransport.in";
-    const isFileOrCapacitor = window.location.protocol === "file:" || window.location.protocol === "capacitor:";
-    const originPrefix = isFileOrCapacitor ? PRODUCTION_ORIGIN : "";
+    const isFileOrCapacitor =
+        window.location.protocol === "file:" ||
+        window.location.protocol === "capacitor:" ||
+        window.location.hostname === "localhost";
+    const originPrefix = (window.location.protocol === "file:" || window.location.protocol === "capacitor:")
+        ? PRODUCTION_ORIGIN
+        : "";
 
-    const PUBLIC_PATHS = ["/", "/welcome.html", "/register.html", "/download_hub.html", "/admin_dashboard.html", "/parking_portal.html", "/advance_sewa_portal.html"];
+    const PUBLIC_PATHS = [
+        "/",
+        "/welcome.html",
+        "/register.html",
+        "/download_hub.html",
+        "/admin_dashboard.html",
+        "/parking_portal.html",
+        "/advance_sewa_portal.html"
+    ];
     const currentPath = window.location.pathname || "/";
     const host = (window.location.hostname || "").toLowerCase();
-    const isSubdomainPortal = host.startsWith("parking.") || host.startsWith("advancesewa.");
+    const isSubdomainPortal = host.startsWith("parking.") || host.startsWith("advancesewa.") || host.startsWith("admin.");
     const isPublicPage = !isFileOrCapacitor && (PUBLIC_PATHS.includes(currentPath) || isSubdomainPortal);
 
+    // -------------------------------------------------------------------------
+    // 1. ANDROID APK BACK-BUTTON & HISTORY TRAP (Prevents jumping to Admin/Blank)
+    // -------------------------------------------------------------------------
+    if (isFileOrCapacitor) {
+        try {
+            window.history.replaceState({ samagamApkRoot: true }, "", window.location.href);
+            window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+
+            window.addEventListener("popstate", function () {
+                const stepOtp = document.getElementById("m-auth-step-otp");
+                const stepPin = document.getElementById("m-auth-step-pin");
+                const step1 = document.getElementById("m-auth-step1");
+
+                // If user is on OTP or PIN step inside the login modal, Back returns to Step 1
+                if (stepOtp && stepOtp.style.display !== "none") {
+                    stepOtp.style.display = "none";
+                    if (step1) step1.style.display = "flex";
+                    window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+                    return;
+                }
+                if (stepPin && stepPin.style.display !== "none") {
+                    stepPin.style.display = "none";
+                    if (step1) step1.style.display = "flex";
+                    window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+                    return;
+                }
+
+                // Driver app step-back support
+                if (typeof window.resetAuthScreen === "function") {
+                    const drvOtp = document.getElementById("auth-step-otp");
+                    const drvPin = document.getElementById("auth-step-pin");
+                    if ((drvOtp && !drvOtp.classList.contains("hidden")) || (drvPin && !drvPin.classList.contains("hidden"))) {
+                        window.resetAuthScreen();
+                        window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+                        return;
+                    }
+                }
+
+                // Keep user inside the current APK screen instead of navigating to admin/blank page
+                window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+            });
+        } catch (_) {}
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. FETCH INTERCEPTOR (Routes APK API calls & attaches Field Session Token)
+    // -------------------------------------------------------------------------
     const origFetch = window.fetch.bind(window);
-    window.fetch = async function(input, init) {
+    window.fetch = async function (input, init) {
         let url = input;
-        if (isFileOrCapacitor && typeof url === "string" && url.startsWith("/")) {
-            url = PRODUCTION_ORIGIN + url;
+        if (originPrefix && typeof url === "string" && url.startsWith("/")) {
+            url = originPrefix + url;
         }
         init = init || {};
         const headers = new Headers(init.headers || {});
@@ -36,13 +103,23 @@
         return resp;
     };
 
+    function getAppFriendlyTitle() {
+        const docTitle = (document.title || "").split("|")[0].trim();
+        return docTitle || "Samagam Field App";
+    }
+
     function forceLockoutScreen(reasonMsg) {
         localStorage.removeItem("samagam_driver_token");
         localStorage.removeItem("samagam_field_token");
         localStorage.removeItem("samagam_field_user");
-        showCompulsoryLoginModal(reasonMsg || "Authentication required to access this Samagam Web/Mobile App.");
+        const strip = document.getElementById("jagriti-top-strip");
+        if (strip) strip.remove();
+        showCompulsoryLoginModal(reasonMsg || "Please sign in or register to continue.");
     }
 
+    // -------------------------------------------------------------------------
+    // 3. APP'S OWN FIELD LOGIN / REGISTER MODAL (Never redirects to Admin Login)
+    // -------------------------------------------------------------------------
     function showCompulsoryLoginModal(alertBannerText) {
         if (document.getElementById("driver-auth-screen") && !alertBannerText.includes("TERMINATED")) {
             return;
@@ -52,30 +129,36 @@
         if (!overlay) {
             overlay = document.createElement("div");
             overlay.id = "samagam-mandatory-auth-overlay";
-            overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,0.97);backdrop-filter:blur(10px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#f8fafc;";
+            overlay.style.cssText = "position:fixed;inset:0;background:rgba(2,6,23,0.97);backdrop-filter:blur(10px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui,-apple-system,sans-serif;color:#f8fafc;overflow-y:auto;";
             document.body.appendChild(overlay);
         }
 
+        const appTitle = getAppFriendlyTitle();
+        const backFooterHtml = isFileOrCapacitor
+            ? `<button id="m-apk-reset-login" style="background:none;border:none;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;">↻ Reset Login / New Sevadar Registration</button>`
+            : `<a href="/" style="color:#94a3b8;font-size:11px;text-decoration:underline;">← Back to Public Welcome Portal</a>`;
+
         overlay.innerHTML = `
-            <div style="max-width:410px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.6);">
+            <div style="max-width:410px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.6);margin:auto;">
                 <div style="text-align:center;margin-bottom:16px;">
                     <div style="font-size:32px;">🔐</div>
-                    <h2 style="font-size:18px;font-weight:800;color:#ffffff;margin:4px 0;">Compulsory Field Login</h2>
-                    <p style="font-size:12px;color:#94a3b8;margin:0;">Web App & APK Access • Authorized Sevadars Only</p>
+                    <h2 style="font-size:18px;font-weight:800;color:#ffffff;margin:4px 0;">${appTitle}</h2>
+                    <p style="font-size:12px;color:#6ee7b7;font-weight:700;margin:0;">Sevadar Sign-In & First-Time Registration</p>
                 </div>
 
                 ${alertBannerText ? `<div style="background:#450a0a;border:1px solid #dc2626;color:#fecaca;font-size:12px;font-weight:700;padding:10px 12px;border-radius:12px;margin-bottom:14px;">${alertBannerText}</div>` : ""}
 
                 <div id="m-auth-step1" style="display:flex;flex-direction:column;gap:10px;">
-                    <input type="text" id="m-auth-ident" placeholder="10-Digit Mobile Number or Email" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:14px;font-weight:600;">
-                    <button id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login →</button>
+                    <label style="font-size:11px;color:#94a3b8;font-weight:700;">Enter Registered Mobile (Login) or Email (New Registration):</label>
+                    <input type="text" id="m-auth-ident" placeholder="10-Digit Mobile or Email Address" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:14px;font-weight:600;">
+                    <button id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login / Register →</button>
                 </div>
 
                 <div id="m-auth-step-pin" style="display:none;flex-direction:column;gap:10px;">
                     <div id="m-pin-label" style="font-size:12px;color:#6ee7b7;font-weight:700;">Enter your 4-digit PIN:</div>
                     <input type="password" id="m-auth-pin" maxlength="4" inputmode="numeric" placeholder="••••" style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:0.5em;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:20px;font-weight:800;">
-                    <button id="m-btn-pin-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Verify & Enter App</button>
-                    <button id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Change Number / Email</button>
+                    <button id="m-btn-pin-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Verify & Open App</button>
+                    <button id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back / Change Mobile or Email</button>
                 </div>
 
                 <div id="m-auth-step-otp" style="display:none;flex-direction:column;gap:8px;">
@@ -92,21 +175,28 @@
                         <input type="text" id="m-auth-code" value="SAMAGAM26" placeholder="Event Code" style="width:120px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;text-transform:uppercase;">
                     </div>
                     <button id="m-btn-otp-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;">Verify OTP & Complete Sign-Up</button>
+                    <button id="m-btn-back2" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back</button>
                 </div>
 
                 <div id="m-auth-err" style="color:#fb7185;font-size:12px;font-weight:700;text-align:center;margin-top:10px;"></div>
                 <div style="text-align:center;margin-top:14px;border-top:1px solid #1e293b;padding-top:10px;">
-                    <a href="${originPrefix}/" style="color:#94a3b8;font-size:11px;text-decoration:underline;">← Back to Public Welcome Portal</a>
+                    ${backFooterHtml}
                 </div>
             </div>
         `;
 
         const errBox = document.getElementById("m-auth-err");
-        document.getElementById("m-btn-back1").onclick = () => {
+        const goBackToStep1 = () => {
             document.getElementById("m-auth-step1").style.display = "flex";
             document.getElementById("m-auth-step-pin").style.display = "none";
+            document.getElementById("m-auth-step-otp").style.display = "none";
             errBox.textContent = "";
         };
+
+        document.getElementById("m-btn-back1").onclick = goBackToStep1;
+        document.getElementById("m-btn-back2").onclick = goBackToStep1;
+        const resetApkBtn = document.getElementById("m-apk-reset-login");
+        if (resetApkBtn) resetApkBtn.onclick = goBackToStep1;
 
         document.getElementById("m-btn-continue").onclick = async () => {
             const ident = document.getElementById("m-auth-ident").value.trim();
@@ -204,7 +294,7 @@
         `;
         document.body.insertBefore(strip, document.body.firstChild);
         document.getElementById("jagriti-global-logout-btn").onclick = async () => {
-            await fetch(originPrefix + "/api/auth/driver-logout", { method: "POST" });
+            await fetch(originPrefix + "/api/auth/driver-logout", { method: "POST" }).catch(() => {});
             forceLockoutScreen("You have logged out.");
         };
     }

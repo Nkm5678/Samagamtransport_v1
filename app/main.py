@@ -85,10 +85,16 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 def _serve_html(filename: str):
-    path = os.path.join(ROOT_DIR, filename)
-    if os.path.exists(path):
-        return FileResponse(path)
-    return {"detail": f"{filename} not found in project root."}
+    candidates = [
+        os.path.join(ROOT_DIR, filename),
+        os.path.join(ROOT_DIR, "root", filename),
+        os.path.join(os.getcwd(), filename),
+        os.path.join(os.getcwd(), "root", filename),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return FileResponse(path)
+    return JSONResponse(status_code=404, content={"detail": f"{filename} not found in project root."})
 
 
 @app.get("/")
