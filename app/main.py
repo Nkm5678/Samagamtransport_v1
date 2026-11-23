@@ -1,24 +1,19 @@
-"""
-Samagam Transport Platform — Hardened Production Entrypoint
-Includes IP Rate Limiting (Anti-DDoS / Anti-Brute-Force), Security Headers & Modular Routers.
-"""
-
+from collections import defaultdict, deque
+from contextlib import asynccontextmanager
 import os
 import sys
 import time
-from collections import defaultdict, deque
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 
-# Ensure project root is on sys.path even if invoked from a subfolder
+# Ensure project root is on sys.path before importing from 'app'
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-
+from sqlalchemy import inspect, text
 from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.services.seed_service import seed_initial_operations_data
@@ -30,9 +25,42 @@ GENERAL_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "180"))
 AUTH_LIMIT_PER_MIN = int(os.environ.get("AUTH_RATE_LIMIT_PER_MIN", "20"))
 
 
+def _ensure_missing_columns():
+    """Safely adds newly introduced columns to existing SQLite/PostgreSQL tables on startup."""
+    try:
+        inspector = inspect(engine)
+        table_names = set(inspector.get_table_names())
+        migrations: list[tuple[str, str, str]] = []
+
+        if "vehicles" in table_names:
+            existing_cols = {c["name"] for c in inspector.get_columns("vehicles")}
+            if "onboarding_team" not in existing_cols:
+                migrations.append(("vehicles", "onboarding_team", "VARCHAR(60) DEFAULT 'Control Room'"))
+            if "registered_by" not in existing_cols:
+                migrations.append(("vehicles", "registered_by", "VARCHAR(120)"))
+
+        if "devotee_parking_passes" in table_names:
+            existing_cols = {c["name"] for c in inspector.get_columns("devotee_parking_passes")}
+            if "owner_email" not in existing_cols:
+                migrations.append(("devotee_parking_passes", "owner_email", "VARCHAR(120)"))
+            if "branch_name" not in existing_cols:
+                migrations.append(("devotee_parking_passes", "branch_name", "VARCHAR(120)"))
+            if "zone_name" not in existing_cols:
+                migrations.append(("devotee_parking_passes", "zone_name", "VARCHAR(120)"))
+
+        if migrations:
+            with engine.begin() as conn:
+                for tbl, col, col_type in migrations:
+                    conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type}"))
+            print(f"✅ Applied {len(migrations)} schema column migration(s).")
+    except Exception as exc:
+        print(f"⚠️ Column auto-migration notice: {exc}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _ensure_missing_columns()
     db = SessionLocal()
     try:
         seed_initial_operations_data(db)
@@ -210,3 +238,10 @@ def serve_html_page(page_name: str, request: Request):
 @app.get("/health")
 def health():
     return {"status": "healthy", "version": settings.APP_VERSION}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.environ.get("PORT", "8000"))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)

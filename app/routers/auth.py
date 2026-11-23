@@ -3,9 +3,20 @@ import hmac
 import os
 import re
 import secrets
+import sys
 import time
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Header
+
+_THIS_FILE = os.path.abspath(__file__)
+_CANDIDATE_ROOTS = [
+    os.path.abspath(os.path.join(os.path.dirname(_THIS_FILE), "..", "..")),
+    r"C:\narendra\SamagamtransportV1",
+]
+for _root in _CANDIDATE_ROOTS:
+    if os.path.isdir(os.path.join(_root, "app")) and _root not in sys.path:
+        sys.path.insert(0, _root)
+
+from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from sqlalchemy.orm import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -116,61 +127,9 @@ def _driver_payload(db: Session, vol: Volunteer, token: str = None) -> dict:
     return out
 
 
-@router.post("/control-room-login")
-def control_room_admin_login(data: dict, db: Session = Depends(get_db)):
-    """Restricts Control Room access strictly to dedicated members & admins."""
-    mobile = _norm_phone(data.get("mobile_number"))
-    passcode = str(data.get("access_code") or data.get("password") or "").strip()
-    if len(mobile) != 10:
-        raise HTTPException(status_code=400, detail="Enter a valid 10-digit registered mobile number.")
-
-    vol = db.query(Volunteer).filter(Volunteer.mobile_number == mobile, Volunteer.is_active == True).first()
-    is_admin_role = bool(vol and vol.system_role in ("GROUND_ADMIN", "ADMIN", "CONTROL_ROOM"))
-    pin_valid = bool(vol and vol.pin_hash and len(_norm_pin(passcode)) == 4 and check_password_hash(vol.pin_hash, _norm_pin(passcode)))
-    master_pwd_valid = bool(ADMIN_MASTER_PASSWORD and hmac.compare_digest(passcode, ADMIN_MASTER_PASSWORD))
-    code_valid = bool(ADMIN_ACCESS_CODE and hmac.compare_digest(passcode, ADMIN_ACCESS_CODE))
-
-    if not ((is_admin_role and pin_valid) or master_pwd_valid or code_valid):
-        raise HTTPException(status_code=403, detail="Access Denied: Restricted to dedicated Control Room members and Admins only.")
-
-    if not vol:
-        vol = Volunteer(
-            volunteer_code=f"HQ-{secrets.randbelow(9000) + 1000}",
-            full_name=str(data.get("member_name") or f"Control Room Member ({mobile[-4:]})").strip(),
-            mobile_number=mobile,
-            unit_number="HQ-Command",
-            branch_name="Samagam Transport HQ",
-            duty_location="Ground 1 (Main Hall)",
-            system_role="GROUND_ADMIN",
-            can_view_all_territories=True,
-            can_execute_ground_tasks=True,
-            can_execute_station_tasks=True,
-            can_manage_fleet=True,
-            geofence_verified=True
-        )
-        db.add(vol)
-        db.commit()
-        db.refresh(vol)
-
-    raw_tok = secrets.token_urlsafe(32)
-    db.add(VolunteerSession(
-        session_token=_tok_hash(raw_tok),
-        volunteer_id=vol.id,
-        expires_at=datetime.utcnow() + timedelta(hours=12)
-    ))
-    db.commit()
-
-    return {
-        "status": "AUTHORIZED",
-        "session_token": raw_tok,
-        "member": {
-            "id": vol.id,
-            "full_name": vol.full_name,
-            "mobile_number": vol.mobile_number,
-            "system_role": vol.system_role
-        }
-    }
-
+# ------------------------------------------------------------------
+# 1. UNIFIED OTP & 4-DIGIT PIN AUTHENTICATION FOR ALL FIELD ROLES
+# ------------------------------------------------------------------
 
 @router.post("/otp/send")
 def send_driver_otp(data: dict, db: Session = Depends(get_db)):
@@ -250,7 +209,11 @@ def verify_driver_otp(data: dict, db: Session = Depends(get_db)):
     name = str(data.get("name") or "").strip()
     phone = _norm_phone(data.get("phone"))
     pin = _norm_pin(data.get("pin"))
-    role = str(data.get("system_role") or "DRIVER").upper().strip()
+    role = str(data.get("system_role") or "FIELD_VOLUNTEER").upper().strip()
+    branch_name = str(data.get("branch_name") or "").strip()
+    unit_number = str(data.get("unit_number") or "").strip()
+    bus_operator_name = str(data.get("bus_operator_name") or "").strip()
+
     if not name or not phone:
         return {"needs_registration": True, "requires_code": bool(REG_CODE)}
     if len(phone) != 10:
@@ -260,17 +223,28 @@ def verify_driver_otp(data: dict, db: Session = Depends(get_db)):
     if REG_CODE and str(data.get("code") or "").strip() != REG_CODE:
         raise HTTPException(status_code=403, detail="Wrong event code. Ask the Control Room.")
 
+    if role == "DRIVER":
+        if not bus_operator_name:
+            raise HTTPException(status_code=400, detail="Bus Operator / Travels Name is required for Drivers.")
+        stored_branch = f"Operator: {bus_operator_name}"
+        stored_unit = "Fleet-Driver"
+    else:
+        if not branch_name or not unit_number:
+            raise HTTPException(status_code=400, detail="Branch Name and Unit Number are required for all non-driver team members.")
+        stored_branch = branch_name
+        stored_unit = unit_number
+
     if db.query(Volunteer).filter(Volunteer.mobile_number == phone).first():
         raise HTTPException(status_code=409, detail="This mobile number is already registered.")
 
     vol = Volunteer(
-        volunteer_code=f"CREW-{secrets.randbelow(9000) + 1000}",
+        volunteer_code=f"{'DRV' if role == 'DRIVER' else 'CREW'}-{secrets.randbelow(9000) + 1000}",
         full_name=name,
         mobile_number=phone,
         email=email,
         pin_hash=generate_password_hash(pin),
-        unit_number=("Fleet-Driver" if role == "DRIVER" else (unit_number or "Unit-01")),
-        branch_name=(f"Operator: {bus_operator_name}" if role == "DRIVER" else (branch_name or "Samagam Branch")),
+        unit_number=stored_unit,
+        branch_name=stored_branch,
         duty_location=str(data.get("duty_location") or "Ground 1 (Main Hall)"),
         system_role=role,
         is_driver=(role == "DRIVER"),
@@ -300,11 +274,16 @@ def verify_driver_pin(data: dict, db: Session = Depends(get_db)):
     if len(pin) != 4:
         raise HTTPException(status_code=400, detail="Enter your 4-digit numerical PIN.")
 
-    vol = db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first() if "@" in ident else db.query(Volunteer).filter(Volunteer.mobile_number == _norm_phone(ident)).first()
+    vol = None
+    if "@" in ident:
+        vol = db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first()
+    else:
+        vol = db.query(Volunteer).filter(Volunteer.mobile_number == _norm_phone(ident)).first()
+
     if not vol:
         raise HTTPException(status_code=404, detail="Crew account not found.")
     if not vol.pin_hash:
-        raise HTTPException(status_code=403, detail="No PIN set yet. Use Forgot PIN or ask Control Room.")
+        raise HTTPException(status_code=403, detail="No PIN set yet. Use 'Forgot PIN' or ask Control Room.")
     if not check_password_hash(vol.pin_hash, pin):
         raise HTTPException(status_code=403, detail="Incorrect 4-digit PIN.")
 
@@ -318,20 +297,30 @@ def verify_driver_pin(data: dict, db: Session = Depends(get_db)):
 @router.post("/pin/reset/send")
 def send_pin_reset_otp(data: dict, db: Session = Depends(get_db)):
     ident = str(data.get("identifier") or "").strip()
-    vol = db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first() if "@" in ident else db.query(Volunteer).filter(Volunteer.mobile_number == _norm_phone(ident)).first()
-    if not vol or not vol.email:
-        raise HTTPException(status_code=400, detail="No email on file for this account. Ask Control Room to reset PIN.")
+    phone_digits = _norm_phone(ident)
+    vol = (
+        db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first()
+        if "@" in ident
+        else db.query(Volunteer).filter(Volunteer.mobile_number == phone_digits).first()
+    )
+    if not vol:
+        raise HTTPException(status_code=404, detail="No registered account found for this mobile number or email.")
+
+    otp_key = _norm_email(vol.email) if vol.email else f"phone:{vol.mobile_number}"
     code = f"{secrets.randbelow(1000000):06d}"
     salt = secrets.token_hex(8)
     now_ts = time.time()
-    row = db.query(EmailOTP).filter(EmailOTP.email == vol.email).first()
+    row = db.query(EmailOTP).filter(EmailOTP.email == otp_key).first()
     if row:
         row.code_hash, row.salt, row.expires_ts, row.attempts, row.sent_ts = _otp_hash(code, salt), salt, now_ts + OTP_TTL, 0, now_ts
     else:
-        db.add(EmailOTP(email=vol.email, code_hash=_otp_hash(code, salt), salt=salt, expires_ts=now_ts + OTP_TTL, attempts=0, sent_ts=now_ts))
+        db.add(EmailOTP(email=otp_key, code_hash=_otp_hash(code, salt), salt=salt, expires_ts=now_ts + OTP_TTL, attempts=0, sent_ts=now_ts))
     db.commit()
-    send_email_async_safe(vol.email, f"{code} — Samagam PIN Reset Code", f"<p>Your PIN reset OTP is <strong>{code}</strong>.</p>")
-    resp = {"sent": True, "email": vol.email}
+
+    if vol.email and "@" in vol.email:
+        send_email_async_safe(vol.email, f"{code} — Samagam PIN Reset Code", f"<p>Your PIN reset OTP is <strong>{code}</strong>.</p>")
+
+    resp = {"sent": True, "email": vol.email or "", "target": vol.email or f"Mobile {vol.mobile_number}"}
     if OTP_DEV_ECHO:
         resp["dev_otp"] = code
     return resp
@@ -342,10 +331,20 @@ def verify_pin_reset(data: dict, db: Session = Depends(get_db)):
     ident = str(data.get("identifier") or "").strip()
     code = re.sub(r"\D", "", str(data.get("otp") or ""))
     pin = _norm_pin(data.get("pin"))
-    vol = db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first() if "@" in ident else db.query(Volunteer).filter(Volunteer.mobile_number == _norm_phone(ident)).first()
-    if not vol or not vol.email:
+    phone_digits = _norm_phone(ident)
+    vol = (
+        db.query(Volunteer).filter(Volunteer.email == _norm_email(ident)).first()
+        if "@" in ident
+        else db.query(Volunteer).filter(Volunteer.mobile_number == phone_digits).first()
+    )
+    if not vol:
         raise HTTPException(status_code=404, detail="Account not found.")
-    row = db.query(EmailOTP).filter(EmailOTP.email == vol.email).first()
+
+    otp_key = _norm_email(vol.email) if vol.email else f"phone:{vol.mobile_number}"
+    row = db.query(EmailOTP).filter(EmailOTP.email == otp_key).first()
+    if not row and vol.email:
+        row = db.query(EmailOTP).filter(EmailOTP.email == _norm_email(vol.email)).first()
+
     if not row or row.expires_ts < time.time() or not hmac.compare_digest(_otp_hash(code, row.salt), row.code_hash):
         raise HTTPException(status_code=403, detail="Invalid or expired OTP.")
     if len(pin) != 4:
@@ -364,64 +363,70 @@ def get_driver_me(vol: Volunteer = Depends(get_current_volunteer), db: Session =
     return _driver_payload(db, vol)
 
 
-@router.post("/driver-logout")
-def driver_logout(
+@router.get("/session-heartbeat")
+def check_active_session_heartbeat(
     x_driver_token: str = Header(None),
     x_session_token: str = Header(None),
     db: Session = Depends(get_db)
 ):
+    """Validates that the web/APK user is logged in and has NOT been terminated by Admin."""
     raw_tok = x_driver_token or x_session_token
-    if raw_tok:
-        sess = db.query(VolunteerSession).filter(
-            VolunteerSession.session_token.in_([raw_tok, _tok_hash(raw_tok)])
-        ).first()
-        if sess:
-            vol = db.query(Volunteer).filter(Volunteer.id == sess.volunteer_id).first()
-            if vol:
-                active_bus = db.query(Vehicle).filter(
-                    ((Vehicle.assigned_driver_id == vol.id) | (Vehicle.driver_phone == vol.mobile_number)),
-                    Vehicle.active_journey_id != None
-                ).first()
-                if active_bus:
-                    raise HTTPException(status_code=409, detail=f"Trip still active on {active_bus.vehicle_reg_number}. Tap 'End Trip' first.")
-                open_shift = db.query(CrewDutyShift).filter(
-                    CrewDutyShift.crew_phone == vol.mobile_number,
-                    CrewDutyShift.is_currently_on_duty == True
-                ).first()
-                if open_shift:
-                    raise HTTPException(status_code=409, detail="You are still ON DUTY. Tap 'End Duty Shift' before logging out.")
-            db.delete(sess)
-            db.commit()
-    return {"ok": True}
-
-
-@router.get("/crew")
-def list_registered_crew(db: Session = Depends(get_db)):
-    crew = db.query(Volunteer).order_by(Volunteer.id.desc()).all()
-    return [
-        {
-            "id": v.id,
-            "volunteer_code": v.volunteer_code,
-            "full_name": v.full_name,
-            "mobile_number": v.mobile_number,
-            "email": v.email or "",
-            "duty_location": v.duty_location,
-            "system_role": v.system_role,
-            "has_pin": bool(v.pin_hash),
-            "is_active": v.is_active
+    if not raw_tok:
+        raise HTTPException(status_code=401, detail="Login required to access Samagam Web/Mobile Apps.")
+    session = db.query(VolunteerSession).filter(
+        VolunteerSession.session_token.in_([raw_tok, _tok_hash(raw_tok)])
+    ).first()
+    if not session or session.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Session expired or terminated. Please sign in again.")
+    vol = db.query(Volunteer).filter(Volunteer.id == session.volunteer_id).first()
+    if not vol or not vol.is_active:
+        db.delete(session)
+        db.commit()
+        raise HTTPException(status_code=403, detail="TERMINATED: Your access has been revoked by the Control Room Admin.")
+    return {
+        "authenticated": True,
+        "user": {
+            "id": vol.id,
+            "volunteer_code": vol.volunteer_code,
+            "full_name": vol.full_name,
+            "mobile_number": vol.mobile_number,
+            "system_role": vol.system_role,
+            "duty_location": vol.duty_location
         }
-        for v in crew
-    ]
+    }
 
 
-@router.post("/admin-reset-pin")
-def admin_reset_crew_pin(data: dict, db: Session = Depends(get_db)):
+@router.post("/admin-terminate-user")
+def admin_terminate_user(data: dict, db: Session = Depends(get_db)):
+    """Immediately terminates a user's account and destroys all active Web & APK sessions."""
     crew_id = data.get("crew_id")
     mobile = _norm_phone(data.get("mobile_number"))
-    pin = _norm_pin(data.get("new_pin") or "1234")
-    if len(pin) != 4:
-        raise HTTPException(status_code=400, detail="New PIN must be exactly 4 digits.")
     vol = db.query(Volunteer).filter(Volunteer.id == int(crew_id)).first() if crew_id else db.query(Volunteer).filter(Volunteer.mobile_number == mobile).first()
+    if not vol:
+        raise HTTPException(status_code=404, detail="User account not found.")
+
+    vol.is_active = False
+    deleted_sessions = db.query(VolunteerSession).filter(VolunteerSession.volunteer_id == vol.id).delete()
+    db.commit()
+    return {
+        "status": "TERMINATED",
+        "crew_id": vol.id,
+        "full_name": vol.full_name,
+        "mobile_number": vol.mobile_number,
+        "revoked_sessions": deleted_sessions
+    }
+
+
+@router.post("/admin-reactivate-user")
+def admin_reactivate_user(data: dict, db: Session = Depends(get_db)):
+    """Re-enables a previously terminated user account so they can log in again."""
+    crew_id = data.get("crew_id")
+    vol = db.query(Volunteer).filter(Volunteer.id == int(crew_id)).first()
+    if not vol:
+        raise HTTPException(status_code=404, detail="User account not found.")
+    vol.is_active = True
+    db.commit()
+    return {"status": "REACTIVATED", "crew_id": vol.id, "full_name": vol.full_name}
     if not vol:
         raise HTTPException(status_code=404, detail="Crew member not found.")
     vol.pin_hash = generate_password_hash(pin)
@@ -430,49 +435,250 @@ def admin_reset_crew_pin(data: dict, db: Session = Depends(get_db)):
     return {"status": "PIN_RESET", "crew_id": vol.id, "full_name": vol.full_name, "mobile_number": vol.mobile_number, "new_pin": pin}
 
 
+ADMIN_ACCESS_CODE = os.environ.get("ADMIN_ACCESS_CODE", "SAMAGAM-HQ-2026").strip()
+
+
+@router.post("/control-room-login")
+def control_room_admin_login(data: dict, request: Request, db: Session = Depends(get_db)):
+    host = (request.headers.get("host") or "").lower().split(":")[0]
+    is_admin_subdomain = (host == "admin.samagamtransport.in" or host.startswith("admin."))
+
+    mobile = _norm_phone(data.get("mobile_number"))
+    passcode = str(data.get("access_code") or data.get("password") or "").strip()
+    if len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Enter a valid 10-digit registered mobile number.")
+
+    vol = db.query(Volunteer).filter(Volunteer.mobile_number == mobile, Volunteer.is_active == True).first()
+    is_admin_role = bool(vol and vol.system_role in ("GROUND_ADMIN", "ADMIN", "CONTROL_ROOM"))
+    pin_valid = bool(vol and vol.pin_hash and len(_norm_pin(passcode)) == 4 and check_password_hash(vol.pin_hash, _norm_pin(passcode)))
+    master_pwd_valid = bool(ADMIN_MASTER_PASSWORD and hmac.compare_digest(passcode, ADMIN_MASTER_PASSWORD))
+    code_valid = bool(ADMIN_ACCESS_CODE and hmac.compare_digest(passcode, ADMIN_ACCESS_CODE))
+
+    if not ((is_admin_role and pin_valid) or master_pwd_valid or code_valid):
+        raise HTTPException(status_code=403, detail="Access Denied: Invalid Admin credentials.")
+
+    if not is_admin_subdomain and not master_pwd_valid:
+        raise HTTPException(status_code=403, detail="Control Room login must use https://admin.samagamtransport.in")
+
+    if not vol:
+        vol = Volunteer(
+            volunteer_code=f"HQ-{secrets.randbelow(9000) + 1000}",
+            full_name=str(data.get("member_name") or f"Control Room Member ({mobile[-4:]})").strip(),
+            mobile_number=mobile,
+            unit_number="HQ-Command",
+            branch_name="Samagam Transport HQ",
+            duty_location="Ground 1 (Main Hall)",
+            system_role="GROUND_ADMIN",
+            can_view_all_territories=True,
+            can_execute_ground_tasks=True,
+            can_execute_station_tasks=True,
+            can_manage_fleet=True,
+            geofence_verified=True
+        )
+        db.add(vol)
+        db.commit()
+        db.refresh(vol)
+
+    raw_tok = secrets.token_urlsafe(32)
+    db.add(VolunteerSession(
+        session_token=_tok_hash(raw_tok),
+        volunteer_id=vol.id,
+        expires_at=datetime.utcnow() + timedelta(hours=12)
+    ))
+    db.commit()
+
+    return {
+        "status": "AUTHORIZED",
+        "session_token": raw_tok,
+        "member": {
+            "id": vol.id,
+            "full_name": vol.full_name,
+            "mobile_number": vol.mobile_number,
+            "system_role": vol.system_role
+        }
+    }
+
+
+@router.post("/assign-driver-bus")
+def assign_driver_to_bus(data: dict, db: Session = Depends(get_db)):
+    reg = str(data.get("vehicle_reg_number") or "").upper().strip()
+    phone = _norm_phone(data.get("driver_phone"))
+    name = str(data.get("driver_name") or "").strip()
+    email = _norm_email(data.get("driver_email")) or None
+    pin = _norm_pin(data.get("pin") or "1234")
+
+    veh = db.query(Vehicle).filter(Vehicle.vehicle_reg_number == reg).first()
+    if not veh:
+        raise HTTPException(status_code=404, detail=f"Vehicle {reg} not found.")
+    if len(phone) != 10 or not name:
+        raise HTTPException(status_code=400, detail="Valid driver name and 10-digit mobile required.")
+
+    vol = db.query(Volunteer).filter(Volunteer.mobile_number == phone).first()
+    if not vol:
+        vol = Volunteer(
+            volunteer_code=f"DRV-{secrets.randbelow(9000) + 1000}",
+            full_name=name,
+            mobile_number=phone,
+            email=email,
+            pin_hash=generate_password_hash(pin if len(pin) == 4 else "1234"),
+            unit_number="Fleet-Crew",
+            branch_name="Samagam Transport",
+            duty_location=veh.current_hub,
+            system_role="DRIVER",
+            is_driver=True,
+            assigned_vehicle_id=veh.id,
+            geofence_verified=True
+        )
+        db.add(vol)
+        db.commit()
+        db.refresh(vol)
+    else:
+        vol.full_name = name
+        vol.assigned_vehicle_id = veh.id
+        if email:
+            vol.email = email
+        if data.get("pin") and len(pin) == 4:
+            vol.pin_hash = generate_password_hash(pin)
+
+    db.query(Vehicle).filter(Vehicle.assigned_driver_id == vol.id).update({"assigned_driver_id": None})
+    veh.assigned_driver_id = vol.id
+    veh.driver_name = name
+    veh.driver_phone = phone
+    db.commit()
+
+    return {"status": "ASSIGNED", "vehicle_reg_number": veh.vehicle_reg_number, "driver_id": vol.id, "driver_name": vol.full_name, "pin": pin}
+
+
+# ------------------------------------------------------------------
+# 3. 2.0KM GEOFENCE VOLUNTEER REGISTRATION & LOGIN
+# ------------------------------------------------------------------
+
+def _determine_role_and_permissions(duty_location: str) -> dict:
+    loc_lower = duty_location.lower()
+    if "ground" in loc_lower or "control" in loc_lower or "venue" in loc_lower:
+        return {
+            "system_role": "GROUND_ADMIN",
+            "can_view_all_territories": True,
+            "can_execute_ground_tasks": True,
+            "can_execute_station_tasks": True,
+            "can_manage_fleet": True
+        }
+    return {
+        "system_role": "STATION_COORDINATOR",
+        "can_view_all_territories": False,
+        "can_execute_ground_tasks": False,
+        "can_execute_station_tasks": True,
+        "can_manage_fleet": False
+    }
+
+
 @router.post("/register")
 def register_volunteer(req: VolunteerRegisterRequest, db: Session = Depends(get_db)):
     is_valid, distance_m, msg, hub = verify_territory_geofence(db, req.duty_location, req.latitude, req.longitude)
     if not is_valid:
         raise HTTPException(status_code=403, detail=msg)
-    if db.query(Volunteer).filter(Volunteer.mobile_number == req.mobile_number).first():
-        raise HTTPException(status_code=400, detail="Mobile number already registered.")
-    loc = req.duty_location.lower()
-    is_ground = ("ground" in loc or "control" in loc or "venue" in loc)
+
+    existing = db.query(Volunteer).filter(Volunteer.mobile_number == req.mobile_number).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Mobile number already registered. Please use Login.")
+
+    perms = _determine_role_and_permissions(req.duty_location)
+    vol_code = f"VOL-{hub.hub_code}-{secrets.randbelow(9000) + 1000}"
+
+    assigned_veh_id = None
+    if req.assigned_vehicle_reg:
+        veh = db.query(Vehicle).filter(Vehicle.vehicle_reg_number == req.assigned_vehicle_reg.upper().strip()).first()
+        if veh:
+            assigned_veh_id = veh.id
+
     vol = Volunteer(
-        volunteer_code=f"VOL-{hub.hub_code}-{secrets.randbelow(9000) + 1000}",
+        volunteer_code=vol_code,
         full_name=req.full_name.strip(),
         mobile_number=req.mobile_number.strip(),
         unit_number=req.unit_number.strip(),
         branch_name=req.branch_name.strip(),
+        photo_b64=req.photo_b64,
         duty_location=req.duty_location,
-        system_role="GROUND_ADMIN" if is_ground else "STATION_COORDINATOR",
-        can_view_all_territories=is_ground,
-        can_execute_ground_tasks=is_ground,
-        can_execute_station_tasks=True,
-        can_manage_fleet=is_ground,
+        device_fingerprint=req.device_fingerprint,
         latitude=req.latitude,
         longitude=req.longitude,
-        geofence_verified=True
+        geo_accuracy=req.geo_accuracy,
+        geofence_verified=True,
+        assigned_vehicle_id=assigned_veh_id,
+        **perms
     )
     db.add(vol)
     db.commit()
     db.refresh(vol)
+
     token = secrets.token_hex(32)
-    db.add(VolunteerSession(session_token=token, volunteer_id=vol.id, expires_at=datetime.utcnow() + timedelta(hours=24)))
+    db.add(VolunteerSession(
+        session_token=token,
+        volunteer_id=vol.id,
+        device_fingerprint=req.device_fingerprint,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        expires_at=datetime.utcnow() + timedelta(hours=24)
+    ))
     db.commit()
-    return {"status": "REGISTERED", "session_token": token, "volunteer": {"id": vol.id, "volunteer_code": vol.volunteer_code, "full_name": vol.full_name, "duty_location": vol.duty_location, "system_role": vol.system_role, "can_view_all_territories": vol.can_view_all_territories}}
+
+    return {
+        "status": "REGISTERED_AND_VERIFIED",
+        "geofence_message": msg,
+        "distance_meters": distance_m,
+        "session_token": token,
+        "volunteer": {
+            "id": vol.id,
+            "volunteer_code": vol.volunteer_code,
+            "full_name": vol.full_name,
+            "mobile_number": vol.mobile_number,
+            "duty_location": vol.duty_location,
+            "system_role": vol.system_role,
+            "can_view_all_territories": vol.can_view_all_territories,
+            "can_manage_fleet": vol.can_manage_fleet
+        }
+    }
 
 
 @router.post("/login")
 def login_volunteer(req: VolunteerLoginRequest, db: Session = Depends(get_db)):
     vol = db.query(Volunteer).filter(Volunteer.mobile_number == req.mobile_number.strip()).first()
     if not vol:
-        raise HTTPException(status_code=404, detail="Volunteer not found.")
+        raise HTTPException(status_code=404, detail="Volunteer not found. Please complete first-time registration.")
+
     is_valid, distance_m, msg, _ = verify_territory_geofence(db, vol.duty_location, req.latitude, req.longitude)
     if not is_valid:
         raise HTTPException(status_code=403, detail=msg)
+
+    vol.latitude = req.latitude
+    vol.longitude = req.longitude
+    vol.geofence_verified = True
+    vol.last_login_at = datetime.utcnow()
+
     token = secrets.token_hex(32)
-    db.add(VolunteerSession(session_token=token, volunteer_id=vol.id, expires_at=datetime.utcnow() + timedelta(hours=24)))
+    db.add(VolunteerSession(
+        session_token=token,
+        volunteer_id=vol.id,
+        device_fingerprint=req.device_fingerprint,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        expires_at=datetime.utcnow() + timedelta(hours=24)
+    ))
     db.commit()
-    return {"status": "AUTHENTICATED", "session_token": token, "volunteer": {"id": vol.id, "volunteer_code": vol.volunteer_code, "full_name": vol.full_name, "duty_location": vol.duty_location, "system_role": vol.system_role, "can_view_all_territories": vol.can_view_all_territories}}
+
+    return {
+        "status": "AUTHENTICATED",
+        "geofence_message": msg,
+        "distance_meters": distance_m,
+        "session_token": token,
+        "volunteer": {
+            "id": vol.id,
+            "volunteer_code": vol.volunteer_code,
+            "full_name": vol.full_name,
+            "mobile_number": vol.mobile_number,
+            "duty_location": vol.duty_location,
+            "system_role": vol.system_role,
+            "can_view_all_territories": vol.can_view_all_territories,
+            "can_manage_fleet": vol.can_manage_fleet
+        }
+    }

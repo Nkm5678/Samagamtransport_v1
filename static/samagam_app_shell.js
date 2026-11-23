@@ -1,10 +1,3 @@
-/**
- * जागृति — The Awakening | निरंकारी सन्त समागम
- * 1. Connects Android APKs & Instant Web Apps seamlessly to https://www.samagamtransport.in
- * 2. Keeps Android APK hardware/gesture Back button inside the app's own Login/Register/Workspace
- *    instead of jumping to the Admin login or closing unexpectedly.
- * 3. Polls session heartbeat every 10s so Admin Termination immediately locks out revoked users.
- */
 (function initJagritiAuthAndShell() {
     const PRODUCTION_ORIGIN = "https://www.samagamtransport.in";
     const isFileOrCapacitor =
@@ -30,19 +23,46 @@
     const isPublicPage = !isFileOrCapacitor && (PUBLIC_PATHS.includes(currentPath) || isSubdomainPortal);
 
     // -------------------------------------------------------------------------
-    // 1. ANDROID APK BACK-BUTTON & HISTORY TRAP (Prevents jumping to Admin/Blank)
+    // 1. REGISTRATION PAGE-CLOSE GUARD & ANDROID APK BACK-BUTTON TRAP
     // -------------------------------------------------------------------------
+    let _isAuthInFlight = false;
+    let _lastPopstateHandledAt = 0;
+
+    function _isRegistrationActive() {
+        const otpStep = document.getElementById("m-auth-step-otp");
+        const hasOtpStepOpen = Boolean(otpStep && otpStep.style.display !== "none");
+        const inputs = Array.from(
+            document.querySelectorAll(
+                "#samagam-mandatory-auth-overlay input, #driver-auth-screen input, form[id*='register'] input, form[id*='onboard'] input"
+            )
+        );
+        const hasTypedRegistrationData = inputs.some((el) => {
+            if (!el || el.type === "hidden" || el.disabled) return false;
+            return String(el.value || "").trim().length > 0;
+        });
+        return Boolean(_isAuthInFlight || hasOtpStepOpen || hasTypedRegistrationData);
+    }
+
     if (isFileOrCapacitor) {
         try {
             window.history.replaceState({ samagamApkRoot: true }, "", window.location.href);
             window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
 
             window.addEventListener("popstate", function () {
+                const now = Date.now();
+                if (now - _lastPopstateHandledAt < 350) return;
+                _lastPopstateHandledAt = now;
+
+                const overlay = document.getElementById("samagam-mandatory-auth-overlay");
+                if (_isRegistrationActive() || (overlay && overlay.style.display !== "none")) {
+                    window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
+                    return;
+                }
+
                 const stepOtp = document.getElementById("m-auth-step-otp");
                 const stepPin = document.getElementById("m-auth-step-pin");
                 const step1 = document.getElementById("m-auth-step1");
 
-                // If user is on OTP or PIN step inside the login modal, Back returns to Step 1
                 if (stepOtp && stepOtp.style.display !== "none") {
                     stepOtp.style.display = "none";
                     if (step1) step1.style.display = "flex";
@@ -56,7 +76,6 @@
                     return;
                 }
 
-                // Driver app step-back support
                 if (typeof window.resetAuthScreen === "function") {
                     const drvOtp = document.getElementById("auth-step-otp");
                     const drvPin = document.getElementById("auth-step-pin");
@@ -67,11 +86,62 @@
                     }
                 }
 
-                // Keep user inside the current APK screen instead of navigating to admin/blank page
                 window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
             });
         } catch (_) {}
     }
+
+    window.addEventListener("beforeunload", function (ev) {
+        if (_isRegistrationActive()) {
+            ev.preventDefault();
+            ev.returnValue = "";
+            return "";
+        }
+    }, true);
+
+    window.addEventListener("pagehide", function () {
+        if (_isRegistrationActive() && !isFileOrCapacitor) {
+            try {
+                window.history.pushState({ samagamStayOnPage: true }, "", window.location.href);
+            } catch (_) {}
+        }
+    }, true);
+
+    document.addEventListener("submit", function (ev) {
+        const target = ev.target;
+        if (!target || !(target instanceof HTMLFormElement)) return;
+        if (
+            target.closest("#samagam-mandatory-auth-overlay") ||
+            target.closest("#driver-auth-screen") ||
+            _isRegistrationActive()
+        ) {
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
+    }, true);
+
+    document.addEventListener("keydown", function (ev) {
+        if (ev.key !== "Enter") return;
+        const active = document.activeElement;
+        if (!active) return;
+        const overlay = document.getElementById("samagam-mandatory-auth-overlay");
+        const inAuthOrReg =
+            (overlay && overlay.contains(active)) ||
+            Boolean(active.closest && active.closest("#driver-auth-screen, form[id*='register'], form[id*='onboard']"));
+        if (!inAuthOrReg) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (overlay && overlay.contains(active)) {
+            if (active.id === "m-auth-ident") {
+                document.getElementById("m-btn-continue")?.click();
+            } else if (active.id === "m-auth-pin") {
+                document.getElementById("m-btn-pin-verify")?.click();
+            } else if (document.getElementById("m-auth-step-otp")?.style.display !== "none") {
+                document.getElementById("m-btn-otp-verify")?.click();
+            }
+        }
+    }, true);
 
     // -------------------------------------------------------------------------
     // 2. FETCH INTERCEPTOR (Routes APK API calls & attaches Field Session Token)
@@ -82,6 +152,9 @@
         if (originPrefix && typeof url === "string" && url.startsWith("/")) {
             url = originPrefix + url;
         }
+        const isAuthEndpoint = typeof url === "string" && url.includes("/api/auth/");
+        if (isAuthEndpoint) _isAuthInFlight = true;
+
         init = init || {};
         const headers = new Headers(init.headers || {});
         const tok = localStorage.getItem("samagam_driver_token") || localStorage.getItem("samagam_field_token") || "";
@@ -90,17 +163,23 @@
         }
         init.headers = headers;
 
-        const resp = await origFetch(url, init);
-        if (!isPublicPage && typeof url === "string" && !url.includes("/api/auth/") && (resp.status === 401 || resp.status === 403)) {
-            const clone = resp.clone();
-            try {
-                const body = await clone.json();
-                if (body && body.detail && (body.detail.includes("TERMINATED") || body.detail.includes("Session expired") || body.detail.includes("Missing session"))) {
-                    forceLockoutScreen(body.detail);
-                }
-            } catch (_) {}
+        try {
+            const resp = await origFetch(url, init);
+            if (!isPublicPage && !isAuthEndpoint && (resp.status === 401 || resp.status === 403)) {
+                const clone = resp.clone();
+                try {
+                    const body = await clone.json();
+                    if (body && body.detail && (body.detail.includes("TERMINATED") || body.detail.includes("Session expired") || body.detail.includes("Missing session"))) {
+                        forceLockoutScreen(body.detail);
+                    }
+                } catch (_) {}
+            }
+            return resp;
+        } finally {
+            if (isAuthEndpoint) {
+                setTimeout(() => { _isAuthInFlight = false; }, 400);
+            }
         }
-        return resp;
     };
 
     function getAppFriendlyTitle() {
@@ -118,7 +197,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // 3. APP'S OWN FIELD LOGIN / REGISTER MODAL (Never redirects to Admin Login)
+    // 3. APP'S OWN FIELD LOGIN / REGISTER MODAL
     // -------------------------------------------------------------------------
     function showCompulsoryLoginModal(alertBannerText) {
         if (document.getElementById("driver-auth-screen") && !alertBannerText.includes("TERMINATED")) {
@@ -135,13 +214,13 @@
 
         const appTitle = getAppFriendlyTitle();
         const backFooterHtml = isFileOrCapacitor
-            ? `<button id="m-apk-reset-login" style="background:none;border:none;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;">↻ Reset Login / New Sevadar Registration</button>`
-            : `<a href="/" style="color:#94a3b8;font-size:11px;text-decoration:underline;">← Back to Public Welcome Portal</a>`;
+            ? `<button id="m-apk-reset-login" style="background:none;border:none;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;">? Reset Login / New Sevadar Registration</button>`
+            : `<a href="/" style="color:#94a3b8;font-size:11px;text-decoration:underline;">? Back to Public Welcome Portal</a>`;
 
         overlay.innerHTML = `
             <div style="max-width:410px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.6);margin:auto;">
                 <div style="text-align:center;margin-bottom:16px;">
-                    <div style="font-size:32px;">🔐</div>
+                    <div style="font-size:32px;">??</div>
                     <h2 style="font-size:18px;font-weight:800;color:#ffffff;margin:4px 0;">${appTitle}</h2>
                     <p style="font-size:12px;color:#6ee7b7;font-weight:700;margin:0;">Sevadar Sign-In & First-Time Registration</p>
                 </div>
@@ -151,14 +230,14 @@
                 <div id="m-auth-step1" style="display:flex;flex-direction:column;gap:10px;">
                     <label style="font-size:11px;color:#94a3b8;font-weight:700;">Enter Registered Mobile (Login) or Email (New Registration):</label>
                     <input type="text" id="m-auth-ident" placeholder="10-Digit Mobile or Email Address" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:14px;font-weight:600;">
-                    <button id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login / Register →</button>
+                    <button id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login / Register ?</button>
                 </div>
 
                 <div id="m-auth-step-pin" style="display:none;flex-direction:column;gap:10px;">
                     <div id="m-pin-label" style="font-size:12px;color:#6ee7b7;font-weight:700;">Enter your 4-digit PIN:</div>
-                    <input type="password" id="m-auth-pin" maxlength="4" inputmode="numeric" placeholder="••••" style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:0.5em;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:20px;font-weight:800;">
+                    <input type="password" id="m-auth-pin" maxlength="4" inputmode="numeric" placeholder="????" style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:0.5em;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:20px;font-weight:800;">
                     <button id="m-btn-pin-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Verify & Open App</button>
-                    <button id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back / Change Mobile or Email</button>
+                    <button id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">? Back / Change Mobile or Email</button>
                 </div>
 
                 <div id="m-auth-step-otp" style="display:none;flex-direction:column;gap:8px;">
@@ -175,7 +254,7 @@
                         <input type="text" id="m-auth-code" value="SAMAGAM26" placeholder="Event Code" style="width:120px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;text-transform:uppercase;">
                     </div>
                     <button id="m-btn-otp-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;">Verify OTP & Complete Sign-Up</button>
-                    <button id="m-btn-back2" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back</button>
+                    <button id="m-btn-back2" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">? Back</button>
                 </div>
 
                 <div id="m-auth-err" style="color:#fb7185;font-size:12px;font-weight:700;text-align:center;margin-top:10px;"></div>
@@ -280,12 +359,12 @@
         strip.style.cssText = "max-width:768px;margin:0 auto;background:#ffffff;border-bottom:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif;";
         strip.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:28px;height:28px;border-radius:9999px;background:#fef3c7;border:1px solid #f59e0b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#0f2c59;">जागृति</div>
+                <div style="width:28px;height:28px;border-radius:9999px;background:#fef3c7;border:1px solid #f59e0b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#0f2c59;">??????</div>
                 <div>
                     <div style="font-size:11px;font-weight:800;color:#0f2c59;line-height:1.1;">
-                        ${user ? user.full_name || user.name : "जागृति The Awakening"}
+                        ${user ? user.full_name || user.name : "?????? The Awakening"}
                     </div>
-                    <div style="font-size:9.5px;color:#059669;font-weight:700;">● Verified Active Session</div>
+                    <div style="font-size:9.5px;color:#059669;font-weight:700;">? Verified Active Session</div>
                 </div>
             </div>
             <button id="jagriti-global-logout-btn" style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:800;padding:4px 9px;border-radius:9999px;border:1px solid #fca5a5;cursor:pointer;">
