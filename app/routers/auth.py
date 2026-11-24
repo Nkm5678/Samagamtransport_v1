@@ -280,13 +280,19 @@ def send_driver_otp(data: dict, db: Session = Depends(get_db)):
             "system_role": vol.system_role,
         }
 
-    if not email:
-        raise HTTPException(status_code=404, detail="Mobile number not registered yet. Register first using your email address.")
+    # Support one-time Mobile OTP registration (used by Ground Service Dept Heads & Kshetriya Sanchalaks)
+    allow_mobile_otp = bool(data.get("allow_mobile_otp"))
+    otp_key = email
+    if not otp_key:
+        if not allow_mobile_otp:
+            raise HTTPException(status_code=404, detail="Mobile number not registered yet. Register first using your email address.")
+        phone = _norm_phone(ident)
+        otp_key = f"phone:{phone}"
 
     code = f"{secrets.randbelow(1000000):06d}"
     salt = secrets.token_hex(8)
     now_ts = time.time()
-    existing_otp = db.query(EmailOTP).filter(EmailOTP.email == email).first()
+    existing_otp = db.query(EmailOTP).filter(EmailOTP.email == otp_key).first()
     if existing_otp:
         existing_otp.code_hash = _otp_hash(code, salt)
         existing_otp.salt = salt
@@ -294,27 +300,31 @@ def send_driver_otp(data: dict, db: Session = Depends(get_db)):
         existing_otp.attempts = 0
         existing_otp.sent_ts = now_ts
     else:
-        db.add(EmailOTP(email=email, code_hash=_otp_hash(code, salt), salt=salt, expires_ts=now_ts + OTP_TTL, attempts=0, sent_ts=now_ts))
+        db.add(EmailOTP(email=otp_key, code_hash=_otp_hash(code, salt), salt=salt, expires_ts=now_ts + OTP_TTL, attempts=0, sent_ts=now_ts))
     db.commit()
 
-    # Non-blocking email dispatch so API responds in <100ms
-    _fire_and_forget_email(
-        email,
-        f"{code} is your Samagam Field Verification Code",
-        f"<h3>Samagam Transport</h3><p>Your 6-digit login code is <strong>{code}</strong> (valid for 10 minutes).</p>",
-    )
+    if email:
+        _fire_and_forget_email(
+            email,
+            f"{code} is your Samagam Field Verification Code",
+            f"<h3>Samagam Transport</h3><p>Your 6-digit login code is <strong>{code}</strong> (valid for 10 minutes).</p>",
+        )
 
-    resp = {"sent": True, "email": email, "ttl": OTP_TTL}
-    if OTP_DEV_ECHO:
+    resp = {"sent": True, "email": email or otp_key, "mobile": _norm_phone(ident) if not email else "", "ttl": OTP_TTL}
+    if OTP_DEV_ECHO or not email:
         resp["dev_otp"] = code
     return resp
 
 
 @router.post("/otp/verify")
 def verify_driver_otp(data: dict, db: Session = Depends(get_db)):
-    email = _norm_email(data.get("email"))
+    raw_email_or_key = str(data.get("email") or data.get("identifier") or "").strip()
+    phone = _norm_phone(data.get("phone") or (raw_email_or_key if "@" not in raw_email_or_key else ""))
+    email = _norm_email(raw_email_or_key) if "@" in raw_email_or_key else None
+    otp_key = email if email else (raw_email_or_key if raw_email_or_key.startswith("phone:") else f"phone:{phone}")
+
     code = re.sub(r"\D", "", str(data.get("otp") or ""))
-    row = db.query(EmailOTP).filter(EmailOTP.email == email).first()
+    row = db.query(EmailOTP).filter(EmailOTP.email == otp_key).first()
     if not row or row.expires_ts < time.time():
         raise HTTPException(status_code=400, detail="This OTP has expired. Please tap Back and request a new OTP.")
     if row.attempts >= OTP_MAX_TRIES:
@@ -327,7 +337,6 @@ def verify_driver_otp(data: dict, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Wrong 6-digit OTP code.")
 
     name = str(data.get("name") or "").strip()[:100]
-    phone = _norm_phone(data.get("phone"))
     pin = _norm_pin(data.get("pin"))
     role = str(data.get("system_role") or "FIELD_VOLUNTEER").upper().strip()
     branch_name = str(data.get("branch_name") or "").strip()[:100]

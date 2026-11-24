@@ -408,7 +408,7 @@
         strip.style.cssText = "max-width:768px;margin:0 auto;background:#ffffff;border-bottom:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif;";
         strip.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:28px;height:28px;border-radius:9999px;background:#fef3c7;border:1px solid #f59e0b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#0f2c59;">जागृति</div>
+                <img src="${originPrefix}/static/jagriti.jpeg" alt="जागृति" style="height:30px;width:auto;border-radius:8px;border:1px solid #f59e0b;background:#ffffff;padding:2px;object-fit:contain;">
                 <div>
                     <div style="font-size:11px;font-weight:800;color:#0f2c59;line-height:1.1;">
                         ${user ? user.full_name || user.name : "जागृति The Awakening"}
