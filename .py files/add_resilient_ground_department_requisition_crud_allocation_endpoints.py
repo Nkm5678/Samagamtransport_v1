@@ -1,0 +1,738 @@
+import os
+import secrets
+import sys
+from datetime import datetime
+
+_THIS_FILE = os.path.abspath(__file__)
+_CANDIDATE_ROOTS = [
+    os.path.abspath(os.path.join(os.path.dirname(_THIS_FILE), "..", "..")),
+    r"C:\narendra\SamagamtransportV1",
+]
+for _root in _CANDIDATE_ROOTS:
+    if os.path.isdir(os.path.join(_root, "app")) and _root not in sys.path:
+        sys.path.insert(0, _root)
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from werkzeug.security import generate_password_hash
+
+from app.database import get_db
+from app.models import (
+    Territory, StationDemand, TurnaroundMovement,
+    FuelLog, MaintenanceTicket, Vehicle, Volunteer,
+    CrewDutyShift, VehicleWearInspection, MSRTCSpotCashVoucher,
+    StationCashFloat, HiredRollingContract, GroundStationIntercom,
+    Journey, TelemetryPing, PickupDropVehicleRequest,
+    DepartmentVehicleRequisition
+)
+
+router = APIRouter(prefix="/api/operations", tags=["Operations, Turnaround & Live Telemetry"])
+
+
+def record_turnaround_movement(
+    db: Session,
+    veh: Vehicle,
+    new_status: str,
+    hub_name: str,
+    actor_name: str,
+    passenger_count: int = 0,
+    destination_hub: str | None = None,
+) -> TurnaroundMovement:
+    """Updates vehicle turnaround state and records an audit log row in turnaround_movements."""
+    prev_status = veh.status or "EMPTY_IN"
+    veh.status = new_status
+    if hub_name:
+        veh.current_hub = hub_name
+    veh.current_passengers = max(0, int(passenger_count or 0))
+    veh.current_destination = destination_hub
+    veh.last_updated = datetime.utcnow()
+
+    movement = TurnaroundMovement(
+        vehicle_id=veh.id,
+        from_status=prev_status,
+        to_status=new_status,
+        station_hub=hub_name or veh.current_hub,
+        destination_hub=destination_hub,
+        passenger_count=veh.current_passengers,
+        recorded_by=actor_name or "Operations Controller",
+        recorded_at=datetime.utcnow(),
+    )
+    db.add(movement)
+    return movement
+
+
+@router.get("/hubs")
+def list_operation_hubs(db: Session = Depends(get_db)):
+    rows = db.query(Territory).order_by(Territory.id.asc()).all()
+    return [
+        {
+            "id": r.id,
+            "hub_code": r.hub_code,
+            "hub_name": r.hub_name,
+            "hub_type": r.hub_type,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "geofence_radius_m": r.geofence_radius_m,
+        }
+        for r in rows
+    ]
+
+
+@router.get("/intercom")
+def list_intercom_messages(hub: str = "", db: Session = Depends(get_db)):
+    q = db.query(GroundStationIntercom)
+    if hub and hub != "ALL_STATIONS":
+        q = q.filter(GroundStationIntercom.channel_hub.in_([hub, "ALL_STATIONS"]))
+    msgs = q.order_by(GroundStationIntercom.id.desc()).limit(40).all()
+    return [
+        {
+            "id": m.id,
+            "channel_hub": m.channel_hub,
+            "sender_side": m.sender_side,
+            "sender_name": m.sender_name,
+            "priority": m.priority,
+            "message_text": m.message_text,
+            "is_acknowledged": m.is_acknowledged,
+            "acknowledged_by": m.acknowledged_by,
+            "created_at": m.created_at.strftime("%H:%M:%S") if m.created_at else ""
+        }
+        for m in msgs
+    ]
+
+
+@router.post("/intercom")
+def post_intercom_message(data: dict, db: Session = Depends(get_db)):
+    msg = GroundStationIntercom(
+        channel_hub=str(data.get("channel_hub") or "ALL_STATIONS").strip(),
+        sender_side=str(data.get("sender_side") or "GROUND_TEAM").strip(),
+        sender_name=str(data.get("sender_name") or "Field Sevadar").strip(),
+        priority=str(data.get("priority") or "NORMAL").strip(),
+        message_text=str(data.get("message_text") or "").strip(),
+    )
+    if not msg.message_text:
+        raise HTTPException(status_code=400, detail="Message text cannot be empty.")
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return {"id": msg.id, "status": "SENT"}
+
+
+@router.get("/pickup-drop-requests")
+def list_pickup_drop_requests(db: Session = Depends(get_db)):
+    rows = db.query(PickupDropVehicleRequest).order_by(PickupDropVehicleRequest.id.desc()).limit(50).all()
+    return [
+        {
+            "id": r.id,
+            "request_code": r.request_code,
+            "trip_direction": r.trip_direction,
+            "transit_hub": r.transit_hub,
+            "passenger_count": r.passenger_count,
+            "vehicle_type_requested": r.vehicle_type_requested,
+            "vehicles_needed": r.vehicles_needed,
+            "scheduled_datetime": r.scheduled_datetime,
+            "train_flight_details": r.train_flight_details or "",
+            "requester_name": r.requester_name,
+            "requester_phone": r.requester_phone,
+            "notes": r.notes or "",
+            "status": r.status,
+            "assigned_vehicle_reg": r.assigned_vehicle_reg,
+        }
+        for r in rows
+    ]
+
+
+@router.post("/pickup-drop-requests")
+def create_pickup_drop_request(data: dict, db: Session = Depends(get_db)):
+    code = f"PND-{secrets.randbelow(9000) + 1000}"
+    pax = int(data.get("passenger_count") or 1)
+    veh_qty = int(data.get("vehicles_needed") or 1)
+    hub_name = str(data.get("transit_hub") or "Panvel Junction (PNVL)").strip()
+    requester = str(data.get("requester_name") or "Coordinator").strip()
+    phone = str(data.get("requester_phone") or "").strip()
+
+    row = PickupDropVehicleRequest(
+        request_code=code,
+        trip_direction=str(data.get("trip_direction") or "PICKUP_TO_SAMAGAM").strip(),
+        transit_hub=hub_name,
+        passenger_count=pax,
+        vehicle_type_requested=str(data.get("vehicle_type_requested") or "Heavy Bus (50-Seater)").strip(),
+        vehicles_needed=veh_qty,
+        scheduled_datetime=str(data.get("scheduled_datetime") or "").strip(),
+        train_flight_details=str(data.get("train_flight_details") or "").strip() or None,
+        requester_name=requester,
+        requester_phone=phone,
+        notes=str(data.get("notes") or "").strip() or None,
+        status="PENDING_ALLOCATION",
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {"status": "CREATED", "request_code": code, "id": row.id}
+
+
+@router.get("/request-status-lookup")
+def lookup_request_status(query: str = "", db: Session = Depends(get_db)):
+    q = str(query or "").strip()
+    if not q:
+        return []
+    digits = "".join(ch for ch in q if ch.isdigit())
+    phone_q = digits[-10:] if len(digits) >= 10 else q
+    code_q = q.upper()
+
+    results = []
+    pd_rows = db.query(PickupDropVehicleRequest).filter(
+        (PickupDropVehicleRequest.requester_phone.contains(phone_q))
+        | (PickupDropVehicleRequest.request_code.ilike(f"%{code_q}%"))
+    ).order_by(PickupDropVehicleRequest.id.desc()).limit(20).all()
+    for p in pd_rows:
+        results.append({
+            "code": p.request_code,
+            "category": "Pickup / Drop",
+            "summary": f"{p.transit_hub} • {p.passenger_count} Pax • {p.vehicles_needed}x {p.vehicle_type_requested}",
+            "requester_name": p.requester_name,
+            "requester_phone": p.requester_phone,
+            "status": p.status,
+            "is_allocated": bool(p.assigned_vehicle_reg),
+            "assigned_vehicle_reg": p.assigned_vehicle_reg,
+            "driver_name": None,
+            "driver_phone": None,
+        })
+    return results
+
+
+@router.get("/demands")
+def list_station_demands(db: Session = Depends(get_db)):
+    rows = db.query(StationDemand).order_by(StationDemand.id.desc()).limit(50).all()
+    return [
+        {
+            "id": d.id,
+            "demand_code": d.demand_code,
+            "hub_name": d.hub_name,
+            "waiting_passenger_count": d.waiting_passenger_count,
+            "recommended_buses": d.recommended_buses,
+            "priority": d.priority,
+            "status": d.status,
+            "requested_by": d.requested_by,
+            "notes": d.notes or "",
+        }
+        for d in rows
+    ]
+
+
+@router.post("/demands")
+def create_station_demand(data: dict, db: Session = Depends(get_db)):
+    code = f"DEM-{secrets.randbelow(9000) + 1000}"
+    pax = int(data.get("waiting_passenger_count") or 1)
+    row = StationDemand(
+        demand_code=code,
+        hub_name=str(data.get("hub_name") or "Thane Railway Station").strip(),
+        waiting_passenger_count=pax,
+        recommended_buses=str(data.get("recommended_buses") or f"{max(1, (pax + 49) // 50)}x Heavy Bus").strip(),
+        priority=str(data.get("priority") or "NORMAL").strip(),
+        status="PENDING",
+        requested_by=str(data.get("requested_by") or "Station Team").strip(),
+        notes=str(data.get("notes") or "").strip() or None,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {"id": row.id, "demand_code": row.demand_code, "status": row.status}
+
+
+@router.post("/shifts/start")
+def start_crew_shift(data: dict, db: Session = Depends(get_db)):
+    shift = CrewDutyShift(
+        crew_role=str(data.get("crew_role") or "Driver").strip(),
+        crew_name=str(data.get("crew_name") or "Crew Member").strip(),
+        crew_phone=str(data.get("crew_phone") or "").strip(),
+        station_hub=str(data.get("station_hub") or "Ground 1 (Main Hall)").strip(),
+        duty_start_time=datetime.utcnow(),
+        is_currently_on_duty=True,
+    )
+    db.add(shift)
+    db.commit()
+    db.refresh(shift)
+    return {"shift_id": shift.id, "id": shift.id, "status": "ON_DUTY"}
+
+
+@router.post("/shifts/end")
+def end_crew_shift(data: dict, db: Session = Depends(get_db)):
+    sid = data.get("shift_id")
+    shift = db.query(CrewDutyShift).filter(CrewDutyShift.id == int(sid)).first() if sid else None
+    if not shift:
+        shift = db.query(CrewDutyShift).filter(CrewDutyShift.is_currently_on_duty == True).order_by(CrewDutyShift.id.desc()).first()
+    if not shift:
+        return {"status": "CLOSED", "total_duty_hours": 0.0}
+    shift.duty_end_time = datetime.utcnow()
+    shift.is_currently_on_duty = False
+    shift.off_duty_reason = str(data.get("off_duty_reason") or "Shift Completed").strip()
+    hrs = round(max(0.0, (shift.duty_end_time - shift.duty_start_time).total_seconds() / 3600.0), 2)
+    shift.total_duty_hours = hrs
+    db.commit()
+    return {"shift_id": shift.id, "status": "CLOSED", "total_duty_hours": hrs}
+
+
+@router.post("/journeys/start")
+def start_vehicle_journey(data: dict, db: Session = Depends(get_db)):
+    reg = str(data.get("vehicle_reg_number") or "").upper().strip()
+    veh = db.query(Vehicle).filter(Vehicle.vehicle_reg_number == reg).first() if reg else db.query(Vehicle).first()
+    j_code = f"JRN-{secrets.randbelow(9000) + 1000}"
+    journey = Journey(
+        journey_code=j_code,
+        vehicle_id=veh.id if veh else 1,
+        origin_hub=veh.current_hub if veh else "Thane Railway Station",
+        destination_hub=str(data.get("destination_name") or "Ground 1 (Main Hall)").strip(),
+        passenger_count=int(data.get("passenger_count") or 0),
+        status="IN_TRANSIT",
+        started_at=datetime.utcnow(),
+    )
+    db.add(journey)
+    if veh:
+        veh.status = "LOADED_OUT"
+        veh.current_destination = journey.destination_hub
+        veh.current_passengers = journey.passenger_count
+    db.commit()
+    db.refresh(journey)
+    return {"journey_id": journey.id, "id": journey.id, "journey_code": j_code, "status": "IN_TRANSIT"}
+
+
+@router.post("/journeys/end")
+def end_vehicle_journey(data: dict, db: Session = Depends(get_db)):
+    jid = data.get("journey_id")
+    journey = db.query(Journey).filter(Journey.id == int(jid)).first() if jid else None
+    if not journey:
+        journey = db.query(Journey).filter(Journey.status == "IN_TRANSIT").order_by(Journey.id.desc()).first()
+    if journey:
+        journey.status = "COMPLETED"
+        journey.ended_at = datetime.utcnow()
+        veh = db.query(Vehicle).filter(Vehicle.id == journey.vehicle_id).first()
+        if veh:
+            veh.status = "UNLOADED_IN"
+            veh.current_hub = str(data.get("end_location_name") or journey.destination_hub).strip()
+            veh.current_passengers = 0
+        db.commit()
+        return {"journey_id": journey.id, "status": "COMPLETED", "total_distance_km": 18.5}
+    return {"status": "COMPLETED", "total_distance_km": 0.0}
+
+
+# ==============================================================================
+# END-TO-END OPERATIONS PIPELINE & CHRONOLOGICAL SEQUENCE ENGINE
+# ==============================================================================
+
+SEQUENCE_STAGES = [
+    {"step": 1, "key": "INTAKE_DEMAND", "title": "1. Request & Demand Intake", "owner_team": "Devotee / Station / Dept"},
+    {"step": 2, "key": "DISPATCH_ASSIGNED", "title": "2. Fleet Allocation & Dispatch", "owner_team": "Control Room / Ground Team"},
+    {"step": 3, "key": "IN_TRANSIT_LOADED", "title": "3. Boarding & Live GPS Transit", "owner_team": "Station Team & Driver App"},
+    {"step": 4, "key": "GATE_UNLOADED_VERIFIED", "title": "4. Venue Gate Unload & Audit", "owner_team": "Gate Keeper & Ground Team"},
+    {"step": 5, "key": "TURNAROUND_FUEL_SAFETY", "title": "5. Fuel, Safety & Loop Return", "owner_team": "Diesel & Workshop Marshall"},
+    {"step": 6, "key": "EXIT_AND_SETTLEMENT", "title": "6. Outward Exit & Accounts Billing", "owner_team": "Gate Keeper & Accounts Cell"},
+]
+
+
+@router.get("/pipeline/live-board")
+def get_live_operations_pipeline(db: Session = Depends(get_db)):
+    pending_demands = db.query(StationDemand).filter(StationDemand.status == "PENDING").order_by(StationDemand.id.desc()).all()
+    vehicles = db.query(Vehicle).order_by(Vehicle.last_updated.desc()).all()
+    stage2_ready = [v for v in vehicles if v.status == "EMPTY_IN" and not v.is_maintenance_flagged]
+    stage3_transit = [v for v in vehicles if v.status in ("LOADED_OUT", "EMPTY_OUT")]
+    stage4_unloaded = [v for v in vehicles if v.status == "UNLOADED_IN"]
+    stage5_maint = [v for v in vehicles if v.is_maintenance_flagged or v.status == "MAINTENANCE_HOLD"]
+
+    unverified_msrtc = db.query(MSRTCSpotCashVoucher).filter(MSRTCSpotCashVoucher.is_verified_at_gate == False).all()
+    active_contracts = db.query(HiredRollingContract).filter(HiredRollingContract.status == "ACTIVE_ROLLING").all()
+    settled_contracts = db.query(HiredRollingContract).filter(HiredRollingContract.status == "SETTLED_AND_EXITED").order_by(HiredRollingContract.id.desc()).limit(10).all()
+
+    return {
+        "sequence_definition": SEQUENCE_STAGES,
+        "stages": {
+            "stage_1_intake": {
+                "count": len(pending_demands),
+                "demands": [
+                    {
+                        "id": d.id,
+                        "code": d.demand_code,
+                        "hub": d.hub_name,
+                        "pax": d.waiting_passenger_count,
+                        "mix": d.recommended_buses,
+                        "requested_by": d.requested_by,
+                        "notes": d.notes or ""
+                    }
+                    for d in pending_demands
+                ],
+            },
+            "stage_2_ready_fleet": {
+                "count": len(stage2_ready),
+                "vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "type": v.vehicle_type,
+                        "capacity": v.capacity,
+                        "hub": v.current_hub,
+                        "driver": f"{v.driver_name} ({v.driver_phone})",
+                        "ownership": v.ownership_type
+                    }
+                    for v in stage2_ready
+                ]
+            },
+            "stage_3_in_transit": {
+                "count": len(stage3_transit),
+                "vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "status": v.status,
+                        "hub": v.current_hub,
+                        "destination": v.current_destination or "Samagam Ground",
+                        "pax": v.current_passengers,
+                        "capacity": v.capacity,
+                        "speed_kmh": v.current_speed_kmh,
+                        "driver": f"{v.driver_name} ({v.driver_phone})"
+                    }
+                    for v in stage3_transit
+                ]
+            },
+            "stage_4_gate_unload_audit": {
+                "count": len(stage4_unloaded) + len(unverified_msrtc),
+                "unloaded_vehicles": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "hub": v.current_hub,
+                        "driver": v.driver_name,
+                        "ownership": v.ownership_type
+                    }
+                    for v in stage4_unloaded
+                ],
+                "pending_msrtc_gate_checks": [
+                    {
+                        "id": m.id,
+                        "voucher": m.voucher_number,
+                        "station": m.station_hub,
+                        "etm": m.etm_receipt_number,
+                        "amount": m.cash_amount_paid_inr,
+                        "pax": m.passenger_headcount
+                    }
+                    for m in unverified_msrtc
+                ]
+            },
+            "stage_5_fuel_and_safety": {
+                "count": len(stage5_maint),
+                "maintenance_holds": [
+                    {
+                        "id": v.id,
+                        "reg": v.vehicle_reg_number,
+                        "health": v.health_score_pct,
+                        "reason": v.maintenance_reason or "Workshop Hold"
+                    }
+                    for v in stage5_maint
+                ]
+            },
+            "stage_6_contracts_settlement": {
+                "active_rolling_count": len(active_contracts),
+                "settled_count": len(settled_contracts),
+                "active_contracts": [
+                    {
+                        "id": c.id,
+                        "code": c.contract_code,
+                        "reg": c.vehicle.vehicle_reg_number if c.vehicle else "",
+                        "vendor": c.vendor_agency_name,
+                        "entry_odo": c.entry_odometer_km
+                    }
+                    for c in active_contracts
+                ]
+            }
+        }
+    }
+
+
+@router.post("/pipeline/advance-step")
+def advance_vehicle_sequence_step(data: dict, db: Session = Depends(get_db)):
+    action = str(data.get("action") or "").upper().strip()
+    vehicle_id = data.get("vehicle_id")
+    demand_id = data.get("demand_id")
+    actor = str(data.get("actor_name") or "Operations Controller").strip()
+    destination = str(data.get("destination_hub") or "Ground 1 (Main Hall)").strip()
+    pax = int(data.get("passenger_count") or 0)
+
+    veh = db.query(Vehicle).filter(Vehicle.id == int(vehicle_id)).first() if vehicle_id else None
+
+    if action == "ASSIGN_AND_DISPATCH":
+        if not veh:
+            raise HTTPException(status_code=400, detail="Select an available bus to dispatch.")
+        if veh.is_maintenance_flagged:
+            raise HTTPException(status_code=409, detail=f"Blocked: {veh.vehicle_reg_number} is on Maintenance Hold.")
+        if demand_id:
+            dem = db.query(StationDemand).filter(StationDemand.id == int(demand_id)).first()
+            if dem:
+                dem.status = "DISPATCHED"
+                pax = pax or dem.waiting_passenger_count
+                pd = db.query(PickupDropVehicleRequest).filter(PickupDropVehicleRequest.request_code == dem.demand_code).first()
+                if pd:
+                    pd.status = "DISPATCHED"
+                    pd.assigned_vehicle_reg = veh.vehicle_reg_number
+        record_turnaround_movement(db, veh, "LOADED_OUT", veh.current_hub, actor, min(pax or veh.capacity, veh.capacity), destination)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_3_TRANSIT", "vehicle": veh.vehicle_reg_number, "next_step": "Arrival & Unload at Venue Gate"}
+
+    if action == "GATE_ARRIVE_UNLOAD":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        record_turnaround_movement(db, veh, "UNLOADED_IN", destination, actor, 0, None)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_4_UNLOADED", "vehicle": veh.vehicle_reg_number, "next_step": "Fuel/Safety Check or Return Loop"}
+
+    if action == "RELEASE_EMPTY_LOOP":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        if veh.is_maintenance_flagged:
+            raise HTTPException(status_code=409, detail="Cannot release bus on Maintenance Hold.")
+        record_turnaround_movement(db, veh, "EMPTY_OUT", veh.current_hub, actor, 0, destination)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_5_RETURN_LOOP", "vehicle": veh.vehicle_reg_number, "next_step": "Arrive Empty at Station Staging"}
+
+    if action == "MARK_READY_AT_HUB":
+        if not veh:
+            raise HTTPException(status_code=404, detail="Vehicle not found.")
+        record_turnaround_movement(db, veh, "EMPTY_IN", destination, actor, 0, None)
+        db.commit()
+        return {"status": "MOVED_TO_STAGE_2_READY", "vehicle": veh.vehicle_reg_number, "next_step": "Assign Next Pilgrim Demand"}
+
+    raise HTTPException(status_code=400, detail=f"Unsupported pipeline action: {action}")
+
+
+# ==============================================================================
+# MASTER CONTACT DIRECTORY (ADMIN, INCHARGES, COORDINATORS, CONTRACTORS, COMMITTEE)
+# ==============================================================================
+
+ROLE_LABELS = {
+    "ADMIN": "Admin HQ",
+    "GROUND_ADMIN": "Admin HQ",
+    "INCHARGE": "Dept / Committee Incharge",
+    "STATION_COORDINATOR": "Station Coordinator",
+    "GROUND_COORDINATOR": "Ground Coordinator",
+    "CONTRACTOR": "Bus Contractor / Vendor",
+    "COMMITTEE_MEMBER": "Committee Member",
+}
+
+
+@router.get("/directory-contacts")
+def list_master_directory_contacts(db: Session = Depends(get_db)):
+    vols = db.query(Volunteer).filter(Volunteer.is_active == True).order_by(Volunteer.id.desc()).all()
+    out = []
+    for v in vols:
+        raw_role = (v.system_role or "COMMITTEE_MEMBER").upper()
+        norm_role = "ADMIN" if raw_role in ("GROUND_ADMIN", "ADMIN", "CONTROL_ROOM") else raw_role
+        out.append({
+            "id": v.id,
+            "code": v.volunteer_code,
+            "role": norm_role,
+            "role_label": ROLE_LABELS.get(norm_role, norm_role.replace("_", " ").title()),
+            "full_name": v.full_name,
+            "mobile_number": v.mobile_number,
+            "duty_location": v.duty_location or "",
+            "branch_name": v.branch_name or "",
+            "unit_number": v.unit_number or "",
+        })
+    return out
+
+
+@router.post("/directory-contacts")
+def upsert_master_directory_contact(data: dict, db: Session = Depends(get_db)):
+    cid = data.get("id")
+    role = str(data.get("role") or "COMMITTEE_MEMBER").upper().strip()
+    name = str(data.get("full_name") or "").strip()
+    digits = "".join(ch for ch in str(data.get("mobile_number") or "") if ch.isdigit())
+    phone = digits[-10:] if len(digits) >= 10 else digits
+    hub = str(data.get("duty_location") or "Ground 1 (Main Hall)").strip()
+    branch = str(data.get("branch_name") or "Samagam Transport").strip()
+    unit = str(data.get("unit_number") or "HQ-Dir").strip()
+    pin = "".join(ch for ch in str(data.get("pin") or "") if ch.isdigit())
+
+    if not name or len(phone) != 10:
+        raise HTTPException(status_code=400, detail="Full Name and a valid 10-digit Mobile Number are required.")
+
+    vol = db.query(Volunteer).filter(Volunteer.id == int(cid)).first() if cid else None
+    if not vol:
+        vol = db.query(Volunteer).filter(Volunteer.mobile_number == phone).first()
+
+    db_role = "GROUND_ADMIN" if role == "ADMIN" else role
+    if vol:
+        vol.full_name = name
+        vol.mobile_number = phone
+        vol.system_role = db_role
+        vol.duty_location = hub
+        vol.branch_name = branch
+        vol.unit_number = unit
+        vol.is_active = True
+        if len(pin) == 4:
+            vol.pin_hash = generate_password_hash(pin)
+    else:
+        vol = Volunteer(
+            volunteer_code=f"DIR-{secrets.randbelow(9000) + 1000}",
+            full_name=name,
+            mobile_number=phone,
+            pin_hash=generate_password_hash(pin if len(pin) == 4 else "1234"),
+            duty_location=hub,
+            branch_name=branch,
+            unit_number=unit,
+            system_role=db_role,
+            is_driver=False,
+            geofence_verified=True,
+        )
+        db.add(vol)
+
+    db.commit()
+    db.refresh(vol)
+    return {"status": "SAVED", "id": vol.id, "full_name": vol.full_name, "mobile_number": vol.mobile_number}
+
+
+@router.post("/directory-contacts/bulk")
+def bulk_upsert_master_directory_contacts(data: dict, db: Session = Depends(get_db)):
+    items = data.get("items") or []
+    saved = 0
+    for item in items:
+        name = str(item.get("full_name") or "").strip()
+        digits = "".join(ch for ch in str(item.get("mobile_number") or "") if ch.isdigit())
+        phone = digits[-10:] if len(digits) >= 10 else digits
+        if not name or len(phone) != 10:
+            continue
+        upsert_master_directory_contact({
+            "role": item.get("role") or "COMMITTEE_MEMBER",
+            "full_name": name,
+            "mobile_number": phone,
+            "duty_location": item.get("duty_location") or "Ground 1 (Main Hall)",
+            "branch_name": item.get("branch_name") or "Samagam Transport",
+            "unit_number": item.get("unit_number") or "HQ-Dir",
+        }, db)
+        saved += 1
+    return {"status": "BULK_SAVED", "saved_count": saved}
+
+
+@router.delete("/directory-contacts/{contact_id}")
+def delete_master_directory_contact(contact_id: int, db: Session = Depends(get_db)):
+    vol = db.query(Volunteer).filter(Volunteer.id == contact_id).first()
+    if not vol:
+        raise HTTPException(status_code=404, detail="Contact not found.")
+    if vol.mobile_number == "9820110001":
+        raise HTTPException(status_code=403, detail="Primary HQ Admin account cannot be deleted.")
+    vol.is_active = False
+    db.commit()
+    return {"status": "DELETED", "id": contact_id}
+
+
+# ==============================================================================
+# GROUND SERVICE DEPARTMENT VEHICLE REQUISITIONS (ground.samagamtransport.in)
+# ==============================================================================
+
+def _serialize_ground_dept_req(r: DepartmentVehicleRequisition) -> dict:
+    return {
+        "id": r.id,
+        "requisition_code": getattr(r, "requisition_code", f"REQ-{r.id}"),
+        "department_name": getattr(r, "department_name", ""),
+        "department_head_name": getattr(r, "department_head_name", "") or "",
+        "requester_name": getattr(r, "requester_name", ""),
+        "requester_phone": getattr(r, "requester_phone", ""),
+        "required_vehicle_type": getattr(r, "required_vehicle_type", ""),
+        "quantity_needed": getattr(r, "quantity_needed", 1),
+        "purpose": getattr(r, "purpose", "") or "",
+        "required_from_datetime": str(getattr(r, "required_from_datetime", "") or ""),
+        "duration_days": str(getattr(r, "duration_days", "") or ""),
+        "status": getattr(r, "status", "PENDING_ALLOCATION"),
+        "allocated_vehicle_reg": getattr(r, "allocated_vehicle_reg", None),
+        "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if getattr(r, "created_at", None) else "",
+    }
+
+
+@router.get("/ground-dept-requisitions")
+def list_ground_dept_requisitions(query: str = "", db: Session = Depends(get_db)):
+    q_obj = db.query(DepartmentVehicleRequisition)
+    q = str(query or "").strip()
+    if q:
+        digits = "".join(ch for ch in q if ch.isdigit())
+        phone_q = digits[-10:] if len(digits) >= 10 else q
+        q_obj = q_obj.filter(
+            (DepartmentVehicleRequisition.requester_phone.contains(phone_q))
+            | (DepartmentVehicleRequisition.requisition_code.ilike(f"%{q.upper()}%"))
+            | (DepartmentVehicleRequisition.department_name.ilike(f"%{q}%"))
+        )
+    rows = q_obj.order_by(DepartmentVehicleRequisition.id.desc()).limit(100).all()
+    return [_serialize_ground_dept_req(r) for r in rows]
+
+
+@router.post("/ground-dept-requisitions")
+def create_ground_dept_requisition(data: dict, db: Session = Depends(get_db)):
+    """Creates an Advance Projection or Ad-hoc Ground Department Vehicle Requisition."""
+    dept_name = str(data.get("department_name") or "").strip()
+    req_name = str(data.get("requester_name") or "").strip()
+    raw_phone = "".join(ch for ch in str(data.get("requester_phone") or "") if ch.isdigit())
+    req_phone = raw_phone[-10:] if len(raw_phone) >= 10 else raw_phone
+    veh_type = str(data.get("required_vehicle_type") or "Goods Carrier / Tempo").strip()
+    qty = max(1, int(data.get("quantity_needed") or 1))
+    purpose = str(data.get("purpose") or "").strip()
+
+    if not dept_name or not req_name or len(req_phone) != 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Department Name, Requester Name, and a valid 10-digit Mobile Number are required."
+        )
+
+    req_code = f"REQ-{secrets.randbelow(9000) + 1000}"
+    model_cols = {c.name: c for c in DepartmentVehicleRequisition.__table__.columns}
+
+    # Safely coerce duration_days if column is Integer vs String
+    raw_duration = str(data.get("duration_days") or "1").strip()
+    duration_val = raw_duration
+    if "duration_days" in model_cols and "INT" in str(model_cols["duration_days"].type).upper():
+        digits_dur = "".join(ch for ch in raw_duration if ch.isdigit())
+        duration_val = int(digits_dur) if digits_dur else 1
+
+    candidate_fields = {
+        "requisition_code": req_code,
+        "department_name": dept_name,
+        "department_head_name": str(data.get("department_head_name") or "").strip() or None,
+        "requester_name": req_name,
+        "requester_phone": req_phone,
+        "required_vehicle_type": veh_type,
+        "quantity_needed": qty,
+        "purpose": purpose or "Ground Department Sewa",
+        "required_from_datetime": str(data.get("required_from_datetime") or "").strip() or None,
+        "duration_days": duration_val,
+        "status": "PENDING_ALLOCATION",
+        "allocated_vehicle_reg": None,
+    }
+
+    safe_kwargs = {k: v for k, v in candidate_fields.items() if k in model_cols}
+    row = DepartmentVehicleRequisition(**safe_kwargs)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+
+    return {
+        "status": "CREATED",
+        "id": row.id,
+        "requisition_code": getattr(row, "requisition_code", req_code),
+        "message": "Vehicle will be allocated if available ASAP.",
+    }
+
+
+@router.post("/ground-dept-requisitions/{req_id}/allocate")
+def allocate_vehicle_to_ground_dept_requisition(req_id: int, data: dict, db: Session = Depends(get_db)):
+    """Allows Admin Control Room or Ground Transport Team to allocate a vehicle to a department request."""
+    row = db.query(DepartmentVehicleRequisition).filter(DepartmentVehicleRequisition.id == req_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Ground department requisition not found.")
+    reg = str(data.get("vehicle_reg_number") or "").upper().strip()
+    if not reg:
+        raise HTTPException(status_code=400, detail="Please select a valid vehicle registration number.")
+
+    row.allocated_vehicle_reg = reg
+    row.status = "ALLOCATED"
+    db.commit()
+    db.refresh(row)
+    return {
+        "status": "ALLOCATED",
+        "id": row.id,
+        "requisition_code": row.requisition_code,
+        "allocated_vehicle_reg": row.allocated_vehicle_reg,
+    }
