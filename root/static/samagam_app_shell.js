@@ -1,3 +1,11 @@
+/**
+ * जागृति — The Awakening | Samagam Field App Shell
+ * Fixes:
+ *  1. Prevents the 10-second session heartbeat from overwriting/closing the Login/Registration modal while typing.
+ *  2. Adds strict client-side validation (10-digit mobile stripping +91/0/spaces, 6-digit OTP, 4-digit PIN).
+ *  3. Uses 30-second timeout with automatic retry for Cloud Run cold starts.
+ *  4. Protects Android APK Back button and accidental page close during registration.
+ */
 (function initJagritiAuthAndShell() {
     const PRODUCTION_ORIGIN = "https://www.samagamtransport.in";
     const isFileOrCapacitor =
@@ -20,11 +28,28 @@
     ];
     const currentPath = window.location.pathname || "/";
     const host = (window.location.hostname || "").toLowerCase();
-    const isSubdomainPortal = host.startsWith("parking.") || host.startsWith("advancesewa.") || host.startsWith("admin.") || host.startsWith("ground.");
+    const isSubdomainPortal =
+        host.startsWith("parking.") ||
+        host.startsWith("advancesewa.") ||
+        host.startsWith("admin.") ||
+        host.startsWith("ground.");
     const isPublicPage = !isFileOrCapacitor && (PUBLIC_PATHS.includes(currentPath) || isSubdomainPortal);
 
+    // -------------------------------------------------------------------------
+    // 1. STATE & REGISTRATION PAGE-CLOSE / BACK-BUTTON GUARD
+    // -------------------------------------------------------------------------
     let _isAuthInFlight = false;
     let _lastPopstateHandledAt = 0;
+
+    function _normalizeTenDigitPhone(raw) {
+        const digits = String(raw || "").replace(/\D/g, "");
+        return digits.length >= 10 ? digits.slice(-10) : digits;
+    }
+
+    function _isModalOpen() {
+        const overlay = document.getElementById("samagam-mandatory-auth-overlay");
+        return Boolean(overlay && overlay.style.display !== "none");
+    }
 
     function _isRegistrationActive() {
         const otpStep = document.getElementById("m-auth-step-otp");
@@ -34,11 +59,11 @@
                 "#samagam-mandatory-auth-overlay input, #driver-auth-screen input, form[id*='register'] input, form[id*='onboard'] input"
             )
         );
-        const hasTypedRegistrationData = inputs.some((el) => {
+        const hasTypedData = inputs.some((el) => {
             if (!el || el.type === "hidden" || el.disabled) return false;
             return String(el.value || "").trim().length > 0;
         });
-        return Boolean(_isAuthInFlight || hasOtpStepOpen || hasTypedRegistrationData);
+        return Boolean(_isAuthInFlight || hasOtpStepOpen || hasTypedData);
     }
 
     if (isFileOrCapacitor) {
@@ -51,29 +76,10 @@
                 if (now - _lastPopstateHandledAt < 350) return;
                 _lastPopstateHandledAt = now;
 
-                const overlay = document.getElementById("samagam-mandatory-auth-overlay");
-                if (_isRegistrationActive() || (overlay && overlay.style.display !== "none")) {
+                if (_isRegistrationActive() || _isModalOpen()) {
                     window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
                     return;
                 }
-
-                const stepOtp = document.getElementById("m-auth-step-otp");
-                const stepPin = document.getElementById("m-auth-step-pin");
-                const step1 = document.getElementById("m-auth-step1");
-
-                if (stepOtp && stepOtp.style.display !== "none") {
-                    stepOtp.style.display = "none";
-                    if (step1) step1.style.display = "flex";
-                    window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
-                    return;
-                }
-                if (stepPin && stepPin.style.display !== "none") {
-                    stepPin.style.display = "none";
-                    if (step1) step1.style.display = "flex";
-                    window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
-                    return;
-                }
-
                 window.history.pushState({ samagamApkGuard: true }, "", window.location.href);
             });
         } catch (_) {}
@@ -90,19 +96,18 @@
     document.addEventListener("submit", function (ev) {
         const target = ev.target;
         if (!target || !(target instanceof HTMLFormElement)) return;
-        if (
-            target.closest("#samagam-mandatory-auth-overlay") ||
-            target.closest("#driver-auth-screen") ||
-            _isRegistrationActive()
-        ) {
+        if (target.closest("#samagam-mandatory-auth-overlay") || target.closest("#driver-auth-screen")) {
             ev.preventDefault();
             ev.stopPropagation();
         }
     }, true);
 
+    // -------------------------------------------------------------------------
+    // 2. FETCH INTERCEPTOR WITH 30s TIMEOUT & COLD-START RETRY
+    // -------------------------------------------------------------------------
     const origFetch = window.fetch.bind(window);
 
-    async function fetchWithTimeoutRetry(targetUrl, options = {}, timeoutMs = 25000, maxRetries = 2) {
+    async function fetchWithTimeoutRetry(targetUrl, options = {}, timeoutMs = 30000, maxRetries = 2) {
         let lastErr = null;
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             const controller = new AbortController();
@@ -111,7 +116,7 @@
                 const resp = await origFetch(targetUrl, { ...options, signal: controller.signal });
                 clearTimeout(timer);
                 if ([502, 503, 504].includes(resp.status) && attempt < maxRetries) {
-                    await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+                    await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
                     continue;
                 }
                 return resp;
@@ -119,7 +124,7 @@
                 clearTimeout(timer);
                 lastErr = err;
                 if (attempt < maxRetries) {
-                    await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+                    await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
                     continue;
                 }
             }
@@ -157,7 +162,7 @@
             return resp;
         } finally {
             if (isAuthEndpoint) {
-                setTimeout(() => { _isAuthInFlight = false; }, 400);
+                setTimeout(() => { _isAuthInFlight = false; }, 350);
             }
         }
     };
@@ -173,15 +178,23 @@
         localStorage.removeItem("samagam_field_user");
         const strip = document.getElementById("jagriti-top-strip");
         if (strip) strip.remove();
-        showCompulsoryLoginModal(reasonMsg || "Please sign in or register to continue.");
+        showCompulsoryLoginModal(reasonMsg || "Please sign in or register to continue.", true);
     }
 
-    function showCompulsoryLoginModal(alertBannerText) {
-        if (document.getElementById("driver-auth-screen") && !alertBannerText.includes("TERMINATED")) {
+    // -------------------------------------------------------------------------
+    // 3. SELF-CONTAINED LOGIN / REGISTRATION MODAL (NEVER WIPED BY HEARTBEAT)
+    // -------------------------------------------------------------------------
+    function showCompulsoryLoginModal(alertBannerText, forceReplace = false) {
+        if (document.getElementById("driver-auth-screen") && !String(alertBannerText || "").includes("TERMINATED")) {
             return;
         }
 
         let overlay = document.getElementById("samagam-mandatory-auth-overlay");
+        // CRITICAL FIX: Do NOT wipe/rebuild the modal while the user is actively typing!
+        if (overlay && !forceReplace) {
+            return;
+        }
+
         if (!overlay) {
             overlay = document.createElement("div");
             overlay.id = "samagam-mandatory-auth-overlay";
@@ -191,11 +204,11 @@
 
         const appTitle = getAppFriendlyTitle();
         const backFooterHtml = isFileOrCapacitor
-            ? `<button id="m-apk-reset-login" style="background:none;border:none;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;">↻ Reset Login / New Sevadar Registration</button>`
+            ? `<button type="button" id="m-apk-reset-login" style="background:none;border:none;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;">↻ Reset Login / New Sevadar Registration</button>`
             : `<a href="/" style="color:#94a3b8;font-size:11px;text-decoration:underline;">← Back to Public Welcome Portal</a>`;
 
         overlay.innerHTML = `
-            <div style="max-width:410px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.6);margin:auto;">
+            <div style="max-width:420px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.6);margin:auto;">
                 <div style="text-align:center;margin-bottom:16px;">
                     <div style="font-size:32px;">🔐</div>
                     <h2 style="font-size:18px;font-weight:800;color:#ffffff;margin:4px 0;">${appTitle}</h2>
@@ -205,36 +218,36 @@
                 ${alertBannerText ? `<div style="background:#450a0a;border:1px solid #dc2626;color:#fecaca;font-size:12px;font-weight:700;padding:10px 12px;border-radius:12px;margin-bottom:14px;">${alertBannerText}</div>` : ""}
 
                 <div id="m-auth-step1" style="display:flex;flex-direction:column;gap:10px;">
-                    <label style="font-size:11px;color:#94a3b8;font-weight:700;">Enter Registered Mobile (Login) or Email (New Registration):</label>
-                    <input type="text" id="m-auth-ident" placeholder="10-Digit Mobile or Email Address" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:14px;font-weight:600;">
-                    <button id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login / Register →</button>
+                    <label style="font-size:11px;color:#94a3b8;font-weight:700;">Registered 10-Digit Mobile (Login) OR Email (New Registration):</label>
+                    <input type="text" id="m-auth-ident" autocomplete="username" placeholder="10-Digit Mobile or Email Address" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:14px;font-weight:600;">
+                    <button type="button" id="m-btn-continue" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Continue to Login / Register →</button>
                 </div>
 
                 <div id="m-auth-step-pin" style="display:none;flex-direction:column;gap:10px;">
                     <div id="m-pin-label" style="font-size:12px;color:#6ee7b7;font-weight:700;">Enter your 4-digit PIN:</div>
                     <input type="password" id="m-auth-pin" maxlength="4" inputmode="numeric" placeholder="••••" style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:0.5em;background:#020617;border:1px solid #475569;border-radius:12px;padding:12px;color:#ffffff;font-size:20px;font-weight:800;">
-                    <button id="m-btn-pin-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Verify & Open App</button>
-                    <button id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back / Change Mobile or Email</button>
+                    <button type="button" id="m-btn-pin-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;">Verify & Open App</button>
+                    <button type="button" id="m-btn-back1" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back / Change Mobile or Email</button>
                 </div>
 
                 <div id="m-auth-step-otp" style="display:none;flex-direction:column;gap:8px;">
-                    <div id="m-otp-banner" style="background:#451a03;border:1px solid #d97706;color:#fde68a;font-size:11px;padding:8px 10px;border-radius:10px;">OTP sent to email.</div>
+                    <div id="m-otp-banner" style="background:#451a03;border:1px solid #d97706;color:#fde68a;font-size:11px;padding:8px 10px;border-radius:10px;line-height:1.4;">OTP sent to email.</div>
                     <input type="text" id="m-auth-otp" maxlength="6" inputmode="numeric" placeholder="6-Digit Verification OTP *" style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:0.35em;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:16px;font-weight:800;">
-                    <input type="text" id="m-auth-name" placeholder="Full Name *" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
+                    <input type="text" id="m-auth-name" maxlength="100" placeholder="Full Name *" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
                     <div style="display:flex;gap:8px;">
-                        <input type="text" id="m-auth-branch" placeholder="Branch Name *" style="flex:1;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
-                        <input type="text" id="m-auth-unit" placeholder="Unit No. *" style="width:125px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
+                        <input type="text" id="m-auth-branch" maxlength="100" placeholder="Branch Name *" style="flex:1;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
+                        <input type="text" id="m-auth-unit" maxlength="40" placeholder="Unit No. *" style="width:125px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;">
                     </div>
-                    <input type="tel" id="m-auth-phone" maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile Number *" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;font-weight:700;">
+                    <input type="tel" id="m-auth-phone" maxlength="15" inputmode="numeric" placeholder="10-Digit Mobile Number *" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;font-weight:700;">
                     <div style="display:flex;gap:8px;">
-                        <input type="password" id="m-auth-newpin" maxlength="4" inputmode="numeric" placeholder="Create 4-Digit PIN" style="flex:1;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;font-weight:700;">
-                        <input type="text" id="m-auth-code" value="SAMAGAM26" placeholder="Event Code" style="width:120px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;text-transform:uppercase;">
+                        <input type="password" id="m-auth-newpin" maxlength="4" inputmode="numeric" placeholder="Create 4-Digit PIN *" style="flex:1;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;font-weight:700;">
+                        <input type="text" id="m-auth-code" value="SAMAGAM26" placeholder="Event Code" style="width:125px;box-sizing:border-box;background:#020617;border:1px solid #475569;border-radius:10px;padding:10px;color:#ffffff;font-size:13px;text-transform:uppercase;">
                     </div>
-                    <button id="m-btn-otp-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;">Verify OTP & Complete Sign-Up</button>
-                    <button id="m-btn-back2" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back</button>
+                    <button type="button" id="m-btn-otp-verify" style="width:100%;background:#059669;color:#ffffff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;">Verify OTP & Complete Sign-Up</button>
+                    <button type="button" id="m-btn-back2" style="background:none;border:none;color:#94a3b8;font-size:12px;text-decoration:underline;cursor:pointer;">← Back</button>
                 </div>
 
-                <div id="m-auth-err" style="color:#fb7185;font-size:12px;font-weight:700;text-align:center;margin-top:10px;"></div>
+                <div id="m-auth-err" style="color:#fb7185;font-size:12px;font-weight:700;text-align:center;margin-top:10px;min-height:16px;"></div>
                 <div style="text-align:center;margin-top:14px;border-top:1px solid #1e293b;padding-top:10px;">
                     ${backFooterHtml}
                 </div>
@@ -258,7 +271,15 @@
             const btn = document.getElementById("m-btn-continue");
             const ident = document.getElementById("m-auth-ident").value.trim();
             errBox.textContent = "";
-            if (!ident) { errBox.textContent = "Enter mobile number or email."; return; }
+            if (!ident) {
+                errBox.textContent = "Please enter your 10-digit mobile number or email address.";
+                return;
+            }
+            if (!ident.includes("@") && _normalizeTenDigitPhone(ident).length !== 10) {
+                errBox.textContent = "Enter a valid 10-digit mobile number or a valid email address.";
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = "⏳ Connecting to Server...";
             try {
@@ -267,15 +288,19 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ identifier: ident })
                 }, 30000, 2);
-                const data = await res.json();
-                if (!res.ok) { errBox.textContent = data.detail || "Unable to proceed."; return; }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errBox.textContent = data.detail || "Unable to proceed. Please check your input.";
+                    return;
+                }
                 document.getElementById("m-auth-step1").style.display = "none";
                 if (data.requires_pin) {
                     document.getElementById("m-auth-step-pin").style.display = "flex";
                     document.getElementById("m-pin-label").textContent = `Welcome ${data.driver_name || "Sevadar"}! Enter your 4-digit PIN:`;
                 } else {
                     document.getElementById("m-auth-step-otp").style.display = "flex";
-                    document.getElementById("m-otp-banner").textContent = `OTP sent to ${data.email}` + (data.dev_otp ? ` (OTP: ${data.dev_otp})` : "");
+                    document.getElementById("m-otp-banner").textContent =
+                        `OTP sent to ${data.email}` + (data.dev_otp ? ` — Verification OTP: ${data.dev_otp}` : " (check inbox/spam)");
                 }
             } catch (_) {
                 errBox.textContent = "Server waking up / slow network. Please tap Continue again.";
@@ -288,8 +313,13 @@
         document.getElementById("m-btn-pin-verify").onclick = async () => {
             const btn = document.getElementById("m-btn-pin-verify");
             const ident = document.getElementById("m-auth-ident").value.trim();
-            const pin = document.getElementById("m-auth-pin").value.trim();
+            const pin = document.getElementById("m-auth-pin").value.replace(/\D/g, "");
             errBox.textContent = "";
+            if (pin.length !== 4) {
+                errBox.textContent = "Please enter your exact 4-digit numeric PIN.";
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = "⏳ Verifying PIN...";
             try {
@@ -298,8 +328,11 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ identifier: ident, pin })
                 }, 30000, 2);
-                const data = await res.json();
-                if (!res.ok) { errBox.textContent = data.detail || "Incorrect PIN."; return; }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errBox.textContent = data.detail || "Incorrect 4-digit PIN.";
+                    return;
+                }
                 localStorage.setItem("samagam_driver_token", data.token);
                 localStorage.setItem("samagam_field_token", data.token);
                 localStorage.setItem("samagam_field_user", JSON.stringify(data.driver));
@@ -315,18 +348,22 @@
 
         document.getElementById("m-btn-otp-verify").onclick = async () => {
             const btn = document.getElementById("m-btn-otp-verify");
-            const ident = document.getElementById("m-auth-ident").value.trim();
+            const ident = document.getElementById("m-auth-ident").value.trim().toLowerCase();
+            const otp = document.getElementById("m-auth-otp").value.replace(/\D/g, "");
             const fullName = document.getElementById("m-auth-name").value.trim();
             const branchName = document.getElementById("m-auth-branch").value.trim();
             const unitNo = document.getElementById("m-auth-unit").value.trim();
-            const phone = document.getElementById("m-auth-phone").value.trim();
-
-            if (!fullName || !branchName || !unitNo || !phone) {
-                errBox.textContent = "Please fill Name, Branch Name, Unit No., and Mobile Number.";
-                return;
-            }
+            const phone = _normalizeTenDigitPhone(document.getElementById("m-auth-phone").value);
+            const newPin = document.getElementById("m-auth-newpin").value.replace(/\D/g, "");
+            const eventCode = (document.getElementById("m-auth-code").value || "SAMAGAM26").trim().toUpperCase();
 
             errBox.textContent = "";
+            if (otp.length !== 6) { errBox.textContent = "Enter the 6-digit verification OTP."; return; }
+            if (fullName.length < 2) { errBox.textContent = "Enter your full name (at least 2 characters)."; return; }
+            if (!branchName || !unitNo) { errBox.textContent = "Enter both Branch Name and Unit Number."; return; }
+            if (phone.length !== 10) { errBox.textContent = "Enter a valid 10-digit mobile number (numbers only)."; return; }
+            if (newPin.length !== 4) { errBox.textContent = "Create a 4-digit numeric PIN (e.g. 1234)."; return; }
+
             btn.disabled = true;
             btn.textContent = "⏳ Completing Registration...";
             try {
@@ -335,18 +372,21 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         email: ident,
-                        otp: document.getElementById("m-auth-otp").value.trim(),
+                        otp,
                         name: fullName,
                         branch_name: branchName,
                         unit_number: unitNo,
-                        phone: phone,
-                        pin: document.getElementById("m-auth-newpin").value.trim(),
-                        code: document.getElementById("m-auth-code").value.trim(),
+                        phone,
+                        pin: newPin,
+                        code: eventCode,
                         system_role: "FIELD_VOLUNTEER"
                     })
                 }, 30000, 2);
-                const data = await res.json();
-                if (!res.ok) { errBox.textContent = data.detail || "OTP verification failed."; return; }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errBox.textContent = data.detail || "Registration failed. Please check all fields.";
+                    return;
+                }
                 localStorage.setItem("samagam_driver_token", data.token);
                 localStorage.setItem("samagam_field_token", data.token);
                 localStorage.setItem("samagam_field_user", JSON.stringify(data.driver));
@@ -376,7 +416,7 @@
                     <div style="font-size:9.5px;color:#059669;font-weight:700;">● Verified Active Session</div>
                 </div>
             </div>
-            <button id="jagriti-global-logout-btn" style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:800;padding:4px 9px;border-radius:9999px;border:1px solid #fca5a5;cursor:pointer;">
+            <button type="button" id="jagriti-global-logout-btn" style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:800;padding:4px 9px;border-radius:9999px;border:1px solid #fca5a5;cursor:pointer;">
                 Logout
             </button>
         `;
@@ -391,7 +431,10 @@
         if (isPublicPage) return;
         const tok = localStorage.getItem("samagam_driver_token") || localStorage.getItem("samagam_field_token") || "";
         if (!tok) {
-            showCompulsoryLoginModal("");
+            // Only open modal if it isn't already open (prevents wiping user's in-progress typing every 10s!)
+            if (!_isModalOpen()) {
+                showCompulsoryLoginModal("", false);
+            }
             return;
         }
         try {
@@ -411,7 +454,7 @@
     window.addEventListener("DOMContentLoaded", () => {
         if (!isPublicPage) {
             verifySessionWithServer();
-            setInterval(verifySessionWithServer, 10000);
+            setInterval(verifySessionWithServer, 15000);
         }
     });
 })();

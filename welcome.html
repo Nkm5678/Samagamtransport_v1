@@ -28,17 +28,18 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
+    <!-- Top Navigation Bar -->
     <header class="bg-[#0b2447]/95 text-white backdrop-blur-md border-b border-amber-400/30 sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
-                <img src="/static/jagriti.png"
-                     onerror="this.onerror=null;this.src='/static/jagriti_proper_logo.svg';"
+                <img src="/static/jagriti.jpg"
+                     onerror="this.onerror=null;this.src='/static/jagriti.jpeg';this.onerror=function(){this.src='/static/image_ccd68e.jpg';};"
                      alt="जागृति — The Awakening"
                      class="h-10 w-auto rounded-xl bg-white px-2 py-0.5 shadow border border-amber-300/60 object-contain">
                 <div class="flex items-center gap-1.5 bg-white/10 p-1 rounded-2xl border border-white/15 text-xs font-extrabold">
-                    <button onclick="setLanguage('hi', this)" class="lang-btn px-3 py-1.5 rounded-xl text-white transition">हिंदी</button>
-                    <button onclick="setLanguage('mr', this)" class="lang-btn px-3 py-1.5 rounded-xl text-white transition">मराठी</button>
-                    <button onclick="setLanguage('en', this)" class="lang-btn active px-3 py-1.5 rounded-xl transition">English</button>
+                    <button type="button" onclick="setLanguage('hi', this)" class="lang-btn px-3 py-1.5 rounded-xl text-white transition">हिंदी</button>
+                    <button type="button" onclick="setLanguage('mr', this)" class="lang-btn px-3 py-1.5 rounded-xl text-white transition">मराठी</button>
+                    <button type="button" onclick="setLanguage('en', this)" class="lang-btn active px-3 py-1.5 rounded-xl transition">English</button>
                 </div>
             </div>
 
@@ -65,8 +66,10 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-7 flex-1 w-full">
 
+        <!-- HERO WITH JAGRITI JPEG LOGO -->
         <section class="text-center max-w-3xl mx-auto space-y-3 pt-1">
             <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#0b2447] text-amber-300 text-xs font-extrabold tracking-wide shadow">
                 <span>धन निरंकार जी 🙏</span>
@@ -75,8 +78,8 @@
             </div>
 
             <div class="mx-auto max-w-xs sm:max-w-sm">
-                <img src="/static/jagriti.png"
-                     onerror="this.onerror=null;this.src='/static/jagriti_proper_logo.svg';"
+                <img src="/static/jagriti.jpg"
+                     onerror="this.onerror=null;this.src='/static/jagriti.jpeg';this.onerror=function(){this.src='/static/image_ccd68e.jpg';};"
                      alt="जागृति — The Awakening"
                      class="w-full h-auto rounded-3xl bg-white p-3 shadow-lg border-2 border-amber-300/80 mx-auto object-contain">
             </div>
@@ -92,6 +95,7 @@
             </p>
         </section>
 
+        <!-- 5 PORTAL DIRECTORY CARDS -->
         <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 max-w-5xl mx-auto">
             <a href="https://advancesewa.samagamtransport.in" class="bg-white hover:bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm transition flex flex-col justify-between space-y-2">
                 <div class="text-2xl">🙏</div>
@@ -134,7 +138,9 @@
             </a>
         </section>
 
+        <!-- MATCHING 2-COLUMN BOXES: PICKUP & DROP + DONATE VEHICLE FOR SEWA -->
         <section class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            <!-- BOX 1: NEED VEHICLE FOR PICKUP & DROP -->
             <div class="service-card bg-white rounded-3xl p-6 sm:p-7 border-2 border-emerald-200 shadow-lg flex flex-col justify-between space-y-5">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
@@ -154,15 +160,16 @@
                 </div>
 
                 <div class="pt-2 space-y-2.5">
-                    <button onclick="openPickupDropModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 px-5 rounded-2xl text-xs sm:text-sm shadow-lg transition flex items-center justify-center gap-2">
+                    <button type="button" onclick="openPickupDropModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 px-5 rounded-2xl text-xs sm:text-sm shadow-lg transition flex items-center justify-center gap-2">
                         <span data-i18n="card2_btn">🚍 Raise Pickup / Drop Request →</span>
                     </button>
                     <div class="text-center text-[11px] font-semibold text-slate-500">
-                        Includes Auto-Suggested Train No./Name, Ticket Upload & Live Status Tracking
+                        Arrival-Only, Departure-Only, or Both • Separate Stations, Trains & Tickets
                     </div>
                 </div>
             </div>
 
+            <!-- BOX 2: DONATE VEHICLE FOR SEWA -->
             <div class="service-card bg-white rounded-3xl p-6 sm:p-7 border-2 border-amber-300 shadow-lg flex flex-col justify-between space-y-5">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
@@ -182,7 +189,7 @@
                 </div>
 
                 <div class="pt-2 space-y-2.5">
-                    <button onclick="openDonateVehicleModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 px-5 rounded-2xl text-xs sm:text-sm shadow-lg transition flex items-center justify-center gap-2">
+                    <button type="button" onclick="openDonateVehicleModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 px-5 rounded-2xl text-xs sm:text-sm shadow-lg transition flex items-center justify-center gap-2">
                         <span data-i18n="donate_btn">🙏 Offer Vehicle for Samagam / Advance Sewa →</span>
                     </button>
                     <div class="text-center text-[11px] font-semibold text-slate-500">
@@ -192,27 +199,33 @@
             </div>
         </section>
 
+        <!-- INLINE SUBMISSION NOTICE (REPLACES ALERT DIALOGS) -->
+        <div id="portal-toast-banner" class="hidden max-w-5xl mx-auto rounded-2xl p-4 border-2 text-xs sm:text-sm font-bold shadow"></div>
+
+        <!-- 24-HOUR SELF-SERVICE STATUS TRACKER (PRIVATE: RESULTS ONLY APPEAR AFTER USER SEARCHES) -->
         <section class="max-w-5xl mx-auto bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#0f2c59]/20 shadow-md space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-sm sm:text-base font-extrabold text-[#0f2c59]" data-i18n="track_title">
                     🔍 Check Your Vehicle Allocation Status (24-Hour Live Tracker via Mobile No. or Request ID)
                 </h2>
-                <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">Live Database Status</span>
+                <button type="button" id="btn-clear-tracker" onclick="clearTrackerResults()" class="hidden text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-full border border-rose-200">
+                    ✕ Hide Results
+                </button>
             </div>
             <div class="flex flex-col sm:flex-row gap-2.5">
-                <input type="text" id="track-query-input" placeholder="Enter 10-Digit Mobile Number or Request ID (e.g. PND-1234, REQ-1234)" class="flex-1 border border-slate-300 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-[#0f2c59]">
-                <button onclick="checkMyRequestStatus()" class="bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold px-6 py-3 rounded-2xl text-sm shadow transition">
+                <input type="text" id="track-query-input" autocomplete="off" placeholder="Enter your 10-Digit Mobile Number or Request ID (e.g. PND-1234)" class="flex-1 border border-slate-300 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-[#0f2c59]">
+                <button type="button" onclick="checkMyRequestStatus()" class="bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold px-6 py-3 rounded-2xl text-sm shadow transition">
                     <span data-i18n="track_btn">Check Status</span>
                 </button>
             </div>
-            <div id="track-status-results" class="space-y-2.5"></div>
+            <div id="track-status-results" class="hidden space-y-2.5"></div>
         </section>
 
     </main>
 
-    <!-- MODAL 1: PICKUP & DROP -->
+    <!-- MODAL 1: PICKUP & DROP (FLEXIBLE ARRIVAL-ONLY, DEPARTURE-ONLY, OR INDEPENDENT ROUND-TRIP) -->
     <div id="pickup-drop-modal" class="fixed inset-0 bg-slate-950/75 hidden items-center justify-center z-50 p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-start border-b pb-3">
                 <div>
                     <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900">
@@ -222,11 +235,14 @@
                         Pickup & Drop Vehicle Requirement Form
                     </h3>
                 </div>
-                <button onclick="closePickupDropModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
+                <button type="button" onclick="closePickupDropModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
             </div>
 
-            <form id="pickup-drop-modal-form" onsubmit="submitPickupDropRequest(event)" class="space-y-3 text-xs sm:text-sm">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div id="pdm-error-box" class="hidden bg-rose-50 border border-rose-300 text-rose-800 rounded-xl p-3 text-xs font-bold"></div>
+
+            <form id="pickup-drop-modal-form" onsubmit="submitPickupDropRequest(event)" class="space-y-4 text-xs sm:text-sm">
+                <!-- Group Leader & Branch Info -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Group Leader Name *</label>
                         <input type="text" name="requester_name" required placeholder="Group Leader Full Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
@@ -234,6 +250,10 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">10-Digit Mobile Number *</label>
                         <input type="tel" name="requester_phone" required maxlength="10" inputmode="numeric" placeholder="98XXXXXXXX" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">No. of Saints *</label>
+                        <input type="number" name="passenger_count" value="45" min="1" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
                     </div>
                 </div>
 
@@ -264,68 +284,111 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Trip Direction *</label>
-                        <select name="trip_direction" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                            <option value="PICKUP_TO_SAMAGAM">Pickup → Samagam Ground</option>
-                            <option value="DROP_FROM_SAMAGAM">Samagam Ground → Drop</option>
-                            <option value="ROUND_TRIP">Both Pickup & Return Drop</option>
-                        </select>
+                <!-- Trip Type Selector: Arrival Only / Departure Only / Both -->
+                <div class="bg-slate-100 p-3 rounded-2xl border border-slate-200">
+                    <label class="block text-xs font-extrabold text-slate-800 mb-1.5">Select Service Requirement *</label>
+                    <select id="pdm-trip-direction" name="trip_direction" onchange="toggleArrivalDepartureSections()" required class="w-full bg-white border-2 border-emerald-500 rounded-xl px-3 py-2.5 font-extrabold text-emerald-950">
+                        <option value="ROUND_TRIP">🔄 Both Arrival (Pickup) & Return Departure (Drop)</option>
+                        <option value="PICKUP_TO_SAMAGAM">🛬 Arrival Only — Pickup to Samagam Ground (No Departure Plan Yet)</option>
+                        <option value="DROP_FROM_SAMAGAM">🛫 Departure Only — Drop from Samagam Ground (No Arrival Needed)</option>
+                    </select>
+                </div>
+
+                <!-- INDEPENDENT ARRIVAL SECTION -->
+                <div id="pdm-arrival-section" class="bg-emerald-50/70 border border-emerald-300 rounded-2xl p-4 space-y-3">
+                    <div class="font-extrabold text-xs uppercase tracking-wider text-emerald-900">
+                        🛬 Arrival (Pickup → Samagam Ground) Details
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Station / Airport / Depot *</label>
-                        <select id="pdm-arrival-station" name="transit_hub" onchange="updateTrainSuggestions('pdm')" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                            <option value="Panvel Junction (PNVL)">Panvel Railway Station (PNVL)</option>
-                            <option value="Thane Railway Station (TNA)">Thane Railway Station (TNA)</option>
-                            <option value="Lokmanya Tilak Terminus (LTT)">Lokmanya Tilak Terminus (LTT)</option>
-                            <option value="Dadar Terminal (DR/DDR)">Dadar Railway Terminal (DR/DDR)</option>
-                            <option value="Chhatrapati Shivaji Maharaj Terminus (CSMT)">CSMT Mumbai</option>
-                            <option value="Mumbai Central (MMCT)">Mumbai Central (MMCT)</option>
-                            <option value="Bandra Terminus (BDTS)">Bandra Terminus (BDTS)</option>
-                            <option value="Kalyan Junction (KYN)">Kalyan Junction (KYN)</option>
-                            <option value="Navi Mumbai International Airport (NMIA)">Navi Mumbai International Airport (NMIA)</option>
-                            <option value="Mumbai Airport Terminal 1 (Domestic)">Mumbai Airport Terminal 1 (Domestic)</option>
-                            <option value="Mumbai Airport Terminal 2 (International)">Mumbai Airport Terminal 2 (International)</option>
-                            <option value="Panvel / Sion / Dadar ST Bus Depot">Panvel / Sion / Dadar ST Bus Depot</option>
-                        </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Station / Airport / Bus Depot *</label>
+                            <select id="arr-station" name="arrival_station" onchange="updateTrainSuggestions('arr')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                                <option value="Panvel Junction (PNVL)">Panvel Railway Station (PNVL)</option>
+                                <option value="Thane Railway Station (TNA)">Thane Railway Station (TNA)</option>
+                                <option value="Lokmanya Tilak Terminus (LTT)">Lokmanya Tilak Terminus (LTT)</option>
+                                <option value="Dadar Terminal (DR/DDR)">Dadar Railway Terminal (DR/DDR)</option>
+                                <option value="Chhatrapati Shivaji Maharaj Terminus (CSMT)">CSMT Mumbai</option>
+                                <option value="Mumbai Central (MMCT)">Mumbai Central (MMCT)</option>
+                                <option value="Bandra Terminus (BDTS)">Bandra Terminus (BDTS)</option>
+                                <option value="Kalyan Junction (KYN)">Kalyan Junction (KYN)</option>
+                                <option value="Navi Mumbai International Airport (NMIA)">Navi Mumbai International Airport (NMIA)</option>
+                                <option value="Mumbai Airport Terminal 1 (Domestic)">Mumbai Airport Terminal 1 (Domestic)</option>
+                                <option value="Mumbai Airport Terminal 2 (International)">Mumbai Airport Terminal 2 (International)</option>
+                                <option value="Panvel / Sion / Dadar ST Bus Depot">Panvel / Sion / Dadar ST Bus Depot</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Date & Time *</label>
+                            <input type="datetime-local" id="arr-datetime" name="arrival_datetime" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">No. of Saints *</label>
-                        <input type="number" name="passenger_count" value="45" min="1" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Train / Flight No. *</label>
+                            <input type="text" id="arr-train-number" name="arrival_train_number" list="arr-train-num-list" oninput="syncTrainNameFromNumber('arr')" placeholder="Type or select" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
+                            <datalist id="arr-train-num-list"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Train / Flight Name *</label>
+                            <input type="text" id="arr-train-name" name="arrival_train_name" list="arr-train-name-list" oninput="syncTrainNumberFromName('arr')" placeholder="Auto-suggested" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <datalist id="arr-train-name-list"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Upload Arrival Ticket (Optional)</label>
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleTicketFileEncode(this, 'arr-ticket-name')" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                            <input type="hidden" id="arr-ticket-name" name="arrival_ticket_name" value="">
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Train / Flight Number *</label>
-                        <input type="text" id="pdm-train-number" name="train_number" list="pdm-train-num-list" oninput="syncTrainNameFromNumber('pdm')" required placeholder="Type or select Train No." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
-                        <datalist id="pdm-train-num-list"></datalist>
+                <!-- INDEPENDENT DEPARTURE SECTION -->
+                <div id="pdm-departure-section" class="bg-sky-50/70 border border-sky-300 rounded-2xl p-4 space-y-3">
+                    <div class="font-extrabold text-xs uppercase tracking-wider text-sky-900">
+                        🛫 Departure (Samagam Ground → Drop Station) Details — Can Be Different Location & Train
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Train / Flight Name *</label>
-                        <input type="text" id="pdm-train-name" name="train_name" list="pdm-train-name-list" oninput="syncTrainNumberFromName('pdm')" required placeholder="Auto-suggested Train Name" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                        <datalist id="pdm-train-name-list"></datalist>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Departure Station / Airport / Bus Depot *</label>
+                            <select id="dep-station" name="departure_station" onchange="updateTrainSuggestions('dep')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                                <option value="Panvel Junction (PNVL)">Panvel Railway Station (PNVL)</option>
+                                <option value="Thane Railway Station (TNA)">Thane Railway Station (TNA)</option>
+                                <option value="Lokmanya Tilak Terminus (LTT)">Lokmanya Tilak Terminus (LTT)</option>
+                                <option value="Dadar Terminal (DR/DDR)">Dadar Railway Terminal (DR/DDR)</option>
+                                <option value="Chhatrapati Shivaji Maharaj Terminus (CSMT)">CSMT Mumbai</option>
+                                <option value="Mumbai Central (MMCT)">Mumbai Central (MMCT)</option>
+                                <option value="Bandra Terminus (BDTS)">Bandra Terminus (BDTS)</option>
+                                <option value="Kalyan Junction (KYN)">Kalyan Junction (KYN)</option>
+                                <option value="Navi Mumbai International Airport (NMIA)">Navi Mumbai International Airport (NMIA)</option>
+                                <option value="Mumbai Airport Terminal 1 (Domestic)">Mumbai Airport Terminal 1 (Domestic)</option>
+                                <option value="Mumbai Airport Terminal 2 (International)">Mumbai Airport Terminal 2 (International)</option>
+                                <option value="Panvel / Sion / Dadar ST Bus Depot">Panvel / Sion / Dadar ST Bus Depot</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Departure Date & Time *</label>
+                            <input type="datetime-local" id="dep-datetime" name="departure_datetime" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Departure Train / Flight No. *</label>
+                            <input type="text" id="dep-train-number" name="departure_train_number" list="dep-train-num-list" oninput="syncTrainNameFromNumber('dep')" placeholder="Type or select" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-extrabold">
+                            <datalist id="dep-train-num-list"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Departure Train / Flight Name *</label>
+                            <input type="text" id="dep-train-name" name="departure_train_name" list="dep-train-name-list" oninput="syncTrainNumberFromName('dep')" placeholder="Auto-suggested" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <datalist id="dep-train-name-list"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Upload Departure Ticket (Optional)</label>
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleTicketFileEncode(this, 'dep-ticket-name')" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                            <input type="hidden" id="dep-ticket-name" name="departure_ticket_name" value="">
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Arrival Date & Time *</label>
-                        <input type="datetime-local" name="scheduled_datetime" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Departure Date *</label>
-                        <input type="date" name="departure_date" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Upload Ticket (Optional)</label>
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="handleTicketFileEncode(this, 'pdm-ticket-b64')" class="w-full border border-slate-300 rounded-xl px-2 py-2 text-xs">
-                        <input type="hidden" id="pdm-ticket-b64" name="ticket_attachment_name" value="">
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-lg transition">
+                <button type="submit" id="btn-submit-pdm" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-lg transition">
                     ✅ Submit Pickup/Drop Request to Transport Control
                 </button>
             </form>
@@ -344,7 +407,7 @@
                         Donate Vehicle for Sewa (During Samagam & In Advance Sewa)
                     </h3>
                 </div>
-                <button onclick="closeDonateVehicleModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
+                <button type="button" onclick="closeDonateVehicleModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
             </div>
 
             <div id="donate-vehicle-confirmation" class="hidden bg-emerald-50 border-2 border-emerald-600 rounded-2xl p-4 text-xs sm:text-sm space-y-1">
@@ -533,6 +596,16 @@
             ]
         };
 
+        function showPortalToast(msg, isError = false) {
+            const el = document.getElementById('portal-toast-banner');
+            el.className = `max-w-5xl mx-auto rounded-2xl p-4 border-2 text-xs sm:text-sm font-bold shadow ${
+                isError ? 'bg-rose-50 border-rose-400 text-rose-900' : 'bg-emerald-50 border-emerald-500 text-emerald-950'
+            }`;
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         function populateBranchesForZone(zoneSelectId, branchSelectId) {
             const zone = document.getElementById(zoneSelectId).value;
             const branchEl = document.getElementById(branchSelectId);
@@ -543,26 +616,44 @@
         }
 
         function updateTrainSuggestions(prefix) {
-            const station = document.getElementById(`${prefix}-arrival-station`).value;
+            const station = document.getElementById(`${prefix}-station`).value;
             const trains = STATION_TRAINS[station] || [];
-            const numList = document.getElementById(`${prefix}-train-num-list`);
-            const nameList = document.getElementById(`${prefix}-train-name-list`);
-            numList.innerHTML = trains.map(t => `<option value="${t.num}">${t.num} — ${t.name}</option>`).join('');
-            nameList.innerHTML = trains.map(t => `<option value="${t.name}">${t.num} — ${t.name}</option>`).join('');
+            document.getElementById(`${prefix}-train-num-list`).innerHTML =
+                trains.map(t => `<option value="${t.num}">${t.num} — ${t.name}</option>`).join('');
+            document.getElementById(`${prefix}-train-name-list`).innerHTML =
+                trains.map(t => `<option value="${t.name}">${t.num} — ${t.name}</option>`).join('');
         }
 
         function syncTrainNameFromNumber(prefix) {
-            const station = document.getElementById(`${prefix}-arrival-station`).value;
+            const station = document.getElementById(`${prefix}-station`).value;
             const numVal = document.getElementById(`${prefix}-train-number`).value.trim().toUpperCase();
             const match = (STATION_TRAINS[station] || []).find(t => t.num.toUpperCase() === numVal);
             if (match) document.getElementById(`${prefix}-train-name`).value = match.name;
         }
 
         function syncTrainNumberFromName(prefix) {
-            const station = document.getElementById(`${prefix}-arrival-station`).value;
+            const station = document.getElementById(`${prefix}-station`).value;
             const nameVal = document.getElementById(`${prefix}-train-name`).value.trim().toLowerCase();
             const match = (STATION_TRAINS[station] || []).find(t => t.name.toLowerCase() === nameVal);
             if (match) document.getElementById(`${prefix}-train-number`).value = match.num;
+        }
+
+        function toggleArrivalDepartureSections() {
+            const dir = document.getElementById('pdm-trip-direction').value;
+            const arrSec = document.getElementById('pdm-arrival-section');
+            const depSec = document.getElementById('pdm-departure-section');
+            const showArr = (dir === 'PICKUP_TO_SAMAGAM' || dir === 'ROUND_TRIP');
+            const showDep = (dir === 'DROP_FROM_SAMAGAM' || dir === 'ROUND_TRIP');
+
+            arrSec.classList.toggle('hidden', !showArr);
+            depSec.classList.toggle('hidden', !showDep);
+
+            ['arr-station', 'arr-datetime', 'arr-train-number', 'arr-train-name'].forEach(id => {
+                document.getElementById(id).required = showArr;
+            });
+            ['dep-station', 'dep-datetime', 'dep-train-number', 'dep-train-name'].forEach(id => {
+                document.getElementById(id).required = showDep;
+            });
         }
 
         function handleTicketFileEncode(inputEl, hiddenId) {
@@ -618,6 +709,7 @@
         }
 
         function openPickupDropModal() {
+            document.getElementById('pdm-error-box').classList.add('hidden');
             document.getElementById('pickup-drop-modal').classList.remove('hidden');
             document.getElementById('pickup-drop-modal').classList.add('flex');
         }
@@ -639,18 +731,43 @@
 
         async function submitPickupDropRequest(e) {
             e.preventDefault();
+            const errBox = document.getElementById('pdm-error-box');
+            errBox.classList.add('hidden');
+
             const raw = Object.fromEntries(new FormData(e.target).entries());
+            const dir = raw.trip_direction || "ROUND_TRIP";
+            const hasArr = (dir === 'PICKUP_TO_SAMAGAM' || dir === 'ROUND_TRIP');
+            const hasDep = (dir === 'DROP_FROM_SAMAGAM' || dir === 'ROUND_TRIP');
+
+            const transitSummary = hasArr && hasDep
+                ? `Arr: ${raw.arrival_station} | Dep: ${raw.departure_station}`
+                : (hasArr ? raw.arrival_station : raw.departure_station);
+
+            const trainSummaryParts = [];
+            if (hasArr) trainSummaryParts.push(`Arr: ${raw.arrival_train_number || ''} ${raw.arrival_train_name || ''}`.trim());
+            if (hasDep) trainSummaryParts.push(`Dep: ${raw.departure_train_number || ''} ${raw.departure_train_name || ''}`.trim());
+
+            const notesParts = [
+                `Zone: ${raw.zone_name || '-'}`,
+                `Branch: ${raw.branch_name || '-'}`,
+                `Unit: ${raw.unit_number || '-'}`,
+            ];
+            if (hasArr) notesParts.push(`ArrDT: ${raw.arrival_datetime || '-'}`);
+            if (hasDep) notesParts.push(`DepDT: ${raw.departure_datetime || '-'}`);
+            if (raw.arrival_ticket_name) notesParts.push(`ArrTicket: ${raw.arrival_ticket_name}`);
+            if (raw.departure_ticket_name) notesParts.push(`DepTicket: ${raw.departure_ticket_name}`);
+
             const payload = {
-                trip_direction: raw.trip_direction || "PICKUP_TO_SAMAGAM",
-                transit_hub: raw.transit_hub,
+                trip_direction: dir,
+                transit_hub: transitSummary,
                 passenger_count: parseInt(raw.passenger_count) || 1,
-                vehicle_type_requested: raw.vehicle_type_requested || "Heavy Bus (50-Seater)",
+                vehicle_type_requested: (parseInt(raw.passenger_count) || 1) > 35 ? "Heavy Bus (50-Seater)" : "Mini Bus / Tempo Traveller (20-35 Seat)",
                 vehicles_needed: Math.max(1, Math.ceil((parseInt(raw.passenger_count) || 1) / 50)),
-                scheduled_datetime: raw.scheduled_datetime,
-                train_flight_details: `${raw.train_number || ''} - ${raw.train_name || ''}`.trim(),
+                scheduled_datetime: hasArr ? (raw.arrival_datetime || '') : (raw.departure_datetime || ''),
+                train_flight_details: trainSummaryParts.join(' | '),
                 requester_name: raw.requester_name,
-                requester_phone: raw.requester_phone,
-                notes: `Zone: ${raw.zone_name || '-'} | Branch: ${raw.branch_name || '-'} | Unit: ${raw.unit_number || '-'} | Departure: ${raw.departure_date || '-'}${raw.ticket_attachment_name ? ' | Ticket: ' + raw.ticket_attachment_name : ''}`
+                requester_phone: String(raw.requester_phone || '').replace(/\D/g, '').slice(-10),
+                notes: notesParts.join(' | ')
             };
 
             const res = await fetch('/api/operations/pickup-drop-requests', {
@@ -658,16 +775,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
-                localStorage.setItem('last_requester_query', payload.requester_phone);
-                document.getElementById('track-query-input').value = payload.requester_phone;
-                alert(`धन निरंकार जी 🙏\nPickup/Drop Vehicle Request Submitted!\nRequest ID: ${data.request_code}\n\nVehicle will be allocated if available ASAP. Track live status anytime with mobile ${payload.requester_phone}.`);
                 e.target.reset();
+                toggleArrivalDepartureSections();
                 closePickupDropModal();
-                checkMyRequestStatus();
+                showPortalToast(`धन निरंकार जी 🙏 Pickup/Drop Request Submitted! Request ID: ${data.request_code} — Vehicle will be allocated if available ASAP.`);
             } else {
-                alert('❌ ' + (data.detail || 'Could not submit request.'));
+                errBox.textContent = data.detail || 'Could not submit request. Please check your details.';
+                errBox.classList.remove('hidden');
             }
         }
 
@@ -676,7 +792,7 @@
             const raw = Object.fromEntries(new FormData(e.target).entries());
             const payload = {
                 donor_name: raw.donor_name,
-                donor_phone: raw.donor_phone,
+                donor_phone: String(raw.donor_phone || '').replace(/\D/g, '').slice(-10),
                 branch_name: raw.branch_unit,
                 vehicle_reg_number: String(raw.vehicle_reg_number || '').toUpperCase().trim(),
                 vehicle_type: `${raw.vehicle_type} [${raw.sewa_phase}]`,
@@ -693,23 +809,32 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
                 const box = document.getElementById('donate-vehicle-confirmation');
                 box.classList.remove('hidden');
                 document.getElementById('donate-vehicle-confirmation-text').textContent =
-                    `Sewa Pass ID: ${data.seva_code || 'SEVA-OK'} | Vehicle: ${payload.vehicle_reg_number} (${raw.vehicle_type}) | Phase: ${raw.sewa_phase} | Available: ${payload.available_from_date} to ${payload.available_to_date}.`;
+                    `Sewa Pass ID: ${data.seva_code || 'SEVA-OK'} | Vehicle: ${payload.vehicle_reg_number} (${raw.vehicle_type}) | Phase: ${raw.sewa_phase}.`;
                 e.target.reset();
             } else {
-                alert('❌ ' + (data.detail || 'Could not register donated vehicle.'));
+                showPortalToast(data.detail || 'Could not register donated vehicle.', true);
             }
+        }
+
+        function clearTrackerResults() {
+            document.getElementById('track-query-input').value = '';
+            const box = document.getElementById('track-status-results');
+            box.innerHTML = '';
+            box.classList.add('hidden');
+            document.getElementById('btn-clear-tracker').classList.add('hidden');
         }
 
         async function checkMyRequestStatus() {
             const q = document.getElementById('track-query-input').value.trim();
             if (!q) return;
-            localStorage.setItem('last_requester_query', q);
             const box = document.getElementById('track-status-results');
+            box.classList.remove('hidden');
+            document.getElementById('btn-clear-tracker').classList.remove('hidden');
             box.innerHTML = '<div class="text-xs text-slate-500">Checking live allocation status...</div>';
 
             const res = await fetch(`/api/operations/request-status-lookup?query=${encodeURIComponent(q)}`);
@@ -755,16 +880,13 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            updateTrainSuggestions('pdm');
+            updateTrainSuggestions('arr');
+            updateTrainSuggestions('dep');
+            toggleArrivalDepartureSections();
             const savedLang = localStorage.getItem('samagam_portal_lang') || 'en';
             const btn = document.querySelector(`.lang-btn[onclick*="'${savedLang}'"]`);
             if (btn) setLanguage(savedLang, btn);
-
-            const lastQ = localStorage.getItem('last_requester_query');
-            if (lastQ) {
-                document.getElementById('track-query-input').value = lastQ;
-                checkMyRequestStatus();
-            }
+            // Privacy: Do NOT auto-fill or auto-display previous status tracker results on page load.
         });
     </script>
 </body>
