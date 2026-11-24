@@ -1,433 +1,575 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>सेवा करण्यासाठी वाहन प्राप्ती व वाटप | In-Ground Seva Vehicles</title>
+    <title>Ground Service Portal | ground.samagamtransport.in</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(180deg, #dff1fb 0%, #eef6fc 45%, #e2e8f0 100%);
+            background: radial-gradient(circle at top, #ecfeff 0%, #f1f5f9 55%, #e2e8f0 100%);
             font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
             color: #0f172a;
         }
-        .tab-pill.active {
+        .tab-btn.active {
             background-color: #0f2c59;
             color: #ffffff;
             box-shadow: 0 8px 20px rgba(15, 44, 89, 0.25);
         }
-        .seva-form-card {
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(10px);
-            border: 1px solid #bae6fd;
-            box-shadow: 0 20px 45px -15px rgba(14, 116, 144, 0.15);
-        }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="min-h-screen flex flex-col justify-between">
 
+    <!-- Top Header -->
     <header class="bg-[#0f2c59] text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
-                <img src="/static/jagriti.jpeg" alt="79 Samagam Logo" class="h-10 sm:h-12 w-auto rounded-xl border border-amber-400/50 shadow">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-sky-100 text-[#0f2c59] flex items-center justify-center font-extrabold text-lg shadow">🙏</div>
+                <img src="/static/jagriti.jpeg"
+                     onerror="this.onerror=null;this.src='/static/jagriti.jpg';"
+                     alt="जागृति — The Awakening"
+                     class="h-11 w-auto rounded-xl bg-white px-2 py-0.5 shadow border border-amber-300/60 object-contain">
                 <div>
-                    <h1 class="font-extrabold text-base sm:text-lg tracking-wide">सेवा करण्यासाठी वाहन प्राप्ती व वाटप प्रणाली</h1>
-                    <p class="text-xs text-sky-200">In-Ground Seva Vehicle Donation, Dept. Requisition & Ground Transport Allocation</p>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-wide">🚛 GROUND SERVICE & DEPARTMENT VEHICLE PORTAL</h1>
+                        <span class="hidden sm:inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-400 text-slate-950">ground.samagamtransport.in</span>
+                    </div>
+                    <p class="text-xs text-sky-200">Department Heads & Kshetriya Sanchalak • Advance Vehicle Projection & Ad-hoc Goods/Seva Requests</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 text-xs font-bold">
-                <a href="/" class="bg-sky-800 hover:bg-sky-700 px-3.5 py-2 rounded-xl">← Welcome Portal</a>
-                <a href="/download_hub.html" class="bg-[#f28b82] text-white px-3.5 py-2 rounded-xl">📲 Mobile Apps</a>
+                <a href="https://www.samagamtransport.in" class="bg-sky-900 hover:bg-sky-800 px-3 py-2 rounded-xl border border-sky-700">← Main Transport Portal</a>
             </div>
         </div>
     </header>
 
-    <div class="max-w-5xl mx-auto px-4 pt-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-white/80 p-2 rounded-2xl shadow-sm border border-sky-100 text-xs sm:text-sm font-bold">
-            <button onclick="switchSevaTab('donate', this)" class="tab-pill active py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
-                <span>🚘</span> 1. सेवा वाहन प्राप्ती फॉर्म (Donate Vehicle)
-            </button>
-            <button onclick="switchSevaTab('request', this)" class="tab-pill py-3 px-4 rounded-xl text-slate-700 hover:bg-sky-50 transition flex items-center justify-center gap-2">
-                <span>📋</span> 2. Dept. Vehicle Requisition (Sign & Stamp)
-            </button>
-            <button onclick="switchSevaTab('allocate', this)" class="tab-pill py-3 px-4 rounded-xl text-slate-700 hover:bg-sky-50 transition flex items-center justify-center gap-2">
-                <span>🔐</span> 3. Ground Transport Allocation
-            </button>
-        </div>
-    </div>
+    <main class="max-w-5xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
 
-    <main class="max-w-5xl mx-auto px-4 pt-6">
-        <!-- TAB 1: DONATE VEHICLE FOR SEVA -->
-        <section id="section-donate" class="max-w-2xl mx-auto">
-            <div class="seva-form-card rounded-3xl p-6 sm:p-8 space-y-6">
-                <div class="text-center border-b border-sky-100 pb-5 space-y-1.5">
-                    <div class="inline-flex items-center justify-center px-5 py-2 rounded-full bg-sky-100 text-[#0f2c59] font-extrabold text-sm gap-2">
-                        <span>🚘 🙏</span> <span>(सेवा)</span>
-                    </div>
-                    <h2 class="text-2xl font-extrabold text-[#0f2c59] pt-1">सेवा करण्यासाठी वाहन प्राप्ती फॉर्म</h2>
-                    <p class="text-sm font-bold text-sky-800">धन निरंकार जी 🙏</p>
+        <!-- STEP 1: DEPARTMENT HEAD / KSHETRIYA SANCHALAK ONE-TIME MOBILE OTP + 4-DIGIT PIN LOGIN -->
+        <section id="dept-auth-card" class="bg-white rounded-3xl p-6 border-2 border-[#0f2c59]/25 shadow-lg space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950">
+                        Mandatory Verification • Department Head / Kshetriya Sanchalak
+                    </span>
+                    <h2 class="text-lg font-extrabold text-[#0f2c59] mt-1">🔐 Sign In with Mobile OTP (One-Time) or 4-Digit PIN</h2>
+                </div>
+                <span id="dept-session-badge" class="hidden text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-900">
+                    ● Verified Department Session
+                </span>
+            </div>
+
+            <!-- Logged-in Banner -->
+            <div id="dept-logged-in-bar" class="hidden bg-emerald-50 border border-emerald-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div>
+                    <div class="font-extrabold text-sm text-emerald-950" id="dept-user-title">Verified Coordinator</div>
+                    <div class="text-emerald-800 font-semibold" id="dept-user-sub">Authenticated via Mobile OTP / PIN</div>
+                </div>
+                <button onclick="logoutDeptHead()" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold px-4 py-2 rounded-xl">
+                    Switch User / Logout
+                </button>
+            </div>
+
+            <!-- Auth Steps -->
+            <div id="dept-auth-steps" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div id="d-step-1" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <div class="font-extrabold text-slate-800">1. Enter Registered Mobile or Email</div>
+                    <input type="text" id="d-auth-ident" placeholder="10-Digit Mobile or Email" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    <button onclick="deptAuthContinue()" id="d-btn-continue" class="w-full bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold py-2.5 rounded-xl">
+                        Send OTP / Check PIN →
+                    </button>
                 </div>
 
-                <form id="seva-donate-form" onsubmit="submitSevaVehicleDonation(event)" class="space-y-4 text-sm">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-sky-50/70 p-4 rounded-2xl border border-sky-100">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">📅 दिनांक (Date) *</label>
-                            <input type="date" id="seva-date" name="handover_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">⏰ वेळ (Time) *</label>
-                            <input type="time" id="seva-time" name="handover_time" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन क्रमांक (Vehicle Reg. No) *</label>
-                            <input type="text" name="vehicle_reg_number" required placeholder="MH-04-AB-1234" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 uppercase font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन प्रकार (Vehicle Type) *</label>
-                            <select name="vehicle_type" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
-                                <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
-                                <option value="Bolero / Pickup / Camper">Bolero / Pickup</option>
-                                <option value="Chhota Hathi / Tata Ace">Chhota Hathi / Tata Ace</option>
-                                <option value="Tempo / Eicher Mini Truck">Tempo / Eicher</option>
-                                <option value="Ambulance / Medical Van">Ambulance / Medical Van</option>
-                                <option value="Two-Wheeler / E-Rickshaw">Two-Wheeler / E-Rickshaw</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">झोन आणि ब्रांच चे नाव (Zone & Branch) *</label>
-                        <input type="text" name="zone_and_branch" required placeholder="उदा. झोन ३ - ठाणे / पनवेल ब्रांच" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">वाहन मालकाचे नाव (Owner Name) *</label>
-                            <input type="text" name="owner_name" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">संपर्क क्रमांक (Contact No) *</label>
-                            <input type="text" name="owner_phone" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">पासून दिनांक (From Date) *</label>
-                            <input type="date" name="seva_from_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">पर्यंत दिनांक (Till Date) *</label>
-                            <input type="date" name="seva_till_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">इंधन क्षमता (Fuel Level)</label>
-                            <select name="fuel_level" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                                <option value="Full (100%)">Full Tank</option>
-                                <option value="3/4 Tank">3/4 Tank</option>
-                                <option value="Half Tank">Half Tank</option>
-                                <option value="1/4 Tank">1/4 Tank</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">इंधन प्रकार (Fuel Type)</label>
-                            <select name="fuel_type" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                                <option value="Diesel">Diesel</option>
-                                <option value="Petrol">Petrol</option>
-                                <option value="CNG">CNG</option>
-                                <option value="Electric">Electric</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">किमी मीटर (Odometer) *</label>
-                            <input type="number" name="odometer_km" required placeholder="45200" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">📸 वाहन फोटो अपलोड (Vehicle Photo)</label>
-                        <input type="file" accept="image/*" onchange="previewImageFile(this, 'donation-photo-preview', 'donation-photo-b64')" class="w-full text-xs">
-                        <input type="hidden" id="donation-photo-b64" name="vehicle_photo_b64">
-                        <img id="donation-photo-preview" class="hidden mt-2 max-h-40 rounded-xl border mx-auto" alt="Preview">
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" name="handed_over_by_name" required placeholder="वाहन सुपूर्द करणाऱ्याचे नाव *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        <input type="text" name="received_by_sevadar_name" required placeholder="स्वीकारणाऱ्या सेवादाराचे नाव *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                    </div>
-
-                    <button type="submit" class="w-full bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold py-4 rounded-2xl text-base shadow-xl">
-                        🙏 सेवा वाहन जमा करा (Submit Seva Vehicle)
+                <div id="d-step-pin" class="hidden bg-emerald-50/70 border border-emerald-300 rounded-2xl p-4 space-y-2.5">
+                    <div class="font-extrabold text-emerald-950" id="d-pin-heading">2. Enter Your 4-Digit PIN</div>
+                    <input type="password" id="d-auth-pin" maxlength="4" inputmode="numeric" placeholder="••••" class="w-full bg-white border border-emerald-400 rounded-xl px-3 py-2.5 text-center text-lg font-black tracking-widest">
+                    <button onclick="deptVerifyPin()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">
+                        Verify PIN & Unlock Form
                     </button>
-                </form>
-            </div>
-        </section>
+                </div>
 
-        <!-- TAB 2: DEPARTMENT VEHICLE REQUISITION -->
-        <section id="section-request" class="hidden grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div class="lg:col-span-3 seva-form-card rounded-3xl p-6 space-y-4">
-                <h2 class="text-xl font-extrabold text-[#0f2c59]">📋 Raise In-Ground Vehicle Requirement</h2>
-                <form id="dept-req-form" onsubmit="submitDeptRequisition(event)" class="space-y-3.5 text-sm">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <select id="dept-select" name="base_department_name" onchange="onDepartmentSelectionChange()" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                                <optgroup label="Primary Field Units (Sub-Number Required)">
-                                    <option value="Sewadal" data-sublabel="Sewadal Unit Number *" data-subplaceholder="e.g. Unit No. 214" data-incharge="Rev. Manmohan Chhabra Ji / Kshetriya Sanchalak">🛡️ Sewadal (With Unit Number)</option>
-                                    <option value="Canteen Committee (No. 12)" data-sublabel="Canteen Number *" data-subplaceholder="e.g. Canteen No. 03" data-incharge="Shri Amarlal Ji">☕ Canteen (With Canteen No.) — Shri Amarlal Ji</option>
-                                    <option value="Langar Working Committee (No. 14)" data-sublabel="Langar Number *" data-subplaceholder="e.g. Langar No. 02" data-incharge="Shri Hiralal Asaram Patil Ji">🍲 Langar (With Langar No.) — Shri Hiralal Asaram Patil Ji</option>
-                                    <option value="Pyau / Water & Sanitation (No. 6)" data-sublabel="Pyau Number *" data-subplaceholder="e.g. Pyau No. 07" data-incharge="Shri Anil Shinde Ji">🚰 Pyau (With Pyau No.) — Shri Anil Shinde Ji</option>
-                                    <option value="Account Department (No. 21)" data-sublabel="Accounts Office Number *" data-subplaceholder="e.g. Office No. 01" data-incharge="Rev. J.K Manchanda Ji (Treasurer - SNM)">💼 Account Department (With Office No.) — Rev. J.K Manchanda Ji</option>
-                                </optgroup>
-                                <optgroup label="Official Samagam Committees (PDF Notification)">
-                                    <option value="Samagam Coordination Committee" data-incharge="Rev. Shambhunath Tiwari Ji (Chairman) / Rev. Lalit Dalvi Ji (Coordinator)">🏛️ Samagam Coordination Committee</option>
-                                    <option value="1. Tents, Electricals, Sound & Tin Boundaries" data-incharge="Shri S.S. Tiwari Ji">⛺ 1. Tents, Electricals, Sound & Tin Boundaries</option>
-                                    <option value="2. Purchase of Langar & Canteen Material" data-incharge="Shri Gurnaam Singh Ji">🛒 2. Purchase of Langar & Canteen Material</option>
-                                    <option value="3. Layout Planning" data-incharge="Shri S.S. Tiwari Ji">📐 3. Layout Planning</option>
-                                    <option value="3A. Sub-Committee Ground No. 1" data-incharge="Shri Shankar Sonawane Ji">📍 Sub-Committee — Ground No. 1</option>
-                                    <option value="3B. Sub-Committee Ground No. 2" data-incharge="Shri Mukund Deve Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 2</option>
-                                    <option value="3C. Sub-Committee Ground No. 3" data-incharge="Shri Praful Mandavakar Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 3</option>
-                                    <option value="4. Installation & Decoration of Gates" data-incharge="Shri Gopi Bamugade Ji">🎀 4. Installation & Decoration of Gates</option>
-                                    <option value="5. Electrical Installation" data-incharge="Shri Virendra Bamne Ji">⚡ 5. Electrical Installation</option>
-                                    <option value="6. Water Installation & Sanitation" data-incharge="Shri Anil Shinde Ji">💧 6. Water Installation & Sanitation</option>
-                                    <option value="7. Transport Committee" data-incharge="Shri Janardan Hasha Patil Ji">🚌 7. Transport Committee</option>
-                                    <option value="8. Railway Facility Committee" data-incharge="Shri Kishan Nagdeve Ji">🚆 8. Railway Facility Committee</option>
-                                    <option value="9. Press and Publicity Committee" data-incharge="Smt Primal Singh Ji">📰 9. Press and Publicity Committee</option>
-                                    <option value="10. Liaison with Government Offices" data-incharge="Shri Shambhunath Tiwari Ji">🏢 10. Liaison with Government Offices</option>
-                                    <option value="11. Arrangement at Chembur Bhawan" data-incharge="Shri Vijay Vichare Ji">🏠 11. Arrangement at Chembur Bhawan</option>
-                                    <option value="13. Canteen & Langar Eatables Store" data-incharge="Shri Yashwant Ji">📦 13. Canteen & Langar Eatables Store</option>
-                                    <option value="15. Medical Committee" data-incharge="Dr. Purshottam Ji">🏥 15. Medical Committee</option>
-                                    <option value="16. Publication Committee" data-incharge="Shri Chandrakant Jadhav Ji">📚 16. Publication Committee</option>
-                                    <option value="17. General Purchase Committee" data-incharge="Shri Jayprakash Upadhyay Ji">🛍️ 17. General Purchase Committee</option>
-                                    <option value="18. General Store Committee" data-incharge="Shri Janardhan Hasha Patil Ji">🏬 18. General Store Committee</option>
-                                    <option value="19. Arrangement of Gyan Kaksh" data-incharge="Shri Prakash Janardan Mahatre Ji">📖 19. Arrangement of Gyan Kaksh</option>
-                                    <option value="20. Speakers, Geetkar, Guru Vandana & Shobha Yatra" data-incharge="Shri Ashok Ahuja Ji">🎤 20. Speakers, Geetkar, Guru Vandana & Shobha Yatra</option>
-                                    <option value="22. Arrangement of Mass Marriages" data-incharge="Shri Harish Aildas Khubchandani Ji">💐 22. Arrangement of Mass Marriages</option>
-                                    <option value="23. Fire Service Committee" data-incharge="Shri Rajendra Kadam Ji">🚒 23. Fire Service Committee</option>
-                                    <option value="24. CCTV & Telephone Installation" data-incharge="Shri Ravasaheb Ramrao Hasbe Ji">📹 24. CCTV & Telephone Installation</option>
-                                    <option value="25. Studio, IT, Internet, Telephony & Live Support" data-incharge="Dr. Vinod Gandharv Ji">💻 25. Studio, IT, Internet, Telephony & Live Support</option>
-                                    <option value="26. Ground Services Committee" data-incharge="Shri Somnath Mane Ji">🌱 26. Ground Services Committee</option>
-                                    <option value="27. Signage Committee" data-incharge="Shri Praveen Solanki Ji">🪧 27. Signage Committee</option>
-                                </optgroup>
-                                <optgroup label="Unlisted / External Department">
-                                    <option value="OTHER_UNLISTED" data-sublabel="Other Department Name *" data-subplaceholder="Enter Department Name" data-incharge="">🚨 Other Department (Written Letter from Incharge Required)</option>
-                                </optgroup>
-                            </select>
-                        <select name="required_vehicle_type" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                            <option value="Car / Sedan / SUV">Car / Sedan / SUV</option>
-                            <option value="Bolero / Pickup / Camper">Bolero / Pickup</option>
-                            <option value="Chhota Hathi / Tata Ace">Chhota Hathi / Tata Ace</option>
-                            <option value="Tempo / Eicher Mini Truck">Tempo / Eicher</option>
-                            <option value="Ambulance / Medical Van">Ambulance / Medical Van</option>
-                            <option value="Two-Wheeler / E-Rickshaw">Two-Wheeler / E-Rickshaw</option>
+                <div id="d-step-otp" class="hidden md:col-span-2 bg-amber-50/80 border border-amber-300 rounded-2xl p-4 space-y-2.5">
+                    <div class="font-extrabold text-amber-950" id="d-otp-info">2. One-Time OTP Verification & Set 4-Digit PIN</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="text" id="d-otp-code" maxlength="6" inputmode="numeric" placeholder="6-Digit OTP *" class="bg-white border border-slate-300 rounded-xl px-3 py-2 font-black text-center">
+                        <input type="text" id="d-otp-name" placeholder="Full Name *" class="bg-white border border-slate-300 rounded-xl px-3 py-2 font-semibold">
+                        <select id="d-otp-designation" class="bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold">
+                            <option value="Department Head">Department Head</option>
+                            <option value="Kshetriya Sanchalak">Kshetriya Sanchalak</option>
+                            <option value="Committee Incharge">Committee Incharge</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <input type="number" name="quantity_needed" value="1" min="1" required placeholder="Qty" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
-                        <input type="text" name="requester_name" required placeholder="Requester Name *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        <input type="text" name="requester_phone" required placeholder="Mobile *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <input type="tel" id="d-otp-phone" maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile *" class="bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold">
+                        <input type="text" id="d-otp-branch" placeholder="Branch / Area *" class="bg-white border border-slate-300 rounded-xl px-3 py-2">
+                        <input type="text" id="d-otp-unit" placeholder="Unit No. *" class="bg-white border border-slate-300 rounded-xl px-3 py-2">
+                        <input type="password" id="d-otp-newpin" maxlength="4" inputmode="numeric" placeholder="Create 4-Digit PIN *" class="bg-white border border-amber-500 rounded-xl px-3 py-2 font-black text-center">
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" name="required_duration" required placeholder="Duty Duration (e.g. 23-26 Jan)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                        <input type="text" name="department_head_name" required placeholder="Dept. Head Name *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5">
-                    </div>
-                    <textarea name="purpose_details" rows="2" required placeholder="Duty Purpose & Route Details *" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2"></textarea>
-                    <div class="bg-amber-50 border-2 border-dashed border-amber-400 rounded-2xl p-3 space-y-1.5">
-                        <label class="block text-xs font-extrabold text-amber-950">🖋️ Upload Dept. Head Approval Slip (Sign & Stamp) *</label>
-                        <input type="file" accept="image/*" required onchange="previewImageFile(this, 'stamp-preview', 'stamp-b64')" class="w-full text-xs">
-                        <input type="hidden" id="stamp-b64" name="approval_stamp_b64">
-                        <img id="stamp-preview" class="hidden mt-2 max-h-36 rounded-xl border mx-auto" alt="Stamp">
-                    </div>
-                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-3.5 rounded-2xl text-sm shadow-lg">
-                        📤 Submit Vehicle Requisition
+                    <button onclick="deptVerifyOtp()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">
+                        Verify OTP & Save 4-Digit PIN
                     </button>
-                </form>
-            </div>
-            <div class="lg:col-span-2 seva-form-card rounded-3xl p-5 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-extrabold text-sm text-[#0f2c59]">📌 Submitted Requisitions</h3>
-                    <button onclick="loadSevaAndRequisitions()" class="text-xs font-bold text-sky-700">↻ Refresh</button>
                 </div>
-                <div id="public-requisitions-list" class="space-y-2.5 text-xs"></div>
             </div>
+            <div id="d-auth-error" class="text-xs font-bold text-rose-600"></div>
         </section>
 
-        <!-- TAB 3: GROUND TRANSPORT MEMBER ALLOCATION -->
-        <section id="section-allocate" class="space-y-6 hidden">
-            <div id="ground-auth-gate" class="max-w-md mx-auto seva-form-card rounded-3xl p-6 space-y-4">
-                <div class="text-center">
-                    <span class="text-3xl">🔐</span>
-                    <h2 class="text-lg font-extrabold text-[#0f2c59] mt-1">Transport Ground Member Login</h2>
+        <!-- MODE SWITCHER: ADVANCE PROJECTION vs AD-HOC REQUEST -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white p-2 rounded-2xl shadow-sm border border-slate-200 text-xs sm:text-sm font-extrabold">
+            <button onclick="switchGroundMode('ADVANCE_PROJECTION', this)" class="tab-btn active py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                <span>📅</span> 1. Advance Vehicle Projection & Purpose Justification
+            </button>
+            <button onclick="switchGroundMode('ADHOC_REQUEST', this)" class="tab-btn py-3 px-4 rounded-xl text-slate-700 hover:bg-slate-100 transition flex items-center justify-center gap-2">
+                <span>⚡</span> 2. Ad-hoc Goods / Immediate Vehicle Request
+            </button>
+        </div>
+
+        <!-- DEPARTMENT REQUEST FORM (NO VEHICLE ALLOCATION CONTROLS — HANDLED BY ADMIN & GROUND TEAM ONLY) -->
+        <section class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-5">
+            <div class="border-b pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span id="ground-mode-badge" class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-sky-100 text-[#0f2c59]">
+                        Advance Activity Projection Mode
+                    </span>
+                    <h2 id="ground-form-heading" class="text-xl font-extrabold text-[#0f2c59] mt-1">
+                        Propose Required Vehicles Well in Advance (With Purpose & Justification)
+                    </h2>
                 </div>
-                <form onsubmit="authenticateGroundAllocator(event)" class="space-y-3 text-sm">
-                    <input type="text" id="alloc-login-mobile" required placeholder="Registered Sevadar Mobile (e.g. 9820110001)" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 font-bold">
-                    <input type="text" id="alloc-login-passcode" required value="GND-2026" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5">
-                    <div id="alloc-login-msg" class="text-xs text-rose-600 font-semibold"></div>
-                    <button type="submit" class="w-full bg-[#0f2c59] text-white font-extrabold py-3 rounded-xl">Unlock Allocation Console</button>
-                </form>
             </div>
 
-            <div id="ground-allocator-workspace" class="hidden space-y-6">
-                <div class="bg-[#0f2c59] text-white rounded-2xl p-4 flex justify-between items-center">
-                    <div class="font-extrabold text-sm" id="allocator-identity">--</div>
-                    <button onclick="logoutGroundAllocator()" class="text-xs bg-rose-600 px-3 py-1.5 rounded-lg font-bold">Sign Out</button>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="seva-form-card rounded-3xl p-5 space-y-3">
-                        <h3 class="font-extrabold text-base text-[#0f2c59]">1. Pending Dept. Requests</h3>
-                        <div id="allocator-requests-list" class="space-y-3 text-xs"></div>
-                    </div>
-                    <div class="seva-form-card rounded-3xl p-5 space-y-3">
-                        <h3 class="font-extrabold text-base text-emerald-900">2. Available Seva Donated Vehicles</h3>
-                        <div id="allocator-vehicles-list" class="space-y-3 text-xs"></div>
-                    </div>
-                </div>
+            <div id="ground-submission-banner" class="hidden bg-emerald-50 border-2 border-emerald-600 rounded-2xl p-4 space-y-1 text-xs sm:text-sm">
+                <div class="font-black text-emerald-950 text-base">✅ Request Submitted to Ground Transport & Control Room!</div>
+                <p class="font-bold text-emerald-900" id="ground-submission-msg">
+                    Vehicle will be allocated if available ASAP.
+                </p>
             </div>
+
+            <div id="ground-form-error" class="hidden bg-rose-50 border-2 border-rose-400 rounded-2xl p-3.5 text-xs sm:text-sm font-bold text-rose-900"></div>
+
+            <form id="ground-dept-form" onsubmit="submitGroundDeptRequest(event)" class="space-y-4 text-xs sm:text-sm">
+                <input type="hidden" id="request-mode-input" name="request_mode" value="ADVANCE_PROJECTION">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Select Official Samagam Department / Committee *</label>
+                        <select id="dept-select" name="base_department_name" onchange="onDepartmentSelectionChange()" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <optgroup label="Primary Field Units (Sub-Number Required)">
+                                <option value="Sewadal" data-sublabel="Sewadal Unit Number *" data-subplaceholder="e.g. Unit No. 214" data-incharge="Rev. Manmohan Chhabra Ji / Kshetriya Sanchalak">🛡️ Sewadal (With Unit Number)</option>
+                                <option value="Canteen Committee (No. 12)" data-sublabel="Canteen Number *" data-subplaceholder="e.g. Canteen No. 03" data-incharge="Shri Amarlal Ji">☕ Canteen (With Canteen No.) — Shri Amarlal Ji</option>
+                                <option value="Langar Working Committee (No. 14)" data-sublabel="Langar Number *" data-subplaceholder="e.g. Langar No. 02" data-incharge="Shri Hiralal Asaram Patil Ji">🍲 Langar (With Langar No.) — Shri Hiralal Asaram Patil Ji</option>
+                                <option value="Pyau / Water & Sanitation (No. 6)" data-sublabel="Pyau Number *" data-subplaceholder="e.g. Pyau No. 07" data-incharge="Shri Anil Shinde Ji">🚰 Pyau (With Pyau No.) — Shri Anil Shinde Ji</option>
+                                <option value="Account Department (No. 21)" data-sublabel="Accounts Office Number *" data-subplaceholder="e.g. Office No. 01" data-incharge="Rev. J.K Manchanda Ji">💼 Account Department (With Office No.) — Rev. J.K Manchanda Ji</option>
+                            </optgroup>
+                            <optgroup label="Official Samagam Committees">
+                                <option value="Samagam Coordination Committee" data-incharge="Rev. Shambhunath Tiwari Ji (Chairman) / Rev. Lalit Dalvi Ji (Coordinator)">🏛️ Samagam Coordination Committee</option>
+                                <option value="1. Tents, Electricals, Sound & Tin Boundaries" data-incharge="Shri S.S. Tiwari Ji">⛺ 1. Tents, Electricals, Sound & Tin Boundaries</option>
+                                <option value="2. Purchase of Langar & Canteen Material" data-incharge="Shri Gurnaam Singh Ji">🛒 2. Purchase of Langar & Canteen Material</option>
+                                <option value="3. Layout Planning" data-incharge="Shri S.S. Tiwari Ji">📐 3. Layout Planning</option>
+                                <option value="3A. Sub-Committee Ground No. 1" data-incharge="Shri Shankar Sonawane Ji">📍 Sub-Committee — Ground No. 1</option>
+                                <option value="3B. Sub-Committee Ground No. 2" data-incharge="Shri Mukund Deve Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 2</option>
+                                <option value="3C. Sub-Committee Ground No. 3" data-incharge="Shri Praful Mandavakar Ji (Kshetriya Sanchalak)">📍 Sub-Committee — Ground No. 3</option>
+                                <option value="4. Installation & Decoration of Gates" data-incharge="Shri Gopi Bamugade Ji">🎀 4. Installation & Decoration of Gates</option>
+                                <option value="5. Electrical Installation" data-incharge="Shri Virendra Bamne Ji">⚡ 5. Electrical Installation</option>
+                                <option value="6. Water Installation & Sanitation" data-incharge="Shri Anil Shinde Ji">💧 6. Water Installation & Sanitation</option>
+                                <option value="7. Transport Committee" data-incharge="Shri Janardan Hasha Patil Ji">🚌 7. Transport Committee</option>
+                                <option value="8. Railway Facility Committee" data-incharge="Shri Kishan Nagdeve Ji">🚆 8. Railway Facility Committee</option>
+                                <option value="9. Press and Publicity Committee" data-incharge="Smt Primal Singh Ji">📰 9. Press and Publicity Committee</option>
+                                <option value="10. Liaison with Government Offices" data-incharge="Shri Shambhunath Tiwari Ji">🏢 10. Liaison with Government Offices</option>
+                                <option value="11. Arrangement at Chembur Bhawan" data-incharge="Shri Vijay Vichare Ji">🏠 11. Arrangement at Chembur Bhawan</option>
+                                <option value="13. Canteen & Langar Eatables Store" data-incharge="Shri Yashwant Ji">📦 13. Canteen & Langar Eatables Store</option>
+                                <option value="15. Medical Committee" data-incharge="Dr. Purshottam Ji">🏥 15. Medical Committee</option>
+                                <option value="16. Publication Committee" data-incharge="Shri Chandrakant Jadhav Ji">📚 16. Publication Committee</option>
+                                <option value="17. General Purchase Committee" data-incharge="Shri Jayprakash Upadhyay Ji">🛍️ 17. General Purchase Committee</option>
+                                <option value="18. General Store Committee" data-incharge="Shri Janardhan Hasha Patil Ji">🏬 18. General Store Committee</option>
+                                <option value="19. Arrangement of Gyan Kaksh" data-incharge="Shri Prakash Janardan Mahatre Ji">📖 19. Arrangement of Gyan Kaksh</option>
+                                <option value="20. Speakers, Geetkar, Guru Vandana & Shobha Yatra" data-incharge="Shri Ashok Ahuja Ji">🎤 20. Speakers, Geetkar, Guru Vandana & Shobha Yatra</option>
+                                <option value="22. Arrangement of Mass Marriages" data-incharge="Shri Harish Aildas Khubchandani Ji">💐 22. Arrangement of Mass Marriages</option>
+                                <option value="23. Fire Service Committee" data-incharge="Shri Rajendra Kadam Ji">🚒 23. Fire Service Committee</option>
+                                <option value="24. CCTV & Telephone Installation" data-incharge="Shri Ravasaheb Ramrao Hasbe Ji">📹 24. CCTV & Telephone Installation</option>
+                                <option value="25. Studio, IT, Internet, Telephony & Live Support" data-incharge="Dr. Vinod Gandharv Ji">💻 25. Studio, IT, Internet, Telephony & Live Support</option>
+                                <option value="26. Ground Services Committee" data-incharge="Shri Somnath Mane Ji">🌱 26. Ground Services Committee</option>
+                                <option value="27. Signage Committee" data-incharge="Shri Praveen Solanki Ji">🪧 27. Signage Committee</option>
+                            </optgroup>
+                            <optgroup label="Unlisted / External Department">
+                                <option value="OTHER_UNLISTED" data-sublabel="Other Department Name *" data-subplaceholder="Enter Department Name" data-incharge="">🚨 Other Department (Written Letter from Incharge Required)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div id="dept-sub-box">
+                        <label id="dept-sub-label" class="block text-xs font-bold text-slate-700 mb-1">Sewadal Unit Number *</label>
+                        <input type="text" id="dept-sub-input" name="department_sub_number" required placeholder="e.g. Unit No. 214" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Department Head / Incharge Name *</label>
+                        <input type="text" id="dept-head-input" name="department_head_name" required placeholder="Incharge Full Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Requester / Kshetriya Sanchalak Name *</label>
+                        <input type="text" id="req-name-input" name="requester_name" required placeholder="Your Full Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">10-Digit Mobile Number *</label>
+                        <input type="tel" id="req-phone-input" name="requester_phone" required maxlength="10" inputmode="numeric" placeholder="98XXXXXXXX" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Type Required *</label>
+                        <select name="required_vehicle_type" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                            <option value="Goods Carrier / Tempo / Chhota Hathi">🚛 Goods Carrier / Tempo / Chhota Hathi</option>
+                            <option value="Pickup / Bolero Camper">🛻 Pickup / Bolero Camper</option>
+                            <option value="Heavy Truck / Container">🚚 Heavy Truck / Material Carrier</option>
+                            <option value="E-Rickshaw / Golf Cart (Internal)">🛺 E-Rickshaw / Golf Cart</option>
+                            <option value="Car / Bolero / SUV (Inspection)">🚙 Car / Bolero / SUV</option>
+                            <option value="Water Tanker / Tractor">🚜 Water Tanker / Tractor</option>
+                            <option value="Ambulance / Medical Van">🚑 Ambulance / Medical Van</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">No. of Vehicles *</label>
+                        <input type="number" name="quantity_needed" value="1" min="1" max="50" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-black">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Required From Date & Time *</label>
+                        <input type="datetime-local" name="required_from_datetime" required class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Required Till Date / Duration *</label>
+                        <input type="text" name="duration_days" required placeholder="e.g. 4 Days / Till 26 Jan" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                    </div>
+                </div>
+
+                <div class="bg-sky-50/70 border border-sky-200 rounded-2xl p-4 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-[#0f2c59] mb-1">Activity / Material Movement Route (From → To) *</label>
+                            <input type="text" name="activity_route" required placeholder="e.g. Central Store → Langar No. 2 / Ground 1" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#0f2c59] mb-1">Expected Daily Trips / Workload Projection *</label>
+                            <input type="text" name="workload_projection" required placeholder="e.g. 4 material trips/day (approx 2 Tons ration/tents)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-[#0f2c59] mb-1">Purpose & Justification of Vehicle Requirement *</label>
+                        <textarea name="purpose_justification" rows="2" required placeholder="Explain clearly why this vehicle is required for your department's Samagam activity..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit-ground-req" class="w-full bg-[#0f2c59] hover:bg-sky-900 text-white font-extrabold py-4 rounded-2xl text-sm sm:text-base shadow-xl transition">
+                    📤 Submit Ground Vehicle Request to Transport Team
+                </button>
+            </form>
         </section>
+
+        <!-- PUBLIC 24-HR STATUS CHECK FOR THIS COORDINATOR -->
+        <section class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-extrabold text-sm text-[#0f2c59]">🔍 Check Your Submitted Ground Request Allocation Status</h3>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="ground-status-query" placeholder="Enter your 10-Digit Mobile No. or Requisition ID (e.g. REQ-1234)" class="flex-1 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold">
+                <button onclick="lookupMyGroundRequisitions()" class="bg-teal-700 hover:bg-teal-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs sm:text-sm">
+                    Check Status
+                </button>
+            </div>
+            <div id="ground-status-output" class="space-y-2 text-xs"></div>
+        </section>
+
     </main>
 
-    <div id="img-lightbox" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-50 p-4" onclick="this.classList.add('hidden')">
-        <div class="bg-white p-3 rounded-2xl max-w-lg w-full space-y-2" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center"><span class="font-extrabold text-xs" id="lightbox-caption">Preview</span><button onclick="document.getElementById('img-lightbox').classList.add('hidden')">✕</button></div>
-            <img id="lightbox-img" class="w-full max-h-[75vh] object-contain rounded-xl border" alt="Preview">
-        </div>
-    </div>
+    <footer class="bg-[#0f2c59] text-sky-200 py-4 text-center text-xs mt-10">
+        धन निरंकार जी 🙏 • Samagam Ground Transport Cell • ground.samagamtransport.in
+    </footer>
 
     <script>
-        let donatedVehicles = [], deptRequisitions = [];
-        let currentAllocator = JSON.parse(localStorage.getItem('ground_allocator_session') || 'null');
+        let DEPT_TOKEN = localStorage.getItem('samagam_dept_token') || localStorage.getItem('samagam_driver_token') || '';
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const now = new Date();
-            document.getElementById('seva-date').value = now.toISOString().split('T')[0];
-            document.getElementById('seva-time').value = now.toTimeString().slice(0, 5);
-            if (currentAllocator) showAllocatorWorkspace();
-            loadSevaAndRequisitions();
-        });
-
-        function switchSevaTab(tabName, btn) {
-            ['donate', 'request', 'allocate'].forEach(t => document.getElementById('section-' + t).classList.add('hidden'));
-            document.getElementById('section-' + tabName).classList.remove('hidden');
-            document.querySelectorAll('.tab-pill').forEach(b => { b.classList.remove('active'); b.classList.add('text-slate-700'); });
-            btn.classList.add('active'); btn.classList.remove('text-slate-700');
+        function showGroundError(msg) {
+            const errBox = document.getElementById('ground-form-error');
+            errBox.textContent = msg;
+            errBox.classList.remove('hidden');
+            errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        function previewImageFile(input, previewImgId, hiddenInputId) {
-            const file = input.files && input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const scale = Math.min(1, 900 / img.width);
-                    canvas.width = img.width * scale; canvas.height = img.height * scale;
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const b64 = canvas.toDataURL('image/jpeg', 0.78);
-                    document.getElementById(hiddenInputId).value = b64;
-                    const prev = document.getElementById(previewImgId);
-                    prev.src = b64; prev.classList.remove('hidden');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        function hideGroundError() {
+            const errBox = document.getElementById('ground-form-error');
+            errBox.textContent = '';
+            errBox.classList.add('hidden');
         }
 
-        function openLightbox(src, title) {
-            if (!src) return;
-            document.getElementById('lightbox-img').src = src;
-            document.getElementById('lightbox-caption').textContent = title;
-            document.getElementById('img-lightbox').classList.remove('hidden');
-            document.getElementById('img-lightbox').classList.add('flex');
-        }
-
-        async function submitSevaVehicleDonation(e) {
-            e.preventDefault();
-            const payload = Object.fromEntries(new FormData(e.target).entries());
-            payload.odometer_km = parseFloat(payload.odometer_km);
-            const res = await fetch('/api/fleet/seva-donations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (res.ok) {
-                const data = await res.json();
-                alert('धन निरंकार जी 🙏 Receipt No: ' + data.receipt_code);
-                e.target.reset(); document.getElementById('donation-photo-preview').classList.add('hidden');
-                loadSevaAndRequisitions();
+        function renderDeptUserState() {
+            const rawUser = localStorage.getItem('samagam_dept_user');
+            if (DEPT_TOKEN && rawUser) {
+                try {
+                    const u = JSON.parse(rawUser);
+                    document.getElementById('dept-auth-steps').classList.add('hidden');
+                    document.getElementById('dept-logged-in-bar').classList.remove('hidden');
+                    document.getElementById('dept-session-badge').classList.remove('hidden');
+                    document.getElementById('dept-user-title').textContent = `${u.full_name} (${u.mobile_number})`;
+                    document.getElementById('dept-user-sub').textContent = `${u.branch_name || ''} • Unit: ${u.unit_number || ''}`;
+                    document.getElementById('req-name-input').value = u.full_name || '';
+                    document.getElementById('req-phone-input').value = u.mobile_number || '';
+                    document.getElementById('ground-status-query').value = u.mobile_number || '';
+                } catch (_) {}
             }
         }
 
-        async function submitDeptRequisition(e) {
-            e.preventDefault();
-            const payload = Object.fromEntries(new FormData(e.target).entries());
-            payload.quantity_needed = parseInt(payload.quantity_needed);
-            const res = await fetch('/api/fleet/dept-requisitions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (res.ok) {
-                const data = await res.json();
-                alert('✅ Requisition Submitted! Code: ' + data.requisition_code);
-                e.target.reset(); document.getElementById('stamp-preview').classList.add('hidden');
-                loadSevaAndRequisitions();
+        function logoutDeptHead() {
+            localStorage.removeItem('samagam_dept_token');
+            localStorage.removeItem('samagam_dept_user');
+            DEPT_TOKEN = '';
+            document.getElementById('dept-logged-in-bar').classList.add('hidden');
+            document.getElementById('dept-session-badge').classList.add('hidden');
+            document.getElementById('dept-auth-steps').classList.remove('hidden');
+            document.getElementById('d-step-pin').classList.add('hidden');
+            document.getElementById('d-step-otp').classList.add('hidden');
+        }
+
+        async function deptAuthContinue() {
+            const ident = document.getElementById('d-auth-ident').value.trim();
+            const errEl = document.getElementById('d-auth-error');
+            const btn = document.getElementById('d-btn-continue');
+            errEl.textContent = '';
+            if (!ident) { errEl.textContent = 'Enter your 10-digit mobile number or email.'; return; }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending OTP / Checking...';
+            try {
+                const res = await fetch('/api/auth/otp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: ident, allow_mobile_otp: true })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) { errEl.textContent = data.detail || 'Unable to verify account.'; return; }
+
+                if (data.requires_pin) {
+                    document.getElementById('d-step-otp').classList.add('hidden');
+                    document.getElementById('d-step-pin').classList.remove('hidden');
+                    document.getElementById('d-pin-heading').textContent = `2. Welcome ${data.driver_name || 'Coordinator'}! Enter 4-Digit PIN`;
+                } else {
+                    document.getElementById('d-step-pin').classList.add('hidden');
+                    document.getElementById('d-step-otp').classList.remove('hidden');
+                    const digitsOnly = ident.replace(/\D/g, '').slice(-10);
+                    if (!ident.includes('@') && digitsOnly.length === 10) {
+                        document.getElementById('d-otp-phone').value = digitsOnly;
+                    }
+                    const targetLabel = data.mobile ? `Mobile ${data.mobile}` : data.email;
+                    document.getElementById('d-otp-info').textContent =
+                        `2. One-Time OTP generated for ${targetLabel}` + (data.dev_otp ? ` — Verification OTP: ${data.dev_otp}` : '');
+                }
+            } catch (_) {
+                errEl.textContent = 'Connection timed out. Please tap Send OTP again.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send OTP / Check PIN →';
             }
         }
 
-        async function loadSevaAndRequisitions() {
-            const [dRes, rRes] = await Promise.all([fetch('/api/fleet/seva-donations'), fetch('/api/fleet/dept-requisitions')]);
-            donatedVehicles = dRes.ok ? await dRes.json() : [];
-            deptRequisitions = rRes.ok ? await rRes.json() : [];
-            const availablePool = donatedVehicles.filter(v => v.status === 'AVAILABLE_AT_GROUND');
+        async function deptVerifyPin() {
+            const ident = document.getElementById('d-auth-ident').value.trim();
+            const pin = document.getElementById('d-auth-pin').value.trim();
+            const errEl = document.getElementById('d-auth-error');
+            errEl.textContent = '';
 
-            document.getElementById('public-requisitions-list').innerHTML = deptRequisitions.map(r => `
-                <div class="p-3 bg-white rounded-2xl border border-slate-200">
-                    <div class="flex justify-between font-bold"><span>${r.requisition_code} • ${r.department_name}</span><span>${r.status}</span></div>
-                    <div>${r.quantity_needed}x ${r.required_vehicle_type} ${r.allocated_vehicle_reg ? '→ ✅ ' + r.allocated_vehicle_reg : ''}</div>
-                </div>
-            `).join('') || '<p class="text-slate-500">No requisitions yet.</p>';
-
-            document.getElementById('allocator-requests-list').innerHTML = deptRequisitions.map(r => `
-                <div class="p-3 bg-white rounded-2xl border space-y-2">
-                    <div class="flex justify-between">
-                        <div><strong>${r.requisition_code} — ${r.department_name}</strong><div>${r.quantity_needed}x ${r.required_vehicle_type}</div></div>
-                        ${r.approval_stamp_b64 ? `<button onclick="openLightbox('${r.approval_stamp_b64}', '${r.requisition_code} Stamp')" class="bg-amber-100 px-2.5 py-1 rounded-lg font-bold">🖋️ Stamp</button>` : ''}
-                    </div>
-                    ${r.status !== 'ALLOCATED' ? `
-                        <div class="flex gap-2">
-                            <select id="pick-veh-${r.id}" class="flex-1 border rounded-xl px-2 py-1.5 font-bold">
-                                ${availablePool.map(v => `<option value="${v.id}">${v.vehicle_reg_number} (${v.vehicle_type})</option>`).join('') || '<option value="">No Seva vehicles</option>'}
-                            </select>
-                            <button onclick="allocateVehicleToDept(${r.id})" class="bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl">Allocate</button>
-                        </div>` : `<div class="text-emerald-700 font-bold">✅ Allocated ${r.allocated_vehicle_reg}</div>`}
-                </div>
-            `).join('') || '<p class="text-slate-500">No pending requests.</p>';
-
-            document.getElementById('allocator-vehicles-list').innerHTML = donatedVehicles.map(v => `
-                <div class="p-3 bg-white rounded-2xl border flex justify-between items-center">
-                    <div><strong>${v.vehicle_reg_number}</strong> • ${v.vehicle_type}<div class="text-slate-500">${v.owner_name} (${v.owner_phone})</div></div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">${v.status}</span>
-                </div>
-            `).join('') || '<p class="text-slate-500">No Seva vehicles donated yet.</p>';
-        }
-
-        async function authenticateGroundAllocator(e) {
-            e.preventDefault();
-            const res = await fetch('/api/fleet/ground-allocator-login', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile_number: document.getElementById('alloc-login-mobile').value.trim(), passcode: document.getElementById('alloc-login-passcode').value.trim() })
+            const res = await fetch('/api/auth/pin/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier: ident, pin })
             });
             const data = await res.json();
-            if (res.ok) { currentAllocator = data.member; localStorage.setItem('ground_allocator_session', JSON.stringify(currentAllocator)); showAllocatorWorkspace(); }
-            else { document.getElementById('alloc-login-msg').textContent = data.detail || 'Invalid passcode'; }
+            if (!res.ok) { errEl.textContent = data.detail || 'Invalid 4-digit PIN.'; return; }
+
+            DEPT_TOKEN = data.token;
+            localStorage.setItem('samagam_dept_token', data.token);
+            localStorage.setItem('samagam_dept_user', JSON.stringify(data.driver));
+            renderDeptUserState();
         }
-        function showAllocatorWorkspace() { document.getElementById('ground-auth-gate').classList.add('hidden'); document.getElementById('ground-allocator-workspace').classList.remove('hidden'); document.getElementById('allocator-identity').textContent = `${currentAllocator.full_name} (${currentAllocator.mobile_number})`; }
-        function logoutGroundAllocator() { localStorage.removeItem('ground_allocator_session'); currentAllocator = null; document.getElementById('ground-allocator-workspace').classList.add('hidden'); document.getElementById('ground-auth-gate').classList.remove('hidden'); }
-        async function allocateVehicleToDept(reqId) {
-            const vehId = parseInt(document.getElementById('pick-veh-' + reqId)?.value);
-            if (!vehId) return;
-            await fetch('/api/fleet/dept-requisitions/allocate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requisition_id: reqId, seva_vehicle_id: vehId, allocated_by_member: currentAllocator?.full_name || 'Ground Team' }) });
-            loadSevaAndRequisitions();
+
+        async function deptVerifyOtp() {
+            const ident = document.getElementById('d-auth-ident').value.trim();
+            const errEl = document.getElementById('d-auth-error');
+            errEl.textContent = '';
+
+            const cleanPhone = (document.getElementById('d-otp-phone').value || ident).replace(/\D/g, '').slice(-10);
+            const payload = {
+                email: ident.includes('@') ? ident : `phone:${cleanPhone}`,
+                identifier: ident,
+                otp: document.getElementById('d-otp-code').value.replace(/\D/g, ''),
+                name: document.getElementById('d-otp-name').value.trim(),
+                phone: cleanPhone,
+                branch_name: document.getElementById('d-otp-branch').value.trim() || 'Samagam Dept',
+                unit_number: document.getElementById('d-otp-unit').value.trim() || 'Dept-HQ',
+                pin: document.getElementById('d-otp-newpin').value.replace(/\D/g, ''),
+                code: 'SAMAGAM26',
+                system_role: 'GROUND_COORDINATOR'
+            };
+
+            const res = await fetch('/api/auth/otp/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { errEl.textContent = data.detail || 'OTP verification failed.'; return; }
+
+            DEPT_TOKEN = data.token;
+            localStorage.setItem('samagam_dept_token', data.token);
+            localStorage.setItem('samagam_dept_user', JSON.stringify(data.driver));
+            renderDeptUserState();
         }
+
+        function switchGroundMode(mode, btn) {
+            document.getElementById('request-mode-input').value = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.add('text-slate-700');
+            });
+            btn.classList.add('active');
+            btn.classList.remove('text-slate-700');
+
+            if (mode === 'ADVANCE_PROJECTION') {
+                document.getElementById('ground-mode-badge').textContent = 'Advance Activity Projection Mode';
+                document.getElementById('ground-form-heading').textContent = 'Propose Required Vehicles Well in Advance (With Purpose & Justification)';
+            } else {
+                document.getElementById('ground-mode-badge').textContent = 'Ad-hoc Immediate Requirement Mode';
+                document.getElementById('ground-form-heading').textContent = 'Raise Ad-hoc Goods / Department Vehicle Request';
+            }
+        }
+
+        function onDepartmentSelectionChange() {
+            const sel = document.getElementById('dept-select');
+            const opt = sel.options[sel.selectedIndex];
+            const subLabel = opt.getAttribute('data-sublabel');
+            const subPlaceholder = opt.getAttribute('data-subplaceholder');
+            const incharge = opt.getAttribute('data-incharge') || '';
+
+            const subBox = document.getElementById('dept-sub-box');
+            const subInput = document.getElementById('dept-sub-input');
+            if (subLabel) {
+                subBox.classList.remove('hidden');
+                subInput.required = true;
+                document.getElementById('dept-sub-label').textContent = subLabel;
+                subInput.placeholder = subPlaceholder || '';
+            } else {
+                subBox.classList.add('hidden');
+                subInput.required = false;
+                subInput.value = '';
+            }
+            if (incharge) {
+                document.getElementById('dept-head-input').value = incharge;
+            }
+        }
+
+        async function submitGroundDeptRequest(e) {
+            e.preventDefault();
+            hideGroundError();
+
+            if (!DEPT_TOKEN) {
+                showGroundError('🔐 Please complete your one-time Mobile OTP or 4-Digit PIN sign-in at the top before submitting.');
+                document.getElementById('dept-auth-card').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-ground-req');
+            const raw = Object.fromEntries(new FormData(e.target).entries());
+            const cleanPhone = String(raw.requester_phone || '').replace(/\D/g, '').slice(-10);
+            if (cleanPhone.length !== 10) {
+                showGroundError('Please enter a valid 10-digit Mobile Number.');
+                return;
+            }
+
+            const deptFull = raw.department_sub_number
+                ? `${raw.base_department_name} (${raw.department_sub_number})`
+                : raw.base_department_name;
+
+            const payload = {
+                department_name: deptFull,
+                department_head_name: raw.department_head_name,
+                requester_name: raw.requester_name,
+                requester_phone: cleanPhone,
+                required_vehicle_type: raw.required_vehicle_type,
+                quantity_needed: parseInt(raw.quantity_needed) || 1,
+                purpose: `[${raw.request_mode}] Route: ${raw.activity_route} | Projection: ${raw.workload_projection} | Justification: ${raw.purpose_justification}`,
+                required_from_datetime: raw.required_from_datetime,
+                duration_days: raw.duration_days
+            };
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Submitting Request to Ground Transport Database...';
+            try {
+                let res = await fetch('/api/operations/ground-dept-requisitions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Driver-Token': DEPT_TOKEN },
+                    body: JSON.stringify(payload)
+                });
+                if (res.status === 404) {
+                    res = await fetch('/api/fleet/dept-requisitions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Driver-Token': DEPT_TOKEN },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    const banner = document.getElementById('ground-submission-banner');
+                    banner.classList.remove('hidden');
+                    document.getElementById('ground-submission-msg').textContent =
+                        `Request ID: ${data.requisition_code || 'REQ-OK'} — Vehicle will be allocated if available ASAP. Check status anytime below using Mobile ${cleanPhone}.`;
+                    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('ground-status-query').value = cleanPhone;
+                    e.target.reset();
+                    onDepartmentSelectionChange();
+                    renderDeptUserState();
+                    lookupMyGroundRequisitions();
+                } else {
+                    showGroundError(data.detail || 'Could not submit ground vehicle request. Please check your entries.');
+                }
+            } catch (_) {
+                showGroundError('Network timeout while submitting. Please tap Submit again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Submit Ground Vehicle Request to Transport Team';
+            }
+        }
+
+        async function lookupMyGroundRequisitions() {
+            const q = document.getElementById('ground-status-query').value.trim();
+            if (!q) return;
+            const out = document.getElementById('ground-status-output');
+            out.innerHTML = '<div class="text-slate-500">Checking live Ground Transport Database...</div>';
+
+            let res = await fetch(`/api/operations/ground-dept-requisitions?query=${encodeURIComponent(q)}`);
+            if (res.status === 404) {
+                res = await fetch(`/api/fleet/dept-requisitions?query=${encodeURIComponent(q)}`);
+            }
+            if (!res.ok) {
+                out.innerHTML = '<div class="text-rose-700 font-bold">Could not load status right now. Please retry.</div>';
+                return;
+            }
+            const rows = await res.json();
+            out.innerHTML = rows.length ? rows.map(r => `
+                <div class="p-3.5 rounded-2xl border ${r.allocated_vehicle_reg ? 'bg-emerald-50 border-emerald-400' : 'bg-amber-50 border-amber-300'} flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <div class="font-extrabold text-slate-900">${r.requisition_code} • ${r.department_name} (${r.quantity_needed}x ${r.required_vehicle_type})</div>
+                        <div class="text-slate-600">${r.purpose}</div>
+                    </div>
+                    <div class="text-right font-extrabold">
+                        ${r.allocated_vehicle_reg
+                            ? `<span class="text-emerald-800">✅ Allocated: ${r.allocated_vehicle_reg}</span>`
+                            : `<span class="text-amber-900">⏳ Vehicle will be allocated if available ASAP</span>`}
+                    </div>
+                </div>
+            `).join('') : '<div class="text-slate-500">No ground vehicle requests found for that mobile or code.</div>';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            onDepartmentSelectionChange();
+            renderDeptUserState();
+        });
     </script>
 </body>
 </html>

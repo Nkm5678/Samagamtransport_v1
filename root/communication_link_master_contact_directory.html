@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samagam Communication Link & Master Contact Directory | Admin HQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #020617;
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Admin Navigation Header -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3.5 sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+                <img src="/static/jagriti.jpeg" alt="जागृति — The Awakening" class="h-10 sm:h-11 w-auto rounded-xl bg-white px-2 py-0.5 shadow border border-amber-300/60 object-contain shrink-0">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📡</span>
+                <div>
+                    <h1 class="font-extrabold text-sm sm:text-base text-white tracking-wide">
+                        COMMUNICATION LINK, TOPOLOGY & MASTER CONTACT DIRECTORY
+                    </h1>
+                    <p class="text-[11px] text-emerald-300">
+                        One-Click Contact Management • Admin • Incharges • Station • Ground • Contractors • Committee Members
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs font-extrabold">
+                <a href="/admin_dashboard.html#admin-reports-center" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl shadow">
+                    📊 Admin Reports Center
+                </a>
+                <a href="/admin_dashboard.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl border border-slate-700">
+                    🛡️ Control Room Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
+
+        <!-- Status Toast Banner -->
+        <div id="comm-status-banner" class="hidden rounded-2xl p-3.5 text-xs font-extrabold border"></div>
+
+        <!-- TOP BAR: CATEGORY FILTER + ONE-CLICK BULK IMPORT -->
+        <section class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300">
+                        Live Command Directory
+                    </span>
+                    <h2 class="text-lg font-extrabold text-white mt-1">📞 Master Key Personnel & Field Communication Directory</h2>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-bold">
+                    <button onclick="openBulkImportModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl shadow">
+                        📥 One-Click Bulk Paste / Import
+                    </button>
+                    <button onclick="exportContactsCsv()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3.5 py-2 rounded-xl border border-slate-700">
+                        ⬇ Export Directory CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Role Filter Pills & Search -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap gap-1.5 text-xs font-extrabold" id="role-filter-tabs">
+                    <button onclick="filterRole('ALL', this)" class="role-pill active bg-emerald-600 text-white px-3 py-1.5 rounded-xl">All Roles</button>
+                    <button onclick="filterRole('ADMIN', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">🛡️ Admin HQ</button>
+                    <button onclick="filterRole('INCHARGE', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">⭐ Dept Incharges</button>
+                    <button onclick="filterRole('STATION_COORDINATOR', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">🚉 Station Coordinators</button>
+                    <button onclick="filterRole('GROUND_COORDINATOR', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">⛺ Ground Coordinators</button>
+                    <button onclick="filterRole('CONTRACTOR', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">🚌 Bus Contractors</button>
+                    <button onclick="filterRole('COMMITTEE_MEMBER', this)" class="role-pill bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl">🏛️ Committee Members</button>
+                </div>
+                <input type="text" id="contact-search-input" oninput="renderContactCards()" placeholder="Search name, mobile, station, committee..." class="bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white w-full sm:w-64">
+            </div>
+        </section>
+
+        <!-- GRID: LEFT ADD/EDIT FORM + RIGHT LIVE DIRECTORY + INTERCOM -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- LEFT: ONE-CLICK ADD / UPDATE CONTACT FORM -->
+            <section class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
+                <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                    <div>
+                        <h3 id="contact-form-title" class="text-base font-extrabold text-emerald-300">➕ Add / Update Contact</h3>
+                        <p class="text-[11px] text-slate-400">Syncs immediately across all field apps & Control Room</p>
+                    </div>
+                    <button type="button" onclick="resetContactForm()" class="text-[11px] text-slate-400 hover:text-white underline">Clear</button>
+                </div>
+
+                <form id="master-contact-form" onsubmit="saveMasterContact(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="c-id" value="">
+
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Role / Category *</label>
+                        <select id="c-role" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-bold">
+                            <option value="ADMIN">🛡️ Admin HQ / Control Room</option>
+                            <option value="INCHARGE">⭐ Department / Committee Incharge</option>
+                            <option value="STATION_COORDINATOR">🚉 Station Coordinator</option>
+                            <option value="GROUND_COORDINATOR">⛺ Ground Coordinator</option>
+                            <option value="CONTRACTOR">🚌 Bus Vendor / Fleet Contractor</option>
+                            <option value="COMMITTEE_MEMBER">🏛️ Transport Committee Member</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Full Name *</label>
+                        <input type="text" id="c-name" required placeholder="e.g. Shri Janardan Hasha Patil Ji" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-semibold">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Mobile Number *</label>
+                            <input type="tel" id="c-phone" required maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-extrabold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">4-Digit App PIN</label>
+                            <input type="text" id="c-pin" maxlength="4" inputmode="numeric" placeholder="e.g. 1234" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Station / Ground / Committee Assignment *</label>
+                        <input type="text" id="c-hub" required placeholder="e.g. Panvel Station / Ground 1 / Transport Committee" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Branch / Agency Name</label>
+                            <input type="text" id="c-branch" placeholder="Branch or Travels Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Unit / Badge No.</label>
+                            <input type="text" id="c-unit" placeholder="e.g. Unit-214" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-save-contact" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3 rounded-xl shadow-lg transition">
+                        💾 Save & Sync Contact
+                    </button>
+                </form>
+            </section>
+
+            <!-- RIGHT: LIVE DIRECTORY LIST + TWO-WAY INTERCOM -->
+            <div class="lg:col-span-8 space-y-6">
+                <section class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-3 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-extrabold text-sm text-white">📋 Registered Personnel & Contractors (<span id="contact-count">0</span>)</h3>
+                        <button onclick="loadMasterContacts()" class="text-xs font-bold text-emerald-400 hover:underline">↻ Refresh List</button>
+                    </div>
+                    <div id="contacts-directory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs max-h-[520px] overflow-y-auto pr-1">
+                        <div class="text-slate-400">Loading directory contacts...</div>
+                    </div>
+                </section>
+
+                <!-- Live Ground <-> Station Intercom Dispatch -->
+                <section class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-3 shadow-xl">
+                    <h3 class="font-extrabold text-sm text-amber-300">📻 Live Ground ↔ Station Broadcast Intercom</h3>
+                    <div class="flex flex-col sm:flex-row gap-2 text-xs">
+                        <select id="ic-hub" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-bold">
+                            <option value="ALL_STATIONS">All Stations & Grounds</option>
+                            <option value="Panvel Junction (PNVL)">Panvel Junction</option>
+                            <option value="Thane Railway Station">Thane Station</option>
+                            <option value="Ground 1 (Main Hall)">Ground 1 (Main Hall)</option>
+                        </select>
+                        <input type="text" id="ic-msg" placeholder="Type urgent broadcast message for all teams..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                        <button onclick="sendBroadcastIntercom()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl">
+                            Send Alert
+                        </button>
+                    </div>
+                    <div id="ic-feed" class="space-y-1.5 text-xs max-h-44 overflow-y-auto"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- BULK IMPORT MODAL -->
+    <div id="bulk-import-modal" class="fixed inset-0 bg-slate-950/90 hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-extrabold text-base text-white">📥 One-Click Bulk Contact Import</h3>
+                <button onclick="closeBulkImportModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
+            </div>
+            <p class="text-xs text-slate-300">
+                Paste one contact per line in format: <code class="text-emerald-300">Role, Full Name, 10-Digit Mobile, Hub/Committee, Branch/Agency</code><br>
+                Valid Roles: <code>ADMIN</code>, <code>INCHARGE</code>, <code>STATION_COORDINATOR</code>, <code>GROUND_COORDINATOR</code>, <code>CONTRACTOR</code>, <code>COMMITTEE_MEMBER</code>
+            </p>
+            <textarea id="bulk-contacts-textarea" rows="6" placeholder="INCHARGE, Shri Janardan Hasha Patil Ji, 9820110010, 7. Transport Committee, Central Mandal&#10;CONTRACTOR, Sai Krupa Travels, 9820110020, Fleet Depot, Sai Krupa Bus Agency&#10;STATION_COORDINATOR, Ramesh Kulkarni, 9820110030, Panvel Junction (PNVL), Panvel Branch" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3 text-xs text-white font-mono"></textarea>
+            <div class="flex justify-end gap-2 text-xs font-extrabold">
+                <button onclick="closeBulkImportModal()" class="bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl">Cancel</button>
+                <button onclick="submitBulkContacts()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl">Import All Contacts</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        धन निरंकार जी 🙏 • Samagam Transport Control Room • Communication & Directory Hub
+    </footer>
+
+    <script>
+        let ALL_CONTACTS = [];
+        let ACTIVE_ROLE_FILTER = 'ALL';
+
+        function showBanner(msg, isError = false) {
+            const el = document.getElementById('comm-status-banner');
+            el.className = `rounded-2xl p-3.5 text-xs font-extrabold border ${
+                isError ? 'bg-rose-950/80 border-rose-500 text-rose-200' : 'bg-emerald-950/80 border-emerald-500 text-emerald-200'
+            }`;
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        function filterRole(role, btn) {
+            ACTIVE_ROLE_FILTER = role;
+            document.querySelectorAll('.role-pill').forEach(b => {
+                b.classList.remove('active', 'bg-emerald-600', 'text-white');
+                b.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            if (btn) {
+                btn.classList.add('active', 'bg-emerald-600', 'text-white');
+                btn.classList.remove('bg-slate-800', 'text-slate-300');
+            }
+            renderContactCards();
+        }
+
+        async function loadMasterContacts() {
+            try {
+                const res = await fetch('/api/operations/directory-contacts');
+                if (!res.ok) return;
+                ALL_CONTACTS = await res.json();
+                renderContactCards();
+            } catch (_) {}
+        }
+
+        function renderContactCards() {
+            const q = (document.getElementById('contact-search-input').value || '').toLowerCase().trim();
+            const filtered = ALL_CONTACTS.filter(c => {
+                if (ACTIVE_ROLE_FILTER !== 'ALL' && c.role !== ACTIVE_ROLE_FILTER) return false;
+                if (!q) return true;
+                return (
+                    (c.full_name || '').toLowerCase().includes(q) ||
+                    (c.mobile_number || '').includes(q) ||
+                    (c.duty_location || '').toLowerCase().includes(q) ||
+                    (c.branch_name || '').toLowerCase().includes(q)
+                );
+            });
+
+            document.getElementById('contact-count').textContent = filtered.length;
+            const grid = document.getElementById('contacts-directory-grid');
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="text-slate-500 col-span-2 py-4">No contacts match this filter. Use the left form or Bulk Import to add contacts.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(c => `
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${c.role_label || c.role}</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${c.code || ''}</span>
+                        </div>
+                        <div class="font-extrabold text-sm text-white mt-1.5">${c.full_name}</div>
+                        <div class="text-slate-400 mt-0.5">📍 ${c.duty_location || '-'} ${c.branch_name ? '• ' + c.branch_name : ''}</div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                        <a href="tel:${c.mobile_number}" class="bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold px-3 py-1 rounded-lg">📞 ${c.mobile_number}</a>
+                        <div class="flex gap-1.5">
+                            <button onclick='editContact(${JSON.stringify(c)})' class="bg-slate-800 hover:bg-slate-700 text-sky-300 px-2.5 py-1 rounded-lg font-bold">✏️ Edit</button>
+                            <button onclick="deleteContact(${c.id})" class="bg-rose-950 hover:bg-rose-900 text-rose-300 px-2.5 py-1 rounded-lg font-bold">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editContact(c) {
+            document.getElementById('c-id').value = c.id || '';
+            document.getElementById('c-role').value = c.role || 'COMMITTEE_MEMBER';
+            document.getElementById('c-name').value = c.full_name || '';
+            document.getElementById('c-phone').value = c.mobile_number || '';
+            document.getElementById('c-hub').value = c.duty_location || '';
+            document.getElementById('c-branch').value = c.branch_name || '';
+            document.getElementById('c-unit').value = c.unit_number || '';
+            document.getElementById('contact-form-title').textContent = '✏️ Update Contact Details';
+            document.getElementById('btn-save-contact').textContent = '✅ Update Contact Now';
+        }
+
+        function resetContactForm() {
+            document.getElementById('master-contact-form').reset();
+            document.getElementById('c-id').value = '';
+            document.getElementById('contact-form-title').textContent = '➕ Add / Update Contact';
+            document.getElementById('btn-save-contact').textContent = '💾 Save & Sync Contact';
+        }
+
+        async function saveMasterContact(e) {
+            e.preventDefault();
+            const payload = {
+                id: document.getElementById('c-id').value || null,
+                role: document.getElementById('c-role').value,
+                full_name: document.getElementById('c-name').value.trim(),
+                mobile_number: document.getElementById('c-phone').value.trim(),
+                pin: document.getElementById('c-pin').value.trim(),
+                duty_location: document.getElementById('c-hub').value.trim(),
+                branch_name: document.getElementById('c-branch').value.trim(),
+                unit_number: document.getElementById('c-unit').value.trim()
+            };
+            const res = await fetch('/api/operations/directory-contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const out = await res.json();
+            if (res.ok) {
+                showBanner(`✅ Saved ${payload.full_name} (${payload.mobile_number}) to Master Directory!`);
+                resetContactForm();
+                loadMasterContacts();
+            } else {
+                showBanner(out.detail || 'Could not save contact.', true);
+            }
+        }
+
+        async function deleteContact(id) {
+            const res = await fetch(`/api/operations/directory-contacts/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                showBanner('🗑️ Contact removed from directory.');
+                loadMasterContacts();
+            }
+        }
+
+        function openBulkImportModal() {
+            const m = document.getElementById('bulk-import-modal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeBulkImportModal() {
+            const m = document.getElementById('bulk-import-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        async function submitBulkContacts() {
+            const raw = document.getElementById('bulk-contacts-textarea').value.trim();
+            if (!raw) return;
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            const items = lines.map(line => {
+                const parts = line.split(',').map(p => p.trim());
+                return {
+                    role: (parts[0] || 'COMMITTEE_MEMBER').toUpperCase(),
+                    full_name: parts[1] || '',
+                    mobile_number: parts[2] || '',
+                    duty_location: parts[3] || 'Ground 1 (Main Hall)',
+                    branch_name: parts[4] || 'Samagam Transport'
+                };
+            });
+            const res = await fetch('/api/operations/directory-contacts/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items })
+            });
+            const out = await res.json();
+            if (res.ok) {
+                closeBulkImportModal();
+                showBanner(`✅ Imported/Updated ${out.saved_count} contacts in one click!`);
+                loadMasterContacts();
+            } else {
+                showBanner(out.detail || 'Bulk import failed.', true);
+            }
+        }
+
+        function exportContactsCsv() {
+            const rows = [['Code', 'Role', 'Full Name', 'Mobile', 'Hub / Committee', 'Branch / Agency', 'Unit']];
+            ALL_CONTACTS.forEach(c => rows.push([c.code, c.role, c.full_name, c.mobile_number, c.duty_location, c.branch_name, c.unit_number]));
+            const csv = rows.map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'samagam_master_contacts.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function loadIntercomFeed() {
+            const res = await fetch('/api/operations/intercom');
+            if (!res.ok) return;
+            const msgs = await res.json();
+            document.getElementById('ic-feed').innerHTML = msgs.slice(0, 10).map(m =>
+                `<div class="p-2 rounded-xl bg-slate-950 border border-slate-800 flex justify-between"><span><strong class="text-amber-300">[${m.channel_hub}]</strong> ${m.sender_name}: ${m.message_text}</span><span class="text-slate-500">${m.created_at}</span></div>`
+            ).join('');
+        }
+
+        async function sendBroadcastIntercom() {
+            const msg = document.getElementById('ic-msg').value.trim();
+            if (!msg) return;
+            const res = await fetch('/api/operations/intercom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel_hub: document.getElementById('ic-hub').value,
+                    sender_side: 'CONTROL_ROOM_HQ',
+                    sender_name: 'Admin Control Room',
+                    priority: 'HIGH',
+                    message_text: msg
+                })
+            });
+            if (res.ok) {
+                document.getElementById('ic-msg').value = '';
+                loadIntercomFeed();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMasterContacts();
+            loadIntercomFeed();
+        });
+    </script>
+</body>
+</html>

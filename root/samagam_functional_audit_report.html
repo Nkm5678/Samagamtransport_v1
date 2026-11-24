@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samagam Transport — Automated Functional & SLA Audit Report</title>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; }
+    .container { max-width: 1280px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15,23,42,0.08); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #0f294a 0%, #1e40af 100%); color: #fff; padding: 28px 32px; }
+    .header h1 { margin: 0 0 6px 0; font-size: 24px; }
+    .header p { margin: 0; opacity: 0.9; font-size: 14px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 24px 32px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
+    .card { background: #fff; padding: 16px 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .card .label { font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; }
+    .card .val { font-size: 26px; font-weight: 800; margin-top: 4px; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    th { background: #f8fafc; font-size: 12px; text-transform: uppercase; color: #475569; }
+    tr:hover { background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Sant Nirankari Mandal — Samagam Transport Functional & SLA Audit</h1>
+      <p>Target Environment: <strong>https://www.samagamtransport.in</strong> &bull; Executed On: 23 Nov 2026, 08:43:00 PM</p>
+    </div>
+    <div class="summary">
+      <div class="card"><div class="label">Total Functional Checks</div><div class="val">31</div></div>
+      <div class="card"><div class="label">Passed Checks</div><div class="val" style="color:#16a34a;">14</div></div>
+      <div class="card"><div class="label">Failed Checks</div><div class="val" style="color:#dc2626;">17</div></div>
+      <div class="card"><div class="label">Readiness Score</div><div class="val" style="color:#1d4ed8;">45.2%</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Module</th>
+          <th>Functional Test Case</th>
+          <th>Status</th>
+          <th>Responsible Role / Actor</th>
+          <th>Turnaround Time (TAT)</th>
+          <th>Latency</th>
+          <th>Audit Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+            <tr>
+              <td>1</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Main Transport Welcome Portal (/)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>8665.8 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>2</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Parking Subdomain Portal (parking.samagamtransport.in) (/)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>11399.6 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>3</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Advance Sewa Subdomain Portal (advancesewa.samagamtransport.in) (/)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>6888.3 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>4</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Station Team Web/APK Portal (/station_team_app.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>473.5 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>5</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Ground Team Web/APK Portal (/ground_team_app.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>315.5 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>6</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Gate Keeper Web/APK Portal (/gate_keeper_app.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>444.3 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>7</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Diesel Team Web/APK Portal (/diesel_team_app.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>552.7 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>8</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Accounts Team Web/APK Portal (/accounts_team_app.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>381.4 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>9</td>
+              <td><strong>1. Portals &amp; Apps</strong></td>
+              <td>Load Driver &amp; Rider Companion App (/driver_rider_companion.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Public / Sevadar</td>
+              <td><code>-</code></td>
+              <td>476.8 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200, HTML size=3 bytes</td>
+            </tr>
+            
+            <tr>
+              <td>10</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Admin Control Room Login</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Admin (Control Room)</td>
+              <td><code>-</code></td>
+              <td>535.3 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Token issued: False</td>
+            </tr>
+            
+            <tr>
+              <td>11</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [STATION_TEAM]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Ramesh Kulkarni (station_team)</td>
+              <td><code>-</code></td>
+              <td>802.5 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Ramesh Kulkarni (9800327431) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>12</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [GROUND_TEAM]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Suresh Patil (ground_team)</td>
+              <td><code>-</code></td>
+              <td>1846.7 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Suresh Patil (9800327432) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>13</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [GATE_KEEPER]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Mahesh Shinde (gate_keeper)</td>
+              <td><code>-</code></td>
+              <td>1637.6 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Mahesh Shinde (9800327433) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>14</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [DIESEL_TEAM]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Dinesh Jadhav (diesel_team)</td>
+              <td><code>-</code></td>
+              <td>1331.0 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Dinesh Jadhav (9800327434) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>15</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [ACCOUNTS_TEAM]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Prakash Nair (accounts_team)</td>
+              <td><code>-</code></td>
+              <td>915.0 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Prakash Nair (9800327435) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>16</td>
+              <td><strong>2. Role Auth &amp; Login</strong></td>
+              <td>Sevadar/Driver Register &amp; Login [DRIVER]</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Ajay Sharma (driver)</td>
+              <td><code>-</code></td>
+              <td>1213.2 ms</td>
+              <td style="font-size:13px;color:#334155;">User=Driver Ajay Sharma (9800327436) | Geofence Reg HTTP 400 | PIN/OTP Token=False</td>
+            </tr>
+            
+            <tr>
+              <td>17</td>
+              <td><strong>3. Booking &amp; Request SLA</strong></td>
+              <td>Create Advance Sewa Transport Booking (Skipped)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Advance Sewa Coordinator</td>
+              <td><code>SKIPPED</code></td>
+              <td>0.0 ms</td>
+              <td style="font-size:13px;color:#334155;">Skipped per user request</td>
+            </tr>
+            
+            <tr>
+              <td>18</td>
+              <td><strong>3. Booking &amp; Request SLA</strong></td>
+              <td>Raise Station-to-Ground Pickup Request</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Ramesh Kulkarni (Station Team)</td>
+              <td><code>Raised @ 15:12:48 UTC</code></td>
+              <td>435.9 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Request Code=None (Demand ID=None) | Raised at 15:12:48 UTC</td>
+            </tr>
+            
+            <tr>
+              <td>19</td>
+              <td><strong>3. Booking &amp; Request SLA</strong></td>
+              <td>Action Taken on Request (Vehicle &amp; Driver Allocation)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Suresh Patil (Ground Team)</td>
+              <td><code>First Action in 0.59s</code></td>
+              <td>585.1 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Bus=MH-04-TR-1001 | Action By: Suresh Patil (Ground Team) | Response: 0.59s</td>
+            </tr>
+            
+            <tr>
+              <td>20</td>
+              <td><strong>3. Booking &amp; Request SLA</strong></td>
+              <td>Request Resolved &amp; Full Audit Trail (Who Raised / Who Acted / TAT)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Ajay Sharma / Admin</td>
+              <td><code>1.53s (0.026 min)</code></td>
+              <td>510.1 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Raised By: Ramesh Kulkarni -&gt; Action By: Suresh Patil -&gt; Resolved By: Driver Ajay Sharma | Total TAT: 1.53s (0.026 min)</td>
+            </tr>
+            
+            <tr>
+              <td>21</td>
+              <td><strong>4. Parking QR Ticket</strong></td>
+              <td>Generate Parking QR Ticket &amp; Allocate Zone (parking.samagamtransport.in)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Gate Keeper / Parking Portal</td>
+              <td><code>-</code></td>
+              <td>415.2 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 405 | Vehicle=MH-04-PK-38776 | Ticket/QR ID=None | Exit PIN=None</td>
+            </tr>
+            
+            <tr>
+              <td>22</td>
+              <td><strong>4. Parking QR Ticket</strong></td>
+              <td>Verify Live Parking Occupancy &amp; Ticket Lookup (parking.samagamtransport.in)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Gate Keeper (Mahesh Shinde)</td>
+              <td><code>-</code></td>
+              <td>1122.4 ms</td>
+              <td style="font-size:13px;color:#334155;">Entry Scan HTTP 404 | Lookup HTTP 200 | Records Found=0</td>
+            </tr>
+            
+            <tr>
+              <td>23</td>
+              <td><strong>5. Driver Shift &amp; Trips</strong></td>
+              <td>Driver Shift Start (Duty Check-In &amp; Odometer Log)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Harbhajan Singh</td>
+              <td><code>-</code></td>
+              <td>517.4 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Shift ID=None | Driver=Harbhajan Singh | Bus=MH-04-TR-1001</td>
+            </tr>
+            
+            <tr>
+              <td>24</td>
+              <td><strong>5. Driver Shift &amp; Trips</strong></td>
+              <td>Driver Trip Start &amp; Live GPS Telemetry Broadcast</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Harbhajan Singh</td>
+              <td><code>-</code></td>
+              <td>513.3 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Journey=None (ID=None) | Route: Thane -&gt; Ground 1 | Pax=48</td>
+            </tr>
+            
+            <tr>
+              <td>25</td>
+              <td><strong>5. Driver Shift &amp; Trips</strong></td>
+              <td>Driver Trip End (Devotee Drop Verified)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Harbhajan Singh</td>
+              <td><code>-</code></td>
+              <td>525.0 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Journey ID=1 marked COMPLETED | Distance=0.0 km</td>
+            </tr>
+            
+            <tr>
+              <td>26</td>
+              <td><strong>5. Driver Shift &amp; Trips</strong></td>
+              <td>Driver Shift Complete (Duty Handover &amp; Odometer End)</td>
+              <td><span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">PASS</span></td>
+              <td>Driver Harbhajan Singh</td>
+              <td><code>-</code></td>
+              <td>496.1 ms</td>
+              <td style="font-size:13px;color:#334155;">HTTP 200 | Shift ID=1 Closed | Total Duty Hours=0.0h</td>
+            </tr>
+            
+            <tr>
+              <td>27</td>
+              <td><strong>6. Station &lt;-&gt; Ground Sync</strong></td>
+              <td>Station Team &lt;-&gt; Ground Team Live Coordination &amp; App Call Directory</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Station Team &lt;-&gt; Ground Team</td>
+              <td><code>-</code></td>
+              <td>1135.2 ms</td>
+              <td style="font-size:13px;color:#334155;">Intercom Feed HTTP 0, Dispatch Sync HTTP 200 | Station Coordination UI=False</td>
+            </tr>
+            
+            <tr>
+              <td>28</td>
+              <td><strong>7. Admin Rights &amp; Reports</strong></td>
+              <td>Admin Portal Access &amp; Public Host Isolation (/admin_dashboard.html)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Admin (Control Room)</td>
+              <td><code>-</code></td>
+              <td>1162.5 ms</td>
+              <td style="font-size:13px;color:#334155;">Public Host HTTP 403 | Admin Subdomain HTTP 200</td>
+            </tr>
+            
+            <tr>
+              <td>29</td>
+              <td><strong>7. Admin Rights &amp; Reports</strong></td>
+              <td>Admin Crew Management Rights (Roster, PIN Reset, Terminate &amp; Reactivate)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Admin (Control Room)</td>
+              <td><code>-</code></td>
+              <td>405.0 ms</td>
+              <td style="font-size:13px;color:#334155;">Crew Roster HTTP 200 (Count=0)</td>
+            </tr>
+            
+            <tr>
+              <td>30</td>
+              <td><strong>7. Admin Rights &amp; Reports</strong></td>
+              <td>Admin Executive Analytics &amp; Live Fleet Oversight</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Admin (Control Room)</td>
+              <td><code>-</code></td>
+              <td>1331.1 ms</td>
+              <td style="font-size:13px;color:#334155;">Summary HTTP 200 (Keys=0) | Fleet HTTP 200 (Buses=0)</td>
+            </tr>
+            
+            <tr>
+              <td>31</td>
+              <td><strong>7. Admin Rights &amp; Reports</strong></td>
+              <td>Admin Report Exports (Pilgrims CSV, Financials CSV &amp; Full Database XLSX)</td>
+              <td><span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12px;">FAIL</span></td>
+              <td>Admin (Control Room)</td>
+              <td><code>-</code></td>
+              <td>1432.6 ms</td>
+              <td style="font-size:13px;color:#334155;">SaintsCSV HTTP 200 | FinCSV HTTP 200 | FullXLSX HTTP 404 (0 bytes)</td>
+            </tr>
+            
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
