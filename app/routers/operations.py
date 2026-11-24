@@ -170,6 +170,22 @@ def create_pickup_drop_request(data: dict, db: Session = Depends(get_db)):
     return {"status": "CREATED", "request_code": code, "id": row.id}
 
 
+@router.post("/pickup-drop-requests/{req_id}/allocate")
+def allocate_vehicle_to_pickup_drop(req_id: int, data: dict, db: Session = Depends(get_db)):
+    """Allows Admin Control Room or Ground Team to allocate a vehicle to a Pickup/Drop request."""
+    row = db.query(PickupDropVehicleRequest).filter(PickupDropVehicleRequest.id == req_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Pickup/Drop request not found.")
+    reg = str(data.get("vehicle_reg_number") or "").upper().strip()
+    if not reg:
+        raise HTTPException(status_code=400, detail="Please select a valid vehicle registration number.")
+    row.assigned_vehicle_reg = reg
+    row.status = "ALLOCATED"
+    db.commit()
+    db.refresh(row)
+    return {"status": "ALLOCATED", "id": row.id, "request_code": row.request_code, "assigned_vehicle_reg": reg}
+
+
 @router.get("/request-status-lookup")
 def lookup_request_status(query: str = "", db: Session = Depends(get_db)):
     q = str(query or "").strip()
