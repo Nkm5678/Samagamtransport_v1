@@ -22,7 +22,8 @@ from app.models import (
     FuelLog, MaintenanceTicket, Vehicle, Volunteer,
     CrewDutyShift, VehicleWearInspection, MSRTCSpotCashVoucher,
     StationCashFloat, HiredRollingContract, GroundStationIntercom,
-    Journey, TelemetryPing, PickupDropVehicleRequest
+    Journey, TelemetryPing, PickupDropVehicleRequest,
+    DepartmentVehicleRequisition
 )
 
 router = APIRouter(prefix="/api/operations", tags=["Operations, Turnaround & Live Telemetry"])
@@ -618,3 +619,120 @@ def delete_master_directory_contact(contact_id: int, db: Session = Depends(get_d
     vol.is_active = False
     db.commit()
     return {"status": "DELETED", "id": contact_id}
+
+
+# ==============================================================================
+# GROUND SERVICE DEPARTMENT VEHICLE REQUISITIONS (ground.samagamtransport.in)
+# ==============================================================================
+
+def _serialize_ground_dept_req(r: DepartmentVehicleRequisition) -> dict:
+    return {
+        "id": r.id,
+        "requisition_code": getattr(r, "requisition_code", f"REQ-{r.id}"),
+        "department_name": getattr(r, "department_name", ""),
+        "department_head_name": getattr(r, "department_head_name", "") or "",
+        "requester_name": getattr(r, "requester_name", ""),
+        "requester_phone": getattr(r, "requester_phone", ""),
+        "required_vehicle_type": getattr(r, "required_vehicle_type", ""),
+        "quantity_needed": getattr(r, "quantity_needed", 1),
+        "purpose": getattr(r, "purpose", "") or "",
+        "required_from_datetime": str(getattr(r, "required_from_datetime", "") or ""),
+        "duration_days": str(getattr(r, "duration_days", "") or ""),
+        "status": getattr(r, "status", "PENDING_ALLOCATION"),
+        "allocated_vehicle_reg": getattr(r, "allocated_vehicle_reg", None),
+        "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if getattr(r, "created_at", None) else "",
+    }
+
+
+@router.get("/ground-dept-requisitions")
+def list_ground_dept_requisitions(query: str = "", db: Session = Depends(get_db)):
+    q_obj = db.query(DepartmentVehicleRequisition)
+    q = str(query or "").strip()
+    if q:
+        digits = "".join(ch for ch in q if ch.isdigit())
+        phone_q = digits[-10:] if len(digits) >= 10 else q
+        q_obj = q_obj.filter(
+            (DepartmentVehicleRequisition.requester_phone.contains(phone_q))
+            | (DepartmentVehicleRequisition.requisition_code.ilike(f"%{q.upper()}%"))
+            | (DepartmentVehicleRequisition.department_name.ilike(f"%{q}%"))
+        )
+    rows = q_obj.order_by(DepartmentVehicleRequisition.id.desc()).limit(100).all()
+    return [_serialize_ground_dept_req(r) for r in rows]
+
+
+@router.post("/ground-dept-requisitions")
+def create_ground_dept_requisition(data: dict, db: Session = Depends(get_db)):
+    """Creates an Advance Projection or Ad-hoc Ground Department Vehicle Requisition."""
+    dept_name = str(data.get("department_name") or "").strip()
+    req_name = str(data.get("requester_name") or "").strip()
+    raw_phone = "".join(ch for ch in str(data.get("requester_phone") or "") if ch.isdigit())
+    req_phone = raw_phone[-10:] if len(raw_phone) >= 10 else raw_phone
+    veh_type = str(data.get("required_vehicle_type") or "Goods Carrier / Tempo").strip()
+    qty = max(1, int(data.get("quantity_needed") or 1))
+    purpose = str(data.get("purpose") or "").strip()
+
+    if not dept_name or not req_name or len(req_phone) != 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Department Name, Requester Name, and a valid 10-digit Mobile Number are required."
+        )
+
+    req_code = f"REQ-{secrets.randbelow(9000) + 1000}"
+    model_cols = {c.name: c for c in DepartmentVehicleRequisition.__table__.columns}
+
+    # Safely coerce duration_days if column is Integer vs String
+    raw_duration = str(data.get("duration_days") or "1").strip()
+    duration_val = raw_duration
+    if "duration_days" in model_cols and "INT" in str(model_cols["duration_days"].type).upper():
+        digits_dur = "".join(ch for ch in raw_duration if ch.isdigit())
+        duration_val = int(digits_dur) if digits_dur else 1
+
+    candidate_fields = {
+        "requisition_code": req_code,
+        "department_name": dept_name,
+        "department_head_name": str(data.get("department_head_name") or "").strip() or None,
+        "requester_name": req_name,
+        "requester_phone": req_phone,
+        "required_vehicle_type": veh_type,
+        "quantity_needed": qty,
+        "purpose": purpose or "Ground Department Sewa",
+        "required_from_datetime": str(data.get("required_from_datetime") or "").strip() or None,
+        "duration_days": duration_val,
+        "status": "PENDING_ALLOCATION",
+        "allocated_vehicle_reg": None,
+    }
+
+    safe_kwargs = {k: v for k, v in candidate_fields.items() if k in model_cols}
+    row = DepartmentVehicleRequisition(**safe_kwargs)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+
+    return {
+        "status": "CREATED",
+        "id": row.id,
+        "requisition_code": getattr(row, "requisition_code", req_code),
+        "message": "Vehicle will be allocated if available ASAP.",
+    }
+
+
+@router.post("/ground-dept-requisitions/{req_id}/allocate")
+def allocate_vehicle_to_ground_dept_requisition(req_id: int, data: dict, db: Session = Depends(get_db)):
+    """Allows Admin Control Room or Ground Transport Team to allocate a vehicle to a department request."""
+    row = db.query(DepartmentVehicleRequisition).filter(DepartmentVehicleRequisition.id == req_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Ground department requisition not found.")
+    reg = str(data.get("vehicle_reg_number") or "").upper().strip()
+    if not reg:
+        raise HTTPException(status_code=400, detail="Please select a valid vehicle registration number.")
+
+    row.allocated_vehicle_reg = reg
+    row.status = "ALLOCATED"
+    db.commit()
+    db.refresh(row)
+    return {
+        "status": "ALLOCATED",
+        "id": row.id,
+        "requisition_code": row.requisition_code,
+        "allocated_vehicle_reg": row.allocated_vehicle_reg,
+    }
