@@ -1,0 +1,134 @@
+Set-Location "C:\narendra\SamagamtransportV1"
+$py = "c:\Users\Swapt\AppData\Local\Python\pythoncore-3.15-64\python.exe"
+
+& $py -c @"
+import os
+
+p = r'C:\narendra\SamagamtransportV1\app\routers\operations.py'
+with open(p, 'r', encoding='utf-8', errors='replace') as f:
+    src = f.read()
+
+# Cut back to before the duplicate appended blocks
+for cut_marker in [
+    '\nimport io as _io_mod\nimport re as _re_mod\nfrom datetime import datetime as _dt_mod',
+    '\n# --- Reconciled Helpline Roster & Fleet/Driver Excel Endpoints ---'
+]:
+    if cut_marker in src:
+        src = src.split(cut_marker, 1)[0].rstrip()
+
+clean_tail = '''
+
+# --- Clean Helpline Roster & Fleet/Driver Excel Endpoints ---
+import io as _io_mod
+import re as _re_mod
+from datetime import datetime as _dt_mod
+from typing import Optional as _Opt
+import openpyxl as _openpyxl
+from fastapi import UploadFile as _UploadFile, File as _File
+from sqlalchemy import text as _sql_text
+
+def _ensure_reconciled_tables(db):
+    q1 = "CREATE TABLE IF NOT EXISTS samagam_duty_roster (id INTEGER PRIMARY KEY AUTOINCREMENT, team_category VARCHAR(40) NOT NULL, duty_date VARCHAR(20), location_name VARCHAR(160) NOT NULL, shift_timing VARCHAR(80) NOT NULL, slot_label VARCHAR(40), sewadar_name VARCHAR(120) NOT NULL, primary_mobile VARCHAR(20) NOT NULL, alt_mobile VARCHAR(20), unit_no VARCHAR(60), duty_role VARCHAR(160), updated_at VARCHAR(40))"
+    q2 = "CREATE TABLE IF NOT EXISTS samagam_fleet_vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, vehicle_reg VARCHAR(30) UNIQUE NOT NULL, vehicle_category VARCHAR(80) NOT NULL, make_model VARCHAR(80), capacity VARCHAR(40), ownership_source VARCHAR(40), owner_name VARCHAR(120), owner_mobile VARCHAR(20), staged_hub VARCHAR(140), driver_name VARCHAR(120), driver_mobile VARCHAR(20), available_from VARCHAR(20), available_till VARCHAR(20), status VARCHAR(30) DEFAULT 'READY', updated_at VARCHAR(40))"
+    q3 = "CREATE TABLE IF NOT EXISTS samagam_driver_roster (id INTEGER PRIMARY KEY AUTOINCREMENT, driver_name VARCHAR(120) NOT NULL, primary_mobile VARCHAR(20) UNIQUE NOT NULL, alt_mobile VARCHAR(20), login_pin VARCHAR(10) NOT NULL, license_no VARCHAR(50), license_type VARCHAR(60), assigned_vehicle_reg VARCHAR(30), base_hub VARCHAR(140), duty_shift VARCHAR(80), unit_agency VARCHAR(120), updated_at VARCHAR(40))"
+    db.execute(_sql_text(q1))
+    db.execute(_sql_text(q2))
+    db.execute(_sql_text(q3))
+    db.commit()
+
+@router.post("/roster/upload-excel")
+async def upload_station_ground_roster_excel(file: _UploadFile = _File(...), db=Depends(get_db)):
+    if not file.filename.lower().endswith((".xlsx", ".xlsm")):
+        raise HTTPException(status_code=400, detail="Please upload the .xlsx Roster Proforma file.")
+    _ensure_reconciled_tables(db)
+    wb = _openpyxl.load_workbook(_io_mod.BytesIO(await file.read()), data_only=True)
+    inserted = 0
+    now_iso = _dt_mod.utcnow().isoformat()
+    for sname in wb.sheetnames:
+        if "summary" in sname.lower():
+            continue
+        ws = wb[sname]
+        default_team = "GROUND_TEAM" if "ground" in sname.lower() else "STATION_TEAM"
+        for r in range(5, ws.max_row + 1):
+            tcat = str(ws.cell(r, 2).value or default_team).strip().upper()
+            tcat = "GROUND_TEAM" if "GROUND" in tcat else "STATION_TEAM"
+            ddate = str(ws.cell(r, 3).value or "").strip()[:10]
+            loc = str(ws.cell(r, 4).value or "").strip()
+            shift = str(ws.cell(r, 5).value or "").strip()
+            slot = str(ws.cell(r, 6).value or "").strip()
+            name = str(ws.cell(r, 7).value or "").strip()
+            mob = _re_mod.sub(r"\\D", "", str(ws.cell(r, 8).value or ""))[-10:]
+            alt = _re_mod.sub(r"\\D", "", str(ws.cell(r, 9).value or ""))[-10:]
+            unit = str(ws.cell(r, 10).value or "").strip()
+            role = str(ws.cell(r, 11).value or "").strip()
+            if not name or len(mob) < 10 or not loc:
+                continue
+            ins_sql = "INSERT INTO samagam_duty_roster (team_category, duty_date, location_name, shift_timing, slot_label, sewadar_name, primary_mobile, alt_mobile, unit_no, duty_role, updated_at) VALUES (:tc, :dd, :loc, :sh, :sl, :nm, :pm, :am, :un, :rl, :ua)"
+            db.execute(_sql_text(ins_sql), {"tc": tcat, "dd": ddate, "loc": loc, "sh": shift, "sl": slot, "nm": name, "pm": mob, "am": alt, "un": unit, "rl": role, "ua": now_iso})
+            inserted += 1
+    db.commit()
+    return {"status": "success", "records_uploaded": inserted, "message": f"Uploaded {inserted} active roster contacts."}
+
+@router.get("/roster/live")
+def get_live_helpline_roster(duty_date: _Opt[str] = None, team_category: _Opt[str] = None, db=Depends(get_db)):
+    _ensure_reconciled_tables(db)
+    q = "SELECT * FROM samagam_duty_roster WHERE 1=1"
+    params = {}
+    if duty_date:
+        q += " AND duty_date = :dd"
+        params["dd"] = duty_date
+    if team_category and team_category != "ALL":
+        q += " AND team_category = :tc"
+        params["tc"] = team_category
+    q += " ORDER BY duty_date ASC, team_category ASC, location_name ASC, shift_timing ASC, id ASC"
+    rows = db.execute(_sql_text(q), params).mappings().all()
+    return {"items": [dict(r) for r in rows], "total": len(rows)}
+
+@router.post("/fleet/upload-excel")
+async def upload_fleet_vehicles_and_drivers_excel(file: _UploadFile = _File(...), db=Depends(get_db)):
+    if not file.filename.lower().endswith((".xlsx", ".xlsm")):
+        raise HTTPException(status_code=400, detail="Please upload the .xlsx Fleet & Drivers Proforma file.")
+    _ensure_reconciled_tables(db)
+    wb = _openpyxl.load_workbook(_io_mod.BytesIO(await file.read()), data_only=True)
+    v_cnt, d_cnt = 0, 0
+    now_iso = _dt_mod.utcnow().isoformat()
+    if "Fleet_Vehicles_Master" in wb.sheetnames:
+        ws_v = wb["Fleet_Vehicles_Master"]
+        for r in range(5, ws_v.max_row + 1):
+            reg = _re_mod.sub(r"\\s+", "", str(ws_v.cell(r, 2).value or "")).upper()
+            v_cat = str(ws_v.cell(r, 3).value or "").strip()
+            if not reg or not v_cat:
+                continue
+            db.execute(_sql_text("DELETE FROM samagam_fleet_vehicles WHERE vehicle_reg = :reg"), {"reg": reg})
+            v_sql = "INSERT INTO samagam_fleet_vehicles (vehicle_reg, vehicle_category, make_model, capacity, ownership_source, owner_name, owner_mobile, staged_hub, driver_name, driver_mobile, available_from, available_till, status, updated_at) VALUES (:reg, :cat, :mm, :cap, :src, :onm, :omob, :hub, :dnm, :dmob, :af, :at, 'READY', :ua)"
+            db.execute(_sql_text(v_sql), {"reg": reg, "cat": v_cat, "mm": str(ws_v.cell(r, 4).value or "").strip(), "cap": str(ws_v.cell(r, 5).value or "").strip(), "src": str(ws_v.cell(r, 6).value or "SEWA_DONATED").strip().upper(), "onm": str(ws_v.cell(r, 7).value or "").strip(), "omob": _re_mod.sub(r"\\D", "", str(ws_v.cell(r, 8).value or ""))[-10:], "hub": str(ws_v.cell(r, 9).value or "").strip(), "dnm": str(ws_v.cell(r, 10).value or "").strip(), "dmob": _re_mod.sub(r"\\D", "", str(ws_v.cell(r, 11).value or ""))[-10:], "af": str(ws_v.cell(r, 12).value or "").strip()[:10], "at": str(ws_v.cell(r, 13).value or "").strip()[:10], "ua": now_iso})
+            v_cnt += 1
+    if "Driver_Roster_Master" in wb.sheetnames:
+        ws_d = wb["Driver_Roster_Master"]
+        for r in range(5, ws_d.max_row + 1):
+            d_name = str(ws_d.cell(r, 2).value or "").strip()
+            p_mob = _re_mod.sub(r"\\D", "", str(ws_d.cell(r, 3).value or ""))[-10:]
+            if not d_name or len(p_mob) < 10:
+                continue
+            a_mob = _re_mod.sub(r"\\D", "", str(ws_d.cell(r, 4).value or ""))[-10:]
+            pin_raw = _re_mod.sub(r"\\D", "", str(ws_d.cell(r, 5).value or ""))
+            pin = pin_raw[:4] if len(pin_raw) >= 4 else p_mob[-4:]
+            veh_reg = _re_mod.sub(r"\\s+", "", str(ws_d.cell(r, 8).value or "")).upper()
+            db.execute(_sql_text("DELETE FROM samagam_driver_roster WHERE primary_mobile = :pm"), {"pm": p_mob})
+            d_sql = "INSERT INTO samagam_driver_roster (driver_name, primary_mobile, alt_mobile, login_pin, license_no, license_type, assigned_vehicle_reg, base_hub, duty_shift, unit_agency, updated_at) VALUES (:dn, :pm, :am, :pin, :ln, :lt, :vr, :bh, :sh, :ua, :up)"
+            db.execute(_sql_text(d_sql), {"dn": d_name, "pm": p_mob, "am": a_mob, "pin": pin, "ln": str(ws_d.cell(r, 6).value or "").strip().upper(), "lt": str(ws_d.cell(r, 7).value or "").strip(), "vr": veh_reg, "bh": str(ws_d.cell(r, 9).value or "").strip(), "sh": str(ws_d.cell(r, 10).value or "").strip(), "ua": str(ws_d.cell(r, 11).value or "").strip(), "up": now_iso})
+            if veh_reg:
+                db.execute(_sql_text("UPDATE samagam_fleet_vehicles SET driver_name = :dn, driver_mobile = :pm, updated_at = :up WHERE vehicle_reg = :vr"), {"dn": d_name, "pm": p_mob, "up": now_iso, "vr": veh_reg})
+            d_cnt += 1
+    db.commit()
+    return {"status": "success", "vehicles_uploaded": v_cnt, "drivers_uploaded": d_cnt, "message": f"Uploaded {v_cnt} vehicles and {d_cnt} drivers."}
+'''
+
+with open(p, 'w', encoding='utf-8') as f:
+    f.write(src + clean_tail)
+
+compile(open(p, encoding='utf-8').read(), p, 'exec')
+print("operations.py cleaned and compiled with zero errors.")
+"@
+
+& $py .\verify_reconciled_endpoints.py

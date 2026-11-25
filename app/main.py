@@ -105,6 +105,15 @@ app.add_middleware(
 )
 
 
+
+@app.get("/helpline")
+async def serve_helpline_portal(request: Request):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for cand in [os.path.join(base_dir, "helpline_portal.html"), os.path.join(base_dir, "root", "helpline_portal.html")]:
+        if os.path.exists(cand):
+            return FileResponse(cand, media_type="text/html")
+    return JSONResponse({"status": "ok", "portal": "https://helpline.samagamtransport.in"})
+
 @app.middleware("http")
 async def ddos_rate_limit_and_security_headers(request: Request, call_next):
     path = request.url.path
