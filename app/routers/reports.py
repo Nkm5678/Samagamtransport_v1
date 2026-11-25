@@ -16,9 +16,9 @@ for _root in _CANDIDATE_ROOTS:
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
 import app.models as models
-from app.database import get_db
+from app.database import get_db, engine
 from app.models import (
     Saint, Vehicle, StationDemand, HiredRollingContract,
     MSRTCSpotCashVoucher, StationCashFloat, FuelLog,
@@ -254,59 +254,59 @@ def purge_test_data_from_database(
     }
 
 
-@router.get("/export/full-database.xlsx")
-def export_entire_database_xlsx(db: Session = Depends(get_db)):
-    """Exports EVERY table in the central database into a 15-sheet formatted Excel workbook (.xlsx)."""
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
-    from openpyxl.utils import get_column_letter
+@router.get("/admin-db-tables")
+def list_admin_database_tables():
+    """Lists all database tables and their row counts for the Admin SQL Console."""
+    insp = inspect(engine)
+    tables = insp.get_table_names()
+    summary = []
+    with engine.connect() as conn:
+        for t in sorted(tables):
+            try:
+                cnt = conn.execute(text(f'SELECT COUNT(*) FROM "{t}"')).scalar() or 0
+            except Exception:
+                cnt = -1
+            summary.append({"table": t, "rows": cnt})
+    return {"dialect": engine.dialect.name, "tables": summary}
 
-    wb = Workbook()
-    hfont = Font(bold=True, color="FFFFFF")
-    hfill = PatternFill("solid", fgColor="0F2C59")
 
-    def to_ist_str(dt):
-        if not dt:
-            return ""
-        return dt.replace(tzinfo=timezone.utc).astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
+@router.post("/admin-sql-query")
+def execute_admin_sql_query(data: dict):
+    """Executes an Admin SQL query (SELECT, UPDATE, DELETE, INSERT, ALTER) directly on the active database."""
+    sql = str(data.get("sql") or "").strip()
+    if not sql:
+        raise HTTPException(status_code=400, detail="SQL query cannot be empty.")
 
-    ws1 = wb.active
-    ws1.title = "1_Advance_Sewa"
-    ws1.append(["Request ID", "Name", "Contact Number", "Branch", "Unit No", "Landmark", "Nearest Station", "Date of Sewa", "Start Time", "Return Time", "Pax", "Notes", "Status", "Assigned Vehicle", "Driver Name", "Driver Phone", "Created (IST)"])
-    adv_cls = getattr(models, "AdvanceSewaVehicleRequest", None)
-    if adv_cls is not None:
-        for r in db.query(adv_cls).order_by(adv_cls.id.desc()).all():
-            ws1.append([r.request_code, r.requester_name, r.contact_number, r.branch_name, r.unit_number, r.landmark, r.nearest_railway_station, r.date_of_sewa, r.start_journey_time, r.return_time, r.passenger_count, r.notes or "", r.status, r.assigned_vehicle_reg or "", r.assigned_driver_name or "", r.assigned_driver_phone or "", to_ist_str(r.created_at)])
+    lowered = sql.lstrip("(").lower()
+    if any(lowered.startswith(bad) for bad in ("drop database", "truncate database")):
+        raise HTTPException(status_code=403, detail="Database-level DROP/TRUNCATE is blocked for safety.")
 
-    ws2 = wb.create_sheet("2_Pickup_Drop")
-    ws2.append(["Request ID", "Direction", "Transit Hub", "Pax", "Vehicle Type", "Qty", "Scheduled Time", "Train / Flight", "Requester", "Mobile", "Notes", "Status", "Assigned Vehicle", "Created (IST)"])
-    for r in db.query(PickupDropVehicleRequest).order_by(PickupDropVehicleRequest.id.desc()).all():
-        ws2.append([r.request_code, r.trip_direction, r.transit_hub, r.passenger_count, r.vehicle_type_requested, r.vehicles_needed, r.scheduled_datetime, r.train_flight_details or "", r.requester_name, r.requester_phone, r.notes or "", r.status, r.assigned_vehicle_reg or "", to_ist_str(r.created_at)])
-
-    ws3 = wb.create_sheet("3_InGround_Dept_Req")
-    ws3.append(["Req Code", "Department", "Vehicle Type", "Qty", "Requester", "Mobile", "Duration", "Dept Head", "Purpose", "Status", "Allocated Vehicle", "Allocated By", "Created (IST)"])
-    for r in db.query(DepartmentVehicleRequisition).order_by(DepartmentVehicleRequisition.id.desc()).all():
-        ws3.append([r.requisition_code, r.department_name, r.required_vehicle_type, r.quantity_needed, r.requester_name, r.requester_phone, r.required_duration, r.department_head_name, r.purpose_details, r.status, r.allocated_vehicle_reg or "", r.allocated_by_member or "", to_ist_str(r.created_at)])
-
-    ws4 = wb.create_sheet("4_Seva_Donated_Veh")
-    ws4.append(["Receipt Code", "Handover Date", "Time", "Vehicle Reg", "Type", "Zone & Branch", "Owner Name", "Owner Phone", "From Date", "Till Date", "Fuel Level", "Fuel Type", "Odometer KM", "Condition", "Handed Over By", "Received By", "Status", "Allocated Dept"])
-    for v in db.query(SevaDonatedVehicle).order_by(SevaDonatedVehicle.id.desc()).all():
-        ws4.append([v.receipt_code, v.handover_date, v.handover_time, v.vehicle_reg_number, v.vehicle_type, v.zone_and_branch, v.owner_name, v.owner_phone, v.seva_from_date, v.seva_till_date, v.fuel_level, v.fuel_type, v.odometer_km, v.exterior_condition, v.handed_over_by_name, v.received_by_sevadar_name, v.status, v.allocated_to_department or ""])
-
-    ws5 = wb.create_sheet("5_Fleet_Vehicles")
-    ws5.append(["ID", "Reg Number", "Type", "Capacity", "Ownership", "Contractor", "Driver Name", "Driver Phone", "Co-Driver", "Co-Driver Phone", "Current Hub", "Onboarding Team", "Registered By", "Status", "Current Pax", "Destination", "Health %", "Maint Flagged"])
-    for v in db.query(Vehicle).order_by(Vehicle.id.asc()).all():
-        ws5.append([v.id, v.vehicle_reg_number, v.vehicle_type, v.capacity, v.ownership_type, v.contractor_name or "", v.driver_name, v.driver_phone, v.rider_name or "", v.rider_phone or "", v.current_hub, getattr(v, "onboarding_team", "") or "", getattr(v, "registered_by", "") or "", v.status, v.current_passengers, v.current_destination or "", v.health_score_pct, "YES" if v.is_maintenance_flagged else "NO"])
-
-    ws6 = wb.create_sheet("6_24h_Rolling_Contracts")
-    ws6.append(["Contract Code", "Vehicle Reg", "Vendor Agency", "Rate/24h (INR)", "Quota KM/24h", "Extra INR/KM", "Entry (IST)", "Entry Odo", "Exit (IST)", "Exit Odo", "Billed Days", "KM Run", "Total Settlement (INR)", "Status"])
-    for c in db.query(HiredRollingContract).order_by(HiredRollingContract.id.desc()).all():
-        m = compute_rolling_contract_metrics(c)
-        ws6.append([c.contract_code, c.vehicle.vehicle_reg_number if c.vehicle else "", c.vendor_agency_name, c.daily_base_rate_inr, c.daily_quota_km, c.extra_rate_per_km_inr, to_ist_str(c.entry_timestamp), c.entry_odometer_km, to_ist_str(c.exit_timestamp), c.exit_odometer_km or "", m["billed_days"], m["km_run"], m["total_settlement_inr"], c.status])
-
-    ws7 = wb.create_sheet("7_MSRTC_Cash_Vouchers")
-    ws7.append(["Voucher No", "Station Hub", "Bus Reg", "Depot", "Conductor", "Cash Paid (INR)", "ETM Receipt", "Pax", "Paid By", "Paid At (IST)", "Gate Verified", "Verified By"])
-    for v in db.query(MSRTCSpotCashVoucher).order_by(MSRTCSpotCashVoucher.id.desc()).all():
+    try:
+        with engine.begin() as conn:
+            result = conn.execute(text(sql))
+            if result.returns_rows:
+                cols = list(result.keys())
+                raw_rows = result.fetchmany(500)
+                rows = [
+                    {col: (val.isoformat() if hasattr(val, "isoformat") else val) for col, val in zip(cols, r)}
+                    for r in raw_rows
+                ]
+                return {
+                    "status": "OK",
+                    "type": "SELECT",
+                    "columns": cols,
+                    "row_count": len(rows),
+                    "rows": rows,
+                }
+            return {
+                "status": "OK",
+                "type": "WRITE",
+                "affected_rows": result.rowcount if result.rowcount is not None else 0,
+                "columns": [],
+                "rows": [],
+            }
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"SQL Error: {exc}")
         ws7.append([v.voucher_number, v.station_hub, v.vehicle.vehicle_reg_number if v.vehicle else "", v.msrtc_depot_name, v.conductor_name, v.cash_amount_paid_inr, v.etm_receipt_number, v.passenger_headcount, v.paid_by_volunteer_name, to_ist_str(v.paid_at), "YES" if v.is_verified_at_gate else "NO", v.verified_by_ground_sevadar or ""])
 
     ws8 = wb.create_sheet("8_Station_Cash_Floats")

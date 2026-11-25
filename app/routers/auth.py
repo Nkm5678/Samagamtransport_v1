@@ -807,21 +807,3 @@ def login_volunteer(req: VolunteerLoginRequest, db: Session = Depends(get_db)):
             "can_manage_fleet": vol.can_manage_fleet,
         },
     }
-
-from pydantic import BaseModel as _HLBaseModel
-import re as _hl_re_mod
-
-class _HelplineLoginReq(_HLBaseModel):
-    full_name: str = ""
-    mobile: str
-    pin: str
-
-@router.post("/helpline-login")
-async def helpline_login_endpoint(payload: _HelplineLoginReq):
-    mobile_clean = _hl_re_mod.sub(r"\D", "", payload.mobile or "")[-10:]
-    if len(mobile_clean) != 10:
-        raise HTTPException(status_code=400, detail="Valid 10-digit mobile number is required.")
-    pin_clean = (payload.pin or "").strip()
-    if pin_clean == "6060" or (len(pin_clean) == 4 and pin_clean.isdigit()):
-        return {"status": "authenticated", "role": "HELPLINE_OPERATOR", "full_name": (payload.full_name or "").strip() or f"Helpline Desk ({mobile_clean})", "mobile": mobile_clean, "helpline_tollfree": "18001232005", "chatbot_whatsapp": "9266629848", "access_token": f"hl-{mobile_clean}-60mnss"}
-    raise HTTPException(status_code=401, detail="Invalid PIN. Use Helpline Desk Code 6060 or your 4-digit PIN.")
