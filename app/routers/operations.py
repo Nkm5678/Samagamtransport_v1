@@ -913,3 +913,65 @@ async def upload_fleet_vehicles_and_drivers_excel(file: _UploadFile = _File(...)
             d_cnt += 1
     db.commit()
     return {"status": "success", "vehicles_uploaded": v_cnt, "drivers_uploaded": d_cnt, "message": f"Uploaded {v_cnt} vehicles and {d_cnt} drivers."}
+
+# --- Advance Sewa Request Submission & Listing ---
+@router.post("/advance-sewa-requests")
+async def create_advance_sewa_request(payload: dict, db=Depends(get_db)):
+    _ensure_reconciled_tables(db)
+    db.execute(_sql_text("""
+        CREATE TABLE IF NOT EXISTS samagam_advance_sewa_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_code VARCHAR(30),
+            unit_name VARCHAR(120),
+            unit_no VARCHAR(40),
+            landmark VARCHAR(160),
+            nearest_station VARCHAR(120),
+            sewa_date VARCHAR(30),
+            start_time VARCHAR(20),
+            return_time VARCHAR(20),
+            sevadars_count INTEGER DEFAULT 1,
+            remarks VARCHAR(300),
+            contact_name VARCHAR(120),
+            contact_mobile VARCHAR(20),
+            status VARCHAR(30) DEFAULT 'PENDING',
+            allocated_vehicle_reg VARCHAR(30),
+            created_at VARCHAR(40)
+        )
+    """))
+    now_iso = _dt_mod.utcnow().isoformat()
+    unit_name = str(payload.get("unit_name") or payload.get("area") or "").strip()
+    unit_no = str(payload.get("unit_no") or "").strip()
+    landmark = str(payload.get("landmark") or "").strip()
+    station = str(payload.get("nearest_station") or payload.get("station") or "").strip()
+    sewa_date = str(payload.get("sewa_date") or payload.get("date_of_sewa") or "").strip()
+    start_t = str(payload.get("start_time") or payload.get("journey_start_time") or "").strip()
+    ret_t = str(payload.get("return_time") or payload.get("journey_return_time") or "").strip()
+    cnt = int(payload.get("sevadars_count") or payload.get("headcount") or 1)
+    remarks = str(payload.get("remarks") or payload.get("department") or "").strip()
+    cname = str(payload.get("contact_name") or payload.get("leader_name") or "").strip()
+    cmob = str(payload.get("contact_mobile") or payload.get("mobile") or "").strip()
+
+    res = db.execute(_sql_text("""
+        INSERT INTO samagam_advance_sewa_requests
+        (unit_name, unit_no, landmark, nearest_station, sewa_date, start_time, return_time, sevadars_count, remarks, contact_name, contact_mobile, status, created_at)
+        VALUES (:un, :uno, :lm, :st, :sd, :stt, :rt, :cnt, :rm, :cn, :cm, 'PENDING', :ca)
+    """), {
+        "un": unit_name, "uno": unit_no, "lm": landmark, "st": station,
+        "sd": sewa_date, "stt": start_t, "rt": ret_t, "cnt": cnt,
+        "rm": remarks, "cn": cname, "cm": cmob, "ca": now_iso
+    })
+    db.commit()
+    new_id = res.lastrowid or 1
+    req_code = f"ADV-{1000 + new_id}"
+    db.execute(_sql_text("UPDATE samagam_advance_sewa_requests SET request_code = :rc WHERE id = :id"), {"rc": req_code, "id": new_id})
+    db.commit()
+    return {"status": "success", "id": new_id, "request_code": req_code, "message": f"Advance Sewa Request {req_code} submitted."}
+
+@router.get("/advance-sewa-requests")
+def list_advance_sewa_requests(db=Depends(get_db)):
+    _ensure_reconciled_tables(db)
+    try:
+        rows = db.execute(_sql_text("SELECT * FROM samagam_advance_sewa_requests ORDER BY id DESC")).mappings().all()
+        return {"items": [dict(r) for r in rows], "total": len(rows)}
+    except Exception:
+        return {"items": [], "total": 0}
