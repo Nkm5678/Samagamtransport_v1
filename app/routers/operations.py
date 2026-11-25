@@ -811,7 +811,10 @@ import io as _io_mod
 import re as _re_mod
 from datetime import datetime as _dt_mod
 from typing import Optional as _Opt
-import openpyxl as _openpyxl
+try:
+    import openpyxl as _openpyxl
+except ImportError:
+    _openpyxl = None
 from fastapi import UploadFile as _UploadFile, File as _File
 from sqlalchemy import text as _sql_text
 
