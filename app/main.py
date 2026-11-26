@@ -143,6 +143,15 @@ async def ddos_rate_limit_and_security_headers(request: Request, call_next):
     return response
 
 
+
+@app.get("/admin/station-analysis-2027")
+async def serve_station_analysis_2027():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for cand in [os.path.join(base_dir, "station_analysis_2027.html"), os.path.join(base_dir, "root", "station_analysis_2027.html")]:
+        if os.path.exists(cand):
+            return FileResponse(cand, media_type="text/html")
+    return JSONResponse({"status": "ok", "page": "station_analysis_2027.html"})
+
 app.include_router(auth.router)
 app.include_router(saints.router)
 app.include_router(fleet.router)

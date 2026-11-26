@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samagam Advance Sewa Transport & Duty Chart | advancesewa.samagamtransport.in</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #fffbeb 0%, #fef3c7 35%, #f1f5f9 100%);
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            color: #0f172a;
+        }
+        .lang-btn.active {
+            background-color: #92400e;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(146, 64, 14, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header class="bg-amber-950 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <img src="/static/jagriti.jpeg"
+                     onerror="this.onerror=null;this.src='/static/jagriti.jpg';"
+                     alt="जागृति — The Awakening"
+                     class="h-11 w-auto rounded-xl bg-white px-2 py-0.5 shadow border border-amber-300/60 object-contain">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-wide">SERVICE FOR ADVANCE SEWA — DUTY CHART & TRANSPORT</h1>
+                        <span class="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-800 text-amber-200">advancesewa.samagamtransport.in</span>
+                    </div>
+                    <p class="text-xs text-amber-200">60th Maharashtra Annual Sant Samagam • Sector 28 & 29, CIDCO Ground, Kharghar, Navi Mumbai</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1 bg-amber-900/90 p-1 rounded-xl border border-amber-700 text-[11px] font-extrabold">
+                    <button type="button" onclick="setAdvLang('hi', this)" class="lang-btn px-2.5 py-1 rounded-lg transition">हिंदी</button>
+                    <button type="button" onclick="setAdvLang('mr', this)" class="lang-btn px-2.5 py-1 rounded-lg transition">मराठी</button>
+                    <button type="button" onclick="setAdvLang('en', this)" class="lang-btn active px-2.5 py-1 rounded-lg transition">English</button>
+                </div>
+                <a href="https://www.samagamtransport.in" class="hidden sm:inline-block text-xs font-bold bg-amber-800 hover:bg-amber-700 px-3 py-2 rounded-xl border border-amber-600">
+                    🚌 Main Transport Portal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
+
+        <!-- OFFICIAL ADVANCE SEWA DUTY CHART (10/12/2026 TO 20/01/2027) -->
+        <section class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-400 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-amber-200 pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950">
+                        Sewadal Department • Official Duty Roster (10/12/2026 – 20/01/2027)
+                    </span>
+                    <h2 class="text-lg sm:text-xl font-black text-amber-950 mt-1">
+                        📋 60th MNSS Advance Sewa Duty Chart & One-Click Transport Booking
+                    </h2>
+                    <p class="text-xs font-bold text-slate-700 mt-0.5">
+                        Sewa Incharges: <span class="text-amber-900">Sh. Shankar Ji, Sh. Mukund Ji, Sh. Mhatre Ji, Sh. Vasudev Ji &amp; Sh. Rane Ji</span>
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-extrabold">
+                    <select id="chart-period-filter" onchange="renderAdvanceSewaChart()" class="bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 text-amber-950">
+                        <option value="ALL">All Sewa Dates (10 Dec – 20 Jan)</option>
+                        <option value="10/12/2026 – 19/12/2026">Phase 1: 10/12/2026 – 19/12/2026 (Vasai Daily Units)</option>
+                        <option value="20/12/2026 to 23/12/2026">Phase 2: 20/12/2026 to 23/12/2026</option>
+                        <option value="24/12/2026 to 27/12/2026">Phase 3: 24/12/2026 to 27/12/2026</option>
+                        <option value="27/12/2026 to 30/12/2026">Phase 4: 27/12/2026 to 30/12/2026</option>
+                        <option value="31/12/2026 to 03/01/2027">Phase 5: 31/12/2026 to 03/01/2027</option>
+                        <option value="03/01/2027 to 06/01/2027">Phase 6: 03/01/2027 to 06/01/2027</option>
+                        <option value="07/01/2027 to 10/01/2027">Phase 7: 07/01/2027 to 10/01/2027</option>
+                        <option value="10/01/2027 to 13/01/2027">Phase 8: 10/01/2027 to 13/01/2027</option>
+                        <option value="14/01/2027 to 17/01/2027">Phase 9: 14/01/2027 to 17/01/2027</option>
+                        <option value="17/01/2027 to 20/01/2027">Phase 10: 17/01/2027 to 20/01/2027 (Mega Final Prep)</option>
+                    </select>
+                    <input type="text" id="chart-search-input" oninput="renderAdvanceSewaChart()" placeholder="Search Khetra, Unit No., Sewa..." class="bg-white border border-slate-300 rounded-xl px-3 py-2 font-semibold w-56">
+                </div>
+            </div>
+
+            <!-- Reporting & Relief Notes Strip -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 bg-amber-50/90 border border-amber-200 rounded-2xl p-3 text-[11px] font-semibold text-amber-950">
+                <div>⏰ <strong>Sunday Reporting:</strong> 09:00 hrs &bull; <strong>Wednesday Relief:</strong> 19:00 hrs</div>
+                <div>⏰ <strong>Wednesday Reporting:</strong> 19:00 hrs &bull; <strong>Sunday Relief:</strong> 19:00 hrs</div>
+                <div>🛠️ <strong>Mandatory:</strong> Carry Sewadal Vardi, Safety Shoes &amp; Technical Tools (Mason-3, Carpenter-1, Plumber-2, Electrician-1)</div>
+            </div>
+
+            <!-- Scrollable Duty Chart Table -->
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl max-h-[420px]">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-amber-950 text-amber-100 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2.5 font-extrabold">Date of Sewa</th>
+                            <th class="px-3 py-2.5 font-extrabold">Khetra &amp; Unit No.</th>
+                            <th class="px-3 py-2.5 font-extrabold">Strength (M+F SD)</th>
+                            <th class="px-3 py-2.5 font-extrabold">Technical Hand</th>
+                            <th class="px-3 py-2.5 font-extrabold">Sewa Perception</th>
+                            <th class="px-3 py-2.5 font-extrabold text-right">Transport</th>
+                        </tr>
+                    </thead>
+                    <tbody id="advance-sewa-chart-tbody" class="divide-y divide-slate-200 bg-white"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 24-HOUR LIVE STATUS & VEHICLE ALLOCATION TRACKER -->
+        <section class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-amber-400 shadow-md space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm sm:text-base font-extrabold text-amber-950" data-i18n="track_title">
+                    🔍 Check Your Advance Sewa Vehicle Allocation Status (Updated Within 24 Hours)
+                </h2>
+                <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">24-Hr SLA Tracker</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+                <input type="text" id="adv-track-input" placeholder="Enter 10-Digit Contact Number or Request ID (e.g. ADV-1234)" class="flex-1 border border-slate-300 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-amber-600">
+                <button type="button" onclick="checkAdvanceSewaStatus()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold px-6 py-3 rounded-2xl text-sm shadow transition">
+                    <span data-i18n="track_btn">Check Allocation Status</span>
+                </button>
+            </div>
+            <div id="adv-track-results" class="space-y-2.5"></div>
+        </section>
+
+        <!-- MAIN ADVANCE SEWA REQUEST FORM + RECENT SUBMISSIONS -->
+        <div id="adv-form-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <section class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-amber-200 shadow-xl space-y-4">
+                <div class="border-b pb-3">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950">
+                        धन निरंकार जी 🙏 • Advance Sewa Transport
+                    </span>
+                    <h2 class="text-xl font-extrabold text-slate-900 mt-1" data-i18n="form_title">
+                        Raise Advance Sewa Vehicle Request
+                    </h2>
+                    <p class="text-xs text-slate-500" data-i18n="form_desc">
+                        Click "Book Transport" on any row of the Duty Chart above to auto-fill your Khetra, Units &amp; Sewadar count, or fill in the details below.
+                    </p>
+                </div>
+
+                <form id="dedicated-adv-form" onsubmit="openAdvanceSewaConfirmModal(event)" class="space-y-3.5 text-xs sm:text-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_name">Name *</label>
+                            <input type="text" id="adv-name-input" name="requester_name" required placeholder="Full Name" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_phone">Contact Number *</label>
+                            <input type="tel" id="adv-phone-input" name="contact_number" required maxlength="10" inputmode="numeric" placeholder="10-Digit Mobile Number" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_branch">Khetra / Branch *</label>
+                            <input type="text" id="adv-branch-input" name="branch_name" required placeholder="e.g. Vasai / Baramati / Pune" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_unit">Unit Number(s) *</label>
+                            <input type="text" id="adv-unit-input" name="unit_number" required placeholder="e.g. Unit No. 1018-Talasari" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_landmark">Pickup Location / Landmark *</label>
+                            <input type="text" id="adv-landmark-input" name="landmark" required placeholder="Pickup Bhawan / Landmark" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_station">Drop / Railway Station Location *</label>
+                            <input type="text" id="adv-station-input" name="nearest_railway_station" required placeholder="e.g. Samagam Ground / Panvel / Thane" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-semibold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50/70 p-3 rounded-2xl border border-amber-200">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-950 mb-1" data-i18n="lbl_dep_date">Departure Date *</label>
+                            <input type="date" id="adv-departure-date-input" name="departure_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-950 mb-1" data-i18n="lbl_start">Pickup / Departure Time *</label>
+                            <input type="time" id="adv-start-input" name="start_journey_time" value="06:30" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-950 mb-1" data-i18n="lbl_ret_date">Return Date *</label>
+                            <input type="date" id="adv-return-date-input" name="return_date" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-950 mb-1" data-i18n="lbl_return">Drop / Return Time *</label>
+                            <input type="time" id="adv-return-input" name="return_time" value="19:00" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_pax">Sevadars Count</label>
+                            <input type="number" id="adv-pax-input" name="passenger_count" value="100" min="1" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="lbl_remarks">Sewa Perception / Department Remarks</label>
+                            <input type="text" id="adv-notes-input" name="notes" placeholder="e.g. Ground Levelling, Preparation of Toilet & Piao" class="w-full border border-slate-300 rounded-xl px-3 py-2.5">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-extrabold py-4 rounded-2xl text-sm sm:text-base shadow-xl transition cursor-pointer">
+                        🔍 <span data-i18n="btn_submit">Review &amp; Confirm Advance Sewa Request →</span>
+                    </button>
+                </form>
+
+                <div id="adv-confirmation-box" class="hidden bg-emerald-50 border-2 border-emerald-600 rounded-2xl p-4 sm:p-5 space-y-2.5 text-xs sm:text-sm shadow">
+                    <div class="font-black text-base text-emerald-950">Dhan Nirankar ji 🙏</div>
+                    <p class="font-bold text-emerald-900 leading-relaxed">
+                        Your request received will share further details or you check allocation details 48 hour before departure and arrival.
+                    </p>
+                    <div id="adv-confirmation-summary" class="text-xs text-slate-700 font-semibold bg-white/80 p-3 rounded-xl border border-emerald-200"></div>
+                    <div class="text-[11px] font-bold text-amber-900 bg-amber-100/80 px-3 py-2 rounded-xl border border-amber-300">
+                        📲 48 Hours Before Departure &amp; Arrival: You will receive Driver Details &amp; Vehicle Details on your registered mobile/WhatsApp.
+                    </div>
+                    <a id="adv-whatsapp-receipt-btn" href="#" target="_blank" rel="noopener noreferrer" class="inline-block bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs">
+                        💬 Save Acknowledgement on WhatsApp
+                    </a>
+                </div>
+            </section>
+
+            <section class="lg:col-span-5 bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-md space-y-3">
+                <div class="flex justify-between items-center border-b pb-2.5">
+                    <div>
+                        <h3 class="font-extrabold text-sm text-amber-950">📋 Live Advance Sewa Queue</h3>
+                        <p class="text-[11px] text-slate-500">Recent requests synced with Control Room</p>
+                    </div>
+                    <button type="button" onclick="loadAdvanceSewaFeed()" class="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-lg">↻ Refresh</button>
+                </div>
+                <div id="adv-live-feed-list" class="space-y-2.5 text-xs max-h-[540px] overflow-y-auto">
+                    <p class="text-slate-400">Loading Advance Sewa requests...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- PRE-SUBMISSION CONFIRMATION MODAL -->
+    <div id="adv-review-confirm-modal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl border-2 border-amber-400 my-auto">
+            <div class="flex justify-between items-start border-b pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950">
+                        Step 2 • Verify Schedule Before Final Submit
+                    </span>
+                    <h3 class="text-lg font-black text-slate-900 mt-1">Confirm Your Advance Sewa Schedule</h3>
+                </div>
+                <button type="button" onclick="closeAdvanceSewaConfirmModal()" class="text-slate-400 hover:text-slate-800 font-bold text-lg">✕</button>
+            </div>
+
+            <div id="adv-review-details-grid" class="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 space-y-2.5 text-xs sm:text-sm">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div id="adv-modal-error" class="hidden bg-rose-50 border border-rose-300 text-rose-800 rounded-xl p-3 text-xs font-bold"></div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1 text-xs sm:text-sm font-extrabold">
+                <button type="button" onclick="closeAdvanceSewaConfirmModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 py-3 rounded-2xl transition cursor-pointer">
+                    ← Edit Details
+                </button>
+                <button type="button" id="btn-final-confirm-adv" onclick="confirmAndSubmitAdvanceSewa()" class="bg-emerald-700 hover:bg-emerald-600 text-white py-3 rounded-2xl shadow-lg transition cursor-pointer">
+                    ✅ Confirm &amp; Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        धन निरंकार जी 🙏 • Samagam Transport &amp; Logistics Cell • advancesewa.samagamtransport.in
+    </footer>
+
+    <script>
+        const DEFAULT_TECH = "Mason-3, Carpenter-1, Plumber-2, Electrician-1";
+        let PENDING_ADV_PAYLOAD = null;
+// ... existing code ... -->
+        function prefillFromDutyChart(row) {
+            document.getElementById('adv-branch-input').value = row.khetra;
+            document.getElementById('adv-unit-input').value = row.units;
+            document.getElementById('adv-departure-date-input').value = row.isoDate;
+            // Auto-compute return date (+3 days for 4-day phases, or same day for 1-day slots)
+            const depObj = new Date(row.isoDate + 'T00:00:00');
+            if (!isNaN(depObj.getTime())) {
+                const daysToAdd = row.date.includes(' to ') ? 3 : 0;
+                depObj.setDate(depObj.getDate() + daysToAdd);
+                document.getElementById('adv-return-date-input').value = depObj.toISOString().split('T')[0];
+            } else {
+                document.getElementById('adv-return-date-input').value = row.isoDate;
+            }
+            document.getElementById('adv-pax-input').value = row.pax;
+            document.getElementById('adv-notes-input').value = `[Chart ${row.date}] ${row.perception} (${row.strength})`;
+            document.getElementById('adv-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        const ADV_I18N = {
+            en: {
+                track_title: "🔍 Check Your Advance Sewa Vehicle Allocation Status (48 Hours Before Departure & Arrival)",
+                track_btn: "Check Allocation Status",
+                form_title: "Raise Advance Sewa Vehicle Request",
+                form_desc: "Click \"Book Transport\" on any row of the Duty Chart above to auto-fill your Khetra, Units & Sewadar count, or fill in the details below.",
+                lbl_name: "Name *",
+                lbl_phone: "Contact Number *",
+                lbl_branch: "Khetra / Branch *",
+                lbl_unit: "Unit Number(s) *",
+                lbl_landmark: "Pickup Location / Landmark *",
+                lbl_station: "Drop / Railway Station Location *",
+                lbl_dep_date: "Departure Date *",
+                lbl_start: "Pickup / Departure Time *",
+                lbl_ret_date: "Return Date *",
+                lbl_return: "Drop / Return Time *",
+                lbl_pax: "Sevadars Count",
+                lbl_remarks: "Sewa Perception / Department Remarks",
+                btn_submit: "Review & Confirm Advance Sewa Request →"
+            },
+            hi: {
+                track_title: "🔍 अपने अग्रिम सेवा वाहन आवंटन की स्थिति जांचें (प्रस्थान और आगमन से 48 घंटे पहले)",
+                track_btn: "स्थिति जांचें",
+                form_title: "अग्रिम सेवा (Advance Sewa) वाहन अनुरोध फॉर्म",
+                form_desc: "ऊपर दिए गए ड्यूटी चार्ट से अपने क्षेत्र/यूनिट के सामने 'Book Transport' दबाएं या नीचे विवरण भरें।",
+                lbl_name: "नाम (Name) *",
+                lbl_phone: "संपर्क नंबर (Contact Number) *",
+                lbl_branch: "क्षेत्र / ब्रांच (Khetra / Branch) *",
+                lbl_unit: "यूनिट नंबर (Unit Number) *",
+                lbl_landmark: "पिकअप स्थान / लैंडमार्क *",
+                lbl_station: "ड्रॉप / रेलवे स्टेशन स्थान *",
+                lbl_dep_date: "प्रस्थान दिनांक (Departure Date) *",
+                lbl_start: "पिकअप / प्रस्थान समय (Pickup Time) *",
+                lbl_ret_date: "वापसी दिनांक (Return Date) *",
+                lbl_return: "ड्रॉप / वापसी समय (Drop Time) *",
+                lbl_pax: "सेवादारों की संख्या",
+                lbl_remarks: "सेवा विवरण / टिप्पणी",
+                btn_submit: "समीक्षा करें और अनुरोध की पुष्टि करें →"
+            },
+            mr: {
+                track_title: "🔍 तुमच्या आगाऊ सेवा वाहन वाटपाची स्थिती तपासा (प्रस्थान आणि आगमनाच्या ४८ तास आधी)",
+                track_btn: "स्थिती तपासा",
+                form_title: "आगाऊ सेवेसाठी वाहन विनंती (Service for Advance Sewa)",
+                form_desc: "वरील ड्युटी चार्टमधील तुमच्या क्षेत्र/युनिटसमोरील 'Book Transport' वर क्लिक करा किंवा खाली माहिती भरा.",
+                lbl_name: "नाव (Name) *",
+                lbl_phone: "संपर्क क्रमांक (Contact Number) *",
+                lbl_branch: "क्षेत्र / ब्रांच (Khetra / Branch) *",
+                lbl_unit: "युनिट नंबर (Unit Number) *",
+                lbl_landmark: "पिकअप ठिकाण / लँडमार्क *",
+                lbl_station: "ड्रॉप / रेल्वे स्टेशन ठिकाण *",
+                lbl_dep_date: "प्रस्थान तारीख (Departure Date) *",
+                lbl_start: "पिकअप / प्रस्थान वेळ (Pickup Time) *",
+                lbl_ret_date: "परतीची तारीख (Return Date) *",
+                lbl_return: "ड्रॉप / परतीची वेळ (Drop Time) *",
+                lbl_pax: "सेवादार संख्या",
+                lbl_remarks: "सेवा तपशील / टीप",
+                btn_submit: "तपशील तपासा आणि विनंती निश्चित करा →"
+            }
+        };
+
+        function setAdvLang(lang, btn) {
+            const dict = ADV_I18N[lang] || ADV_I18N.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                if (dict[k]) el.textContent = dict[k];
+            });
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            localStorage.setItem('samagam_adv_lang', lang);
+        }
+
+        function openAdvanceSewaConfirmModal(e) {
+            e.preventDefault();
+            const raw = Object.fromEntries(new FormData(e.target).entries());
+            const cleanPhone = String(raw.contact_number || '').replace(/\D/g, '').slice(-10);
+            if (cleanPhone.length !== 10) {
+                alert('Please enter a valid 10-digit Contact Number.');
+                return;
+            }
+
+            PENDING_ADV_PAYLOAD = {
+                requester_name: raw.requester_name.trim(),
+                contact_number: cleanPhone,
+                branch_name: raw.branch_name.trim(),
+                unit_number: raw.unit_number.trim(),
+                landmark: raw.landmark.trim(),
+                nearest_railway_station: raw.nearest_railway_station.trim(),
+                departure_date: raw.departure_date,
+                return_date: raw.return_date,
+                date_of_sewa: `${raw.departure_date} to ${raw.return_date}`,
+                start_journey_time: raw.start_journey_time,
+                return_time: raw.return_time,
+                passenger_count: parseInt(raw.passenger_count) || 1,
+                notes: (raw.notes || '').trim()
+            };
+
+            document.getElementById('adv-review-details-grid').innerHTML = `
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-white p-2.5 rounded-xl border border-amber-200">
+                        <div class="text-[10px] font-bold uppercase text-slate-500">Departure Date</div>
+                        <div class="font-black text-slate-900">${PENDING_ADV_PAYLOAD.departure_date}</div>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-xl border border-amber-200">
+                        <div class="text-[10px] font-bold uppercase text-slate-500">Return Date</div>
+                        <div class="font-black text-slate-900">${PENDING_ADV_PAYLOAD.return_date}</div>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-xl border border-amber-200">
+                        <div class="text-[10px] font-bold uppercase text-slate-500">Pickup Time</div>
+                        <div class="font-black text-emerald-900">${PENDING_ADV_PAYLOAD.start_journey_time}</div>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-xl border border-amber-200">
+                        <div class="text-[10px] font-bold uppercase text-slate-500">Drop / Return Time</div>
+                        <div class="font-black text-emerald-900">${PENDING_ADV_PAYLOAD.return_time}</div>
+                    </div>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-amber-200 space-y-1">
+                    <div><span class="text-slate-500 font-bold">Pickup Location:</span> <strong class="text-slate-900">${PENDING_ADV_PAYLOAD.landmark}</strong></div>
+                    <div><span class="text-slate-500 font-bold">Drop / Station Location:</span> <strong class="text-slate-900">${PENDING_ADV_PAYLOAD.nearest_railway_station}</strong></div>
+                    <div><span class="text-slate-500 font-bold">Khetra &amp; Unit:</span> <strong class="text-slate-900">${PENDING_ADV_PAYLOAD.branch_name} (${PENDING_ADV_PAYLOAD.unit_number})</strong></div>
+                    <div><span class="text-slate-500 font-bold">Coordinator &amp; Mobile:</span> <strong class="text-slate-900">${PENDING_ADV_PAYLOAD.requester_name} (${PENDING_ADV_PAYLOAD.contact_number})</strong> &bull; <strong>${PENDING_ADV_PAYLOAD.passenger_count} Sevadars</strong></div>
+                </div>
+            `;
+
+            document.getElementById('adv-modal-error').classList.add('hidden');
+            const modal = document.getElementById('adv-review-confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAdvanceSewaConfirmModal() {
+            const modal = document.getElementById('adv-review-confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function confirmAndSubmitAdvanceSewa() {
+            if (!PENDING_ADV_PAYLOAD) return;
+            const btn = document.getElementById('btn-final-confirm-adv');
+            const errBox = document.getElementById('adv-modal-error');
+            errBox.classList.add('hidden');
+            btn.disabled = true;
+            btn.textContent = '⏳ Submitting...';
+
+            try {
+                const payload = PENDING_ADV_PAYLOAD;
+                const res = await fetch('/api/operations/advance-sewa-requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    closeAdvanceSewaConfirmModal();
+                    localStorage.setItem('last_adv_query', payload.contact_number);
+                    document.getElementById('adv-track-input').value = payload.contact_number;
+
+                    const box = document.getElementById('adv-confirmation-box');
+                    box.classList.remove('hidden');
+                    document.getElementById('adv-confirmation-summary').innerHTML =
+                        `<strong>Request ID: ${data.request_code}</strong> | ${payload.requester_name} (${payload.branch_name} / ${payload.unit_number})<br>` +
+                        `Departure: <strong>${payload.departure_date} at ${payload.start_journey_time}</strong> &bull; Return: <strong>${payload.return_date} at ${payload.return_time}</strong><br>` +
+                        `Location: ${payload.landmark} → ${payload.nearest_railway_station}`;
+
+                    const waMsg = encodeURIComponent(
+                        `Dhan Nirankar ji 🙏\n` +
+                        `Your request received will share further details or you check allocation details 48 hour before departure and arrival.\n\n` +
+                        `*Request ID:* ${data.request_code}\n` +
+                        `*Khetra / Unit:* ${payload.branch_name} (${payload.unit_number})\n` +
+                        `*Departure:* ${payload.departure_date} at ${payload.start_journey_time}\n` +
+                        `*Return:* ${payload.return_date} at ${payload.return_time}\n` +
+                        `*Location:* ${payload.landmark} -> ${payload.nearest_railway_station}\n\n` +
+                        `48 hours before departure & arrival, Driver Details & Vehicle Details will be shared.\n` +
+                        `Track anytime at: https://advancesewa.samagamtransport.in`
+                    );
+                    const waPhone = `91${payload.contact_number}`;
+                    document.getElementById('adv-whatsapp-receipt-btn').href = `https://wa.me/${waPhone}?text=${waMsg}`;
+
+                    document.getElementById('dedicated-adv-form').reset();
+                    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    checkAdvanceSewaStatus();
+                    loadAdvanceSewaFeed();
+                } else {
+                    errBox.textContent = data.detail || 'Error submitting Advance Sewa request.';
+                    errBox.classList.remove('hidden');
+                }
+            } catch (_) {
+                errBox.textContent = 'Network timeout while submitting. Please tap Confirm & Submit again.';
+                errBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✅ Confirm & Submit';
+            }
+        }
+
+        async function checkAdvanceSewaStatus() {
+            const q = document.getElementById('adv-track-input').value.trim();
+            if (!q) return;
+            localStorage.setItem('last_adv_query', q);
+            const box = document.getElementById('adv-track-results');
+            box.innerHTML = '<div class="text-xs text-slate-500">Checking live database status...</div>';
+
+            const res = await fetch(`/api/operations/request-status-lookup?query=${encodeURIComponent(q)}`);
+            if (!res.ok) {
+                box.innerHTML = '<div class="p-3 rounded-2xl bg-rose-50 text-rose-700 text-xs font-bold">No Advance Sewa request found for that number or ID.</div>';
+                return;
+            }
+            const items = await res.json();
+            if (!items.length) {
+                box.innerHTML = '<div class="p-3 rounded-2xl bg-amber-50 text-amber-900 text-xs font-bold">No matching requests found yet.</div>';
+                return;
+            }
+
+            box.innerHTML = items.map(item => `
+                <div class="p-4 rounded-2xl border-2 ${item.is_allocated ? 'bg-emerald-50 border-emerald-500' : 'bg-amber-50 border-amber-300'} flex flex-wrap justify-between items-center gap-3 text-xs">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-sm text-slate-900">${item.code}</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${item.is_allocated ? 'bg-emerald-700 text-white' : 'bg-amber-500 text-slate-950'}">
+                                ${item.is_allocated ? '✅ VEHICLE & DRIVER ALLOCATED' : '⏳ RECEIVED (ALLOCATION 48 HRS BEFORE)'}
+                            </span>
+                        </div>
+                        <div class="font-semibold text-slate-700">${item.summary}</div>
+                        <div class="text-slate-500">Requester: ${item.requester_name} (${item.requester_phone})</div>
+                    </div>
+                    ${item.is_allocated ? `
+                        <div class="bg-white p-3 rounded-xl border border-emerald-300 text-right space-y-1 shadow-sm">
+                            <div class="text-[10px] uppercase font-bold text-emerald-700">48-Hr Dispatch • Vehicle &amp; Driver Details</div>
+                            <div class="text-sm font-black text-slate-900">🚌 Vehicle: ${item.assigned_vehicle_reg}</div>
+                            <div class="text-slate-800 font-bold">👤 Driver: ${item.driver_name || 'Assigned Sevadar'}</div>
+                            ${item.driver_phone ? `<a href="tel:${item.driver_phone}" class="inline-block mt-1 bg-emerald-700 text-white font-bold px-3 py-1 rounded-lg">📞 Call Driver ${item.driver_phone}</a>` : ''}
+                        </div>
+                    ` : `
+                        <div class="text-right text-amber-950 font-bold max-w-xs">
+                            Dhan Nirankar ji 🙏<br>
+                            Check allocation details 48 hours before departure &amp; arrival (Driver &amp; Vehicle details will appear here).
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        async function loadAdvanceSewaFeed() {
+            try {
+                const res = await fetch('/api/operations/advance-sewa-requests');
+                if (!res.ok) return;
+                const list = await res.json();
+                const box = document.getElementById('adv-live-feed-list');
+                box.innerHTML = list.length ? list.map(a => `
+                    <div class="p-3.5 rounded-2xl border ${a.status === 'ALLOCATED' ? 'bg-emerald-50/70 border-emerald-300' : 'bg-amber-50/60 border-amber-200'} space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-extrabold text-amber-950">${a.request_code} • ${a.branch_name} (${a.unit_number})</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${a.status === 'ALLOCATED' ? 'bg-emerald-700 text-white' : 'bg-amber-400 text-slate-950'}">${a.status}</span>
+                        </div>
+                        <div class="text-slate-700 font-semibold">${a.nearest_railway_station} • ${a.date_of_sewa} (${a.start_journey_time} → ${a.return_time})</div>
+                        <div class="text-slate-500">By: ${a.requester_name} • ${a.passenger_count} Sevadars</div>
+                        ${a.assigned_vehicle_reg ? `<div class="text-emerald-800 font-extrabold">🚍 Assigned: ${a.assigned_vehicle_reg} (${a.assigned_driver_name || 'Assigned'})</div>` : ''}
+                    </div>
+                `).join('') : '<p class="text-slate-400">No Advance Sewa requests raised yet.</p>';
+            } catch (_) {}
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAdvanceSewaChart();
+            const savedLang = localStorage.getItem('samagam_adv_lang') || 'en';
+            const btn = document.querySelector(`.lang-btn[onclick*="'${savedLang}'"]`);
+            if (btn) setAdvLang(savedLang, btn);
+            loadAdvanceSewaFeed();
+            setInterval(loadAdvanceSewaFeed, 30000);
+        });
+    </script>
+</body>
+</html>

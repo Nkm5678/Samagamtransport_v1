@@ -890,5 +890,47 @@
             // Privacy: Do NOT auto-fill or auto-display previous status tracker results on page load.
         });
     </script>
+
+<!-- SAMAGAM_WELCOME_PICKUP_GUIDE_START -->
+
+<section id="samagam-leader-pickup-section" class="max-w-4xl mx-auto my-6 p-4 rounded-2xl bg-slate-900 border border-amber-500/40 text-slate-100 space-y-3">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <h3 class="text-sm font-extrabold text-amber-300">Arrival Station / Airport / Bus Depot Waiting Point & On-Duty Sewadars</h3>
+      <p class="text-xs text-slate-400">Select your arrival hub to view the schematic pickup point map and call on-duty Station Sewadars.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <select id="leader-station-picker" onchange="loadSamagamPickupGuide(this.value, 'samagam-pickup-guide-box')" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs">
+        <option value="Panvel">Panvel Railway Station</option>
+        <option value="Thane">Thane Railway Station</option>
+        <option value="LTT">Lokmanya Tilak Terminus (LTT)</option>
+        <option value="CSMT">CSMT Railway Station</option>
+        <option value="Dadar">Dadar Railway Station</option>
+        <option value="Kalyan">Kalyan Junction</option>
+        <option value="T1">Mumbai Airport Terminal 1 (T1)</option>
+        <option value="T2">Mumbai Airport Terminal 2 (T2)</option>
+        <option value="NMIA">Navi Mumbai Airport (NMIA)</option>
+      </select>
+      <a href="/helpline" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white text-xs font-bold">Helpline 18001232005</a>
+    </div>
+  </div>
+  <div id="samagam-pickup-guide-box"></div>
+</section>
+<script src="/static/samagam_pickup_guide.js"></script>
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    loadSamagamPickupGuide("Panvel", "samagam-pickup-guide-box");
+    document.querySelectorAll("select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        const val = sel.options[sel.selectedIndex]?.text || sel.value;
+        if (/panvel|thane|ltt|csmt|dadar|kalyan|t1|t2|nmia|airport|station|depot/i.test(val)) {
+          loadSamagamPickupGuide(val, "samagam-pickup-guide-box");
+        }
+      });
+    });
+  });
+</script>
+
+<!-- SAMAGAM_WELCOME_PICKUP_GUIDE_END -->
 </body>
 </html>

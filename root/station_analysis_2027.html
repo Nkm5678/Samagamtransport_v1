@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Station-Wise Analysis (19 Jan ? 28 Jan 2027) & Live NTES Tracks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="bg-gradient-to-r from-indigo-900 via-slate-900 to-amber-900 border-b border-amber-400/30 px-4 py-4 shadow-lg">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-xs uppercase tracking-wider text-amber-300 font-bold">Admin Control Panel ? 60th Nirankari Sant Samagam</div>
+        <h1 class="text-lg md:text-2xl font-extrabold text-white">Station-Wise Arrival Analysis (Tue 19 Jan 2027 ? Thu 28 Jan 2027) &amp; Live NTES Tracks</h1>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs font-bold">
+        <a href="/admin_dashboard.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700">? Admin Dashboard</a>
+        <button onclick="syncNtesLive(true)" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold">?? Sync Live NTES Now</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 space-y-5">
+    <!-- Day & Date Strip (Tue 19 Jan 2027 to Thu 28 Jan 2027) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-extrabold text-amber-300">Select Day &amp; Date (19 Jan 2027 ? 28 Jan 2027) ? Peak Days Highlighted</h2>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <label class="text-slate-400">Station:</label>
+          <select id="sel-station" onchange="loadAnalysis()" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+            <option value="ALL">All Stations (8 MMR Hubs)</option>
+            <option value="Thane">Thane (TNA)</option>
+            <option value="Panvel">Panvel (PNVL)</option>
+            <option value="Kalyan">Kalyan (KYN)</option>
+            <option value="Bandra">Bandra Terminus (BDTS)</option>
+            <option value="Dadar">Dadar (DR/DDR)</option>
+            <option value="CSMT">CSMT (CST)</option>
+            <option value="LTT">LTT (Kurla)</option>
+            <option value="Mumbai Central">Mumbai Central (BCT)</option>
+          </select>
+          <label class="text-slate-400">Gathering:</label>
+          <select id="sel-gathering" onchange="loadAnalysis()" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+            <option value="80000" selected>80,000 Scale</option>
+            <option value="100000">1,00,000 Scale</option>
+            <option value="60000">60,000 Scale</option>
+          </select>
+        </div>
+      </div>
+      <div id="day-tabs-strip" class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2"></div>
+    </section>
+
+    <!-- KPI Summary Cards -->
+    <section id="kpi-summary-row" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></section>
+
+    <!-- Station-Wise Hourly Trains & Expected Saints -->
+    <section id="station-breakdown-container" class="space-y-4"></section>
+
+    <!-- Live Train Tracks from NTES -->
+    <section class="bg-slate-900 border border-sky-500/40 rounded-2xl p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-extrabold text-sky-300">Live Train Tracks from NTES (Real-Time Delay &amp; ETA)</h2>
+          <p id="ntes-sync-meta" class="text-xs text-slate-400">Loading NTES train track status...</p>
+        </div>
+        <button onclick="syncNtesLive(false)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold">Refresh Tracks</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-700 text-slate-400">
+              <th class="py-2 px-2">Station</th>
+              <th class="py-2 px-2">Hour Slot</th>
+              <th class="py-2 px-2">Train No &amp; Name</th>
+              <th class="py-2 px-2">Route</th>
+              <th class="py-2 px-2">Sched ? Live ETA</th>
+              <th class="py-2 px-2">Delay &amp; NTES Track Status</th>
+            </tr>
+          </thead>
+          <tbody id="ntes-tracks-tbody" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let selectedDate = "2027-01-24";
+
+    function renderDayTabs(days) {
+      const strip = document.getElementById("day-tabs-strip");
+      strip.innerHTML = (days || []).map(d => {
+        const isSel = d.date === selectedDate;
+        const peakRing = d.is_peak ? "ring-2 ring-amber-400" : "";
+        const bgClass = isSel
+          ? "bg-amber-500 text-slate-950 font-extrabold"
+          : (d.is_peak ? "bg-amber-950/60 text-amber-200 border border-amber-500/40" : "bg-slate-800 text-slate-200 border border-slate-700");
+        return `
+          <button onclick="selectDay('${d.date}')" class="p-2 rounded-xl text-left transition ${bgClass} ${peakRing}">
+            <div class="text-[11px] font-extrabold">${d.day_name.slice(0,3)} ? ${d.date.slice(5)}</div>
+            <div class="text-[10px] opacity-90">${Math.round(d.factor * 100)}% Surge</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectDay(dtStr) {
+      selectedDate = dtStr;
+      loadAnalysis();
+    }
+
+    async function loadAnalysis() {
+      const st = document.getElementById("sel-station").value;
+      const gath = document.getElementById("sel-gathering").value;
+      const res = await fetch(`/api/operations/station-analysis-2027?duty_date=${encodeURIComponent(selectedDate)}&station=${encodeURIComponent(st)}&gathering=${encodeURIComponent(gath)}`);
+      const data = await res.json();
+      renderDayTabs(data.days || []);
+
+      const dayInfo = data.selected_day || {};
+      document.getElementById("kpi-summary-row").innerHTML = `
+        <div class="bg-slate-900 border border-amber-400/40 rounded-2xl p-4">
+          <div class="text-xs text-amber-300 font-bold">Highlighted Day &amp; Date</div>
+          <div class="text-lg font-extrabold text-white mt-1">${dayInfo.label || selectedDate} (${dayInfo.day_name || ""})</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <div class="text-xs text-sky-300 font-bold">Inbound Mail/Express Trains</div>
+          <div class="text-lg font-extrabold text-white mt-1">${data.total_trains || 0} Trains</div>
+        </div>
+        <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4">
+          <div class="text-xs text-emerald-300 font-bold">Expected Saints on Selected Day</div>
+          <div class="text-lg font-extrabold text-emerald-300 mt-1">${(data.total_expected_saints || 0).toLocaleString()} Saints</div>
+        </div>
+      `;
+
+      const container = document.getElementById("station-breakdown-container");
+      const stations = data.stations || [];
+      if (!stations.length) {
+        container.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400">No inbound trains for selected filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = stations.map(s => `
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+            <div class="text-sm font-extrabold text-amber-300">${s.station_name} <span class="text-xs text-slate-400">(${dayInfo.label || selectedDate})</span></div>
+            <div class="text-xs font-bold text-emerald-300">${s.total_trains} Trains ? ${s.expected_saints.toLocaleString()} Expected Saints</div>
+          </div>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            ${(s.hourly || []).map(h => `
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono font-extrabold text-sky-300">${h.hour_slot}</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">~${h.hour_saints} Saints</span>
+                </div>
+                ${(h.trains || []).map(tr => `
+                  <div class="border-t border-slate-800/80 pt-1.5 space-y-0.5">
+                    <div class="font-bold text-white">${tr.train_no} ? ${tr.train_name}</div>
+                    <div class="text-[11px] text-slate-400">${tr.origin} ? ${tr.destination}</div>
+                    <div class="flex items-center justify-between text-[11px]">
+                      <span class="text-amber-300">Sched ${tr.scheduled_time} ? ETA ${tr.eta_time} (+${tr.hist_delay_mins}m)</span>
+                      <span class="font-extrabold text-emerald-300">~${tr.expected_saints} Saints (${tr.buses_needed} Bus)</span>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function syncNtesLive(forceLive) {
+      const st = document.getElementById("sel-station").value;
+      const res = await fetch(`/api/operations/ntes-live-tracks?station=${encodeURIComponent(st)}&live_query=${forceLive ? "true" : "false"}`);
+      const data = await res.json();
+      document.getElementById("ntes-sync-meta").textContent =
+        `Last Sync: ${data.synced_at || "-"} | Live NTES Client Active: ${data.ntes_client_live ? "YES" : "Fallback to Jan Historical Benchmark"} | Tracks: ${data.count || 0}`;
+      const tbody = document.getElementById("ntes-tracks-tbody");
+      tbody.innerHTML = (data.tracks || []).map(t => `
+        <tr class="hover:bg-slate-800/60">
+          <td class="py-2 px-2 font-bold text-amber-300">${t.station_name}</td>
+          <td class="py-2 px-2 font-mono text-sky-300">${t.eta_slot || t.slot}</td>
+          <td class="py-2 px-2 font-bold text-white">${t.train_no} ${t.train_name}</td>
+          <td class="py-2 px-2 text-slate-300">${t.origin} ? ${t.destination}</td>
+          <td class="py-2 px-2 font-mono text-emerald-300">${t.scheduled_time} ? ${t.live_eta}</td>
+          <td class="py-2 px-2 text-slate-200">+${t.active_delay_mins}m ? ${t.track_status}</td>
+        </tr>
+      `).join("");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadAnalysis();
+      syncNtesLive(false);
+    });
+  </script>
+</body>
+</html>

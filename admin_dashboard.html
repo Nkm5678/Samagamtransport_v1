@@ -229,5 +229,117 @@
             loadAllAdminReports();
         });
     </script>
-<div id="consolidatedExcelUploadBar" style="max-width:1280px;margin:12px auto;padding:14px 18px;background:#0f172a;border:1px solid #334155;border-radius:14px;color:#f8fafc;">Helpline Portal: <a href="https://helpline.samagamtransport.in" target="_blank" style="color:#38bdf8;font-weight:700;">https://helpline.samagamtransport.in</a> &bull; Helpline: <b>18001232005</b> &bull; Chatbot: <b>9266629848</b></div><div id="consolidatedExcelUploadBar" style="max-width:1280px;margin:12px auto;padding:14px 18px;background:#0f172a;border:1px solid #334155;border-radius:14px;color:#f8fafc;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;"><div><div style="font-weight:800;font-size:14px;color:#fbbf24;">Bulk Upload Excel Proformas (.xlsx) &amp; Helpline Subdomain</div><div style="font-size:12px;color:#cbd5e1;margin-top:2px;">Helpline Portal: <a href="https://helpline.samagamtransport.in" target="_blank" style="color:#38bdf8;font-weight:700;">https://helpline.samagamtransport.in</a> &bull; Helpline: <b>18001232005</b> &bull; Chatbot: <b>9266629848</b></div></div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"><label style="font-size:11px;background:#1e293b;padding:6px 10px;border-radius:8px;border:1px solid #475569;cursor:pointer;">Roster (.xlsx): <input id="admRosterXlsx" type="file" accept=".xlsx,.xlsm" style="font-size:11px;max-width:165px;" /> <button type="button" onclick="uploadRosterExcelAdmin()" style="background:#0284c7;color:#fff;border:none;border-radius:6px;padding:4px 9px;font-weight:700;cursor:pointer;">Upload</button></label><label style="font-size:11px;background:#1e293b;padding:6px 10px;border-radius:8px;border:1px solid #475569;cursor:pointer;">Fleet &amp; Drivers (.xlsx): <input id="admFleetXlsx" type="file" accept=".xlsx,.xlsm" style="font-size:11px;max-width:165px;" /> <button type="button" onclick="uploadFleetExcelAdmin()" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 9px;font-weight:700;cursor:pointer;">Upload</button></label></div></div><script>async function uploadRosterExcelAdmin(){const f=document.getElementById("admRosterXlsx");if(!f||!f.files.length){alert("Select Station & Ground Roster .xlsx file first.");return;}const fd=new FormData();fd.append("file",f.files[0]);const r=await fetch("/api/operations/roster/upload-excel",{method:"POST",body:fd});const d=await r.json();alert(r.ok?("OK: "+d.message):("Error: "+(d.detail||"Upload failed")));}async function uploadFleetExcelAdmin(){const f=document.getElementById("admFleetXlsx");if(!f||!f.files.length){alert("Select Fleet Vehicles & Drivers .xlsx file first.");return;}const fd=new FormData();fd.append("file",f.files[0]);const r=await fetch("/api/operations/fleet/upload-excel",{method:"POST",body:fd});const d=await r.json();alert(r.ok?("OK: "+d.message):("Error: "+(d.detail||"Upload failed")));}</script></body>
+<div id="consolidatedExcelUploadBar" style="max-width:1280px;margin:12px auto;padding:14px 18px;background:#0f172a;border:1px solid #334155;border-radius:14px;color:#f8fafc;">Helpline Portal: <a href="https://helpline.samagamtransport.in" target="_blank" style="color:#38bdf8;font-weight:700;">https://helpline.samagamtransport.in</a> &bull; Helpline: <b>18001232005</b> &bull; Chatbot: <b>9266629848</b></div><div id="consolidatedExcelUploadBar" style="max-width:1280px;margin:12px auto;padding:14px 18px;background:#0f172a;border:1px solid #334155;border-radius:14px;color:#f8fafc;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;"><div><div style="font-weight:800;font-size:14px;color:#fbbf24;">Bulk Upload Excel Proformas (.xlsx) &amp; Helpline Subdomain</div><div style="font-size:12px;color:#cbd5e1;margin-top:2px;">Helpline Portal: <a href="https://helpline.samagamtransport.in" target="_blank" style="color:#38bdf8;font-weight:700;">https://helpline.samagamtransport.in</a> &bull; Helpline: <b>18001232005</b> &bull; Chatbot: <b>9266629848</b></div></div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"><label style="font-size:11px;background:#1e293b;padding:6px 10px;border-radius:8px;border:1px solid #475569;cursor:pointer;">Roster (.xlsx): <input id="admRosterXlsx" type="file" accept=".xlsx,.xlsm" style="font-size:11px;max-width:165px;" /> <button type="button" onclick="uploadRosterExcelAdmin()" style="background:#0284c7;color:#fff;border:none;border-radius:6px;padding:4px 9px;font-weight:700;cursor:pointer;">Upload</button></label><label style="font-size:11px;background:#1e293b;padding:6px 10px;border-radius:8px;border:1px solid #475569;cursor:pointer;">Fleet &amp; Drivers (.xlsx): <input id="admFleetXlsx" type="file" accept=".xlsx,.xlsm" style="font-size:11px;max-width:165px;" /> <button type="button" onclick="uploadFleetExcelAdmin()" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 9px;font-weight:700;cursor:pointer;">Upload</button></label></div></div><script>async function uploadRosterExcelAdmin(){const f=document.getElementById("admRosterXlsx");if(!f||!f.files.length){alert("Select Station & Ground Roster .xlsx file first.");return;}const fd=new FormData();fd.append("file",f.files[0]);const r=await fetch("/api/operations/roster/upload-excel",{method:"POST",body:fd});const d=await r.json();alert(r.ok?("OK: "+d.message):("Error: "+(d.detail||"Upload failed")));}async function uploadFleetExcelAdmin(){const f=document.getElementById("admFleetXlsx");if(!f||!f.files.length){alert("Select Fleet Vehicles & Drivers .xlsx file first.");return;}const fd=new FormData();fd.append("file",f.files[0]);const r=await fetch("/api/operations/fleet/upload-excel",{method:"POST",body:fd});const d=await r.json();alert(r.ok?("OK: "+d.message):("Error: "+(d.detail||"Upload failed")));}</script>
+<!-- SAMAGAM_ADMIN_UNIFIED_START -->
+
+<section id="samagam-admin-unified-panel" class="max-w-6xl mx-auto my-6 p-4 rounded-2xl bg-slate-900 border border-amber-500/40 text-slate-100 space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 class="text-base font-extrabold text-amber-300">Advance Sewa Requests & Nearby-Vicinity Vehicle Allocation</h2>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <a href="/helpline" target="_blank" class="px-3 py-1.5 rounded-lg bg-orange-600 text-white font-bold">Open Helpline Portal (18001232005)</a>
+      <button onclick="refreshAdminUnifiedData()" class="px-3 py-1.5 rounded-lg bg-slate-700 text-white font-bold">Refresh Live Queues</button>
+    </div>
+  </div>
+  <div class="grid md:grid-cols-2 gap-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs">
+    <div class="flex items-center gap-2">
+      <input id="admin-roster-xlsx" type="file" accept=".xlsx,.xlsm" class="text-slate-300" />
+      <button onclick="uploadRosterExcelAdmin()" class="px-3 py-1.5 rounded bg-indigo-600 text-white font-bold">Upload Roster Excel</button>
+    </div>
+    <div class="flex items-center gap-2">
+      <input id="admin-fleet-xlsx" type="file" accept=".xlsx,.xlsm" class="text-slate-300" />
+      <button onclick="uploadFleetExcelAdmin()" class="px-3 py-1.5 rounded bg-emerald-600 text-white font-bold">Upload Fleet/Driver Excel</button>
+    </div>
+  </div>
+  <div id="admin-adv-sewa-list" class="space-y-2 text-xs">Loading Advance Sewa requests...</div>
+</section>
+<script>
+  async function uploadRosterExcelAdmin() {
+    const f = document.getElementById("admin-roster-xlsx").files[0];
+    if (!f) return alert("Choose Roster .xlsx file first.");
+    const fd = new FormData(); fd.append("file", f);
+    const r = await fetch("/api/operations/roster/upload-excel", { method: "POST", body: fd });
+    const d = await r.json(); alert(d.message || d.detail);
+  }
+  async function uploadFleetExcelAdmin() {
+    const f = document.getElementById("admin-fleet-xlsx").files[0];
+    if (!f) return alert("Choose Fleet .xlsx file first.");
+    const fd = new FormData(); fd.append("file", f);
+    const r = await fetch("/api/operations/fleet/upload-excel", { method: "POST", body: fd });
+    const d = await r.json(); alert(d.message || d.detail);
+  }
+  async function allocateAdvanceSewa(reqId, station, count) {
+    const sel = document.getElementById(`veh-sel-adv-${reqId}`);
+    if (!sel || !sel.value) return alert("Select a nearby vehicle first.");
+    const [vehReg, drvName, drvMob] = sel.value.split("|");
+    const res = await fetch("/api/operations/allocate-vehicle", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        ref_type: "ADVANCE_SEWA",
+        ref_id: String(reqId),
+        vehicle_reg: vehReg,
+        driver_name: drvName,
+        driver_mobile: drvMob,
+        pickup_hub: station,
+        drop_hub: "Samagam Ground",
+        headcount: count
+      })
+    });
+    const out = await res.json();
+    alert(out.message || out.detail || "Allocated!");
+    refreshAdminUnifiedData();
+  }
+  async function refreshAdminUnifiedData() {
+    const box = document.getElementById("admin-adv-sewa-list");
+    if (!box) return;
+    const res = await fetch("/api/operations/advance-sewa-requests");
+    const data = await res.json();
+    const items = data.items || [];
+    if (!items.length) {
+      box.innerHTML = `<div class="text-slate-400">No Advance Sewa requests submitted yet.</div>`;
+      return;
+    }
+    const htmlParts = await Promise.all(items.map(async (it) => {
+      const hub = it.nearest_station || it.landmark || "Panvel";
+      const vRes = await fetch(`/api/operations/nearby-vehicles?hub=${encodeURIComponent(hub)}`);
+      const vList = await vRes.json();
+      const opts = vList.map(v => {
+        const badge = v.is_nearby ? "?? NEARBY" : (v.is_ready ? "?? READY" : "?? BUSY");
+        return `<option value="${v.vehicle_reg}|${v.driver_name}|${v.driver_mobile}">${badge} ? ${v.vehicle_reg} (${v.distance_km} km ? ${v.current_hub})</option>`;
+      }).join("");
+      return `
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="font-bold text-amber-300">${it.request_code || "ADV-" + it.id} ? ${it.unit_name} (Unit ${it.unit_no || "-"}) ? ${it.sevadars_count} Sewadars</div>
+            <div class="text-slate-300">Station: ${it.nearest_station} | Date: ${it.sewa_date} (${it.start_time} - ${it.return_time}) | ${it.remarks || ""}</div>
+            <div class="text-emerald-400">Status: ${it.status} ${it.allocated_vehicle_reg ? "? " + it.allocated_vehicle_reg + " (" + (it.allocated_driver_name || "") + ")" : ""}</div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="veh-sel-adv-${it.id}" class="px-2.5 py-1.5 rounded bg-slate-800 border border-slate-700 text-xs">${opts}</select>
+            <button onclick="allocateAdvanceSewa(${it.id}, '${hub.replace(/'/g, "")}', ${it.sevadars_count || 1})" class="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold">Allocate</button>
+          </div>
+        </div>`;
+    }));
+    box.innerHTML = htmlParts.join("");
+  }
+  window.addEventListener("DOMContentLoaded", refreshAdminUnifiedData);
+</script>
+
+<!-- SAMAGAM_ADMIN_UNIFIED_END -->
+
+<!-- SAMAGAM_ADMIN_ANALYSIS_LINK_START -->
+<div id="samagam-admin-analysis-bar" class="max-w-6xl mx-auto my-4 px-4">
+  <div class="p-4 rounded-2xl bg-indigo-950/80 border border-indigo-400/40 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <div class="text-xs font-extrabold text-amber-300">10-Day Station Forecast (Tue 19 Jan 2027 ? Thu 28 Jan 2027) &amp; Live NTES Tracks</div>
+      <div class="text-xs text-slate-300">Day/Date highlights, station-wise hourly trains, expected saints per train &amp; live NTES delay tracking.</div>
+    </div>
+    <a href="/admin/station-analysis-2027" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow">
+      Open Station Analysis (19?28 Jan 2027) ?
+    </a>
+  </div>
+</div>
+<!-- SAMAGAM_ADMIN_ANALYSIS_LINK_END -->
+
+</body>
 </html>
